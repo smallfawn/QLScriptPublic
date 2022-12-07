@@ -1,5 +1,5 @@
 /**
- * 拾光家
+ * 拾光家 app https://www.shiguangjia.cn , 内测拾光码:130239
  * cron 10 10 * * *  sgj.js
  *
  * 22/12/7   每日答题1块钱低保
@@ -50,7 +50,7 @@ async function start() {
         for (let i = 0; i < 5; i++) { 
             taskall.push(await user.official_event('开始获取答题')); 
         }
-        await wait(1); //延迟
+        await wait(15); //延迟
     }
     await Promise.all(taskall);
 
@@ -136,7 +136,6 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options, name);
             //console.log(result);
-            //console.log(result.data.list[4]);
             if (result.code == 1) {
                 DoubleLog(`账号[${this.index}]  获取答题任务信息: ${result.msg}`);
                 for (let i in result.data.list) {
@@ -152,13 +151,7 @@ class UserInfo {
                     }
 
                 }
-                //for (let i in result.data.list[4].last_msg.nr.data.list) {
-                //console.log(`任务有效期和奖励为${result.data.list[4].last_msg.nr.data.list[i].n}&${result.data.list[4].last_msg.nr.data.list[i].v}`);
-                //}
-                //rw_id=168&pk=push20221207111239J9adIUVB6v
-                //let r2 = r1.slice(6, 9)
-                //let r3 = r1.slice(13)
-                //await this.task_accept(r2, r3)
+
             } else {
                 DoubleLog(`账号[${this.index}]  获取答题任务:失败 ❌ 了呢,原因未知！`);
                 console.log(result);
