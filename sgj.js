@@ -42,10 +42,10 @@ async function start() {
     //    async get_recoord(name) { // 进入答题
     //    async get_qlist(name) { // 获取答题列表
     //    async sub_papers(name) { // 提交答案
-    console.log('\n答题错误就是题库不全 你们发现就手动答题,答案截图发我');
-    console.log('\nhttps://api.shiguangjia.cn/api/task/get_qlist 这个数据包中的响应=>预览/raw截图给我 \n 我的qq860562056 感谢\n');
-    console.log('\n请先完成进行中的拾光!！这个报错是因为你那边积攒的未完成的太多了,手动答题且把截图发我谢谢\n');
-    console.log('\n达到完成次数上限!！ 这个报错是因为这条任务你已经上限了多运行几次\n');
+    console.log('\n更新：题库内没有就会重新获取题库,直到所有的题目都在题库内才会答题');
+    console.log('\n');
+    console.log('\n请先完成进行中的拾光!！这个报错是因为你那边积攒的未完成的太多了!\n');
+    console.log('\n达到完成次数上限!！ 这个报错是因为这条任务你已经上限了,可以多运行几次\n');
     console.log('\n================== 开始获取答题 ==================\n');
     taskall = [];
     for (let user of userList) {
@@ -344,7 +344,9 @@ class UserInfo {
                 for (let i in result.data.question) {
                     console.log(`题目[${i}],id[${result.data.question[i].id}],问题题目${result.data.question[i].question}`);
                     let id = result.data.question[i].id
+                    await wait(1)
                     idArr.push(id)
+                    await wait(2)
                 }
                 await wait(3)
                 await this.sub_papers(r4, k, idArr)
@@ -368,11 +370,13 @@ class UserInfo {
                     let ppp0 = rs.qid[q0]
                     let ppp1 = rs.qid[q1]
                     let ppp2 = rs.qid[q2]
-                    return [
-                        { qid: 0, answer: [ppp0], error: false },
-                        { qid: 1, answer: [ppp1], error: false },
-                        { qid: 2, answer: [ppp2], error: false }
-                    ]
+                    if (ppp0 !== undefined && ppp1 !== undefined && ppp2 !== undefined) {
+                        return [
+                            { qid: 0, answer: [ppp0], error: false },
+                            { qid: 1, answer: [ppp1], error: false },
+                            { qid: 2, answer: [ppp2], error: false }
+                        ]
+                    }
                 } else if (r00.length == 4) {
                     let q0 = idArr[0]
                     let q1 = idArr[1]
@@ -382,46 +386,55 @@ class UserInfo {
                     let ppp1 = rs.qid[q1]
                     let ppp2 = rs.qid[q2]
                     let ppp3 = rs.qid[q3]
-                    return [
-                        { qid: 0, answer: [ppp0], error: false },
-                        { qid: 1, answer: [ppp1], error: false },
-                        { qid: 2, answer: [ppp2], error: false },
-                        { qid: 3, answer: [ppp3], error: false }
-                    ]
+                    if (ppp0 !== undefined && ppp1 !== undefined && ppp2 !== undefined && ppp3 !== undefined) {
+                        return [
+                            { qid: 0, answer: [ppp0], error: false },
+                            { qid: 1, answer: [ppp1], error: false },
+                            { qid: 2, answer: [ppp2], error: false },
+                            { qid: 3, answer: [ppp3], error: false }
+                        ]
+                    }
                 }
             }
             let pp = r(idArr)
-            let options = {
-                method: 'POST',
-                url: 'https://api.shiguangjia.cn/api/task/sub_papers',
-                headers: {
-                    'C-model': 'android',
-                    'C-type': 'app-miniapp',
-                    'C-version': '2.7.7',
-                    token: this.token,
-                    'user-agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36 uni-app Html5Plus/1.0 (Immersed/29.818182)',
-                    'Content-Type': 'application/json;charset=UTF-8',
-                    Host: 'api.shiguangjia.cn',
-                    Connection: 'Keep-Alive',
-                    //Cookie: this.cookie,
-                    'content-type': 'application/json'
-                },
-                body: {
-                    record_id: r4,
-                    key: k,
-                    papers: pp
-                },
-                json: true
-            };
-            //console.log(options);
-            let result = await httpRequest(options, "提交答案");
-            //console.log(result);
-            if (result.code == 1) {
-                DoubleLog(`账号[${this.index}]  提交答案成功: ${result.msg}`);
+            //console.log(pp);
+            if (pp !== undefined) {
+                let options = {
+                    method: 'POST',
+                    url: 'https://api.shiguangjia.cn/api/task/sub_papers',
+                    headers: {
+                        'C-model': 'android',
+                        'C-type': 'app-miniapp',
+                        'C-version': '2.7.7',
+                        token: this.token,
+                        'user-agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36 uni-app Html5Plus/1.0 (Immersed/29.818182)',
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        Host: 'api.shiguangjia.cn',
+                        Connection: 'Keep-Alive',
+                        //Cookie: this.cookie,
+                        'content-type': 'application/json'
+                    },
+                    body: {
+                        record_id: r4,
+                        key: k,
+                        papers: pp
+                    },
+                    json: true
+                };
+                //console.log(options);
+                let result = await httpRequest(options, "提交答案");
+                //console.log(result);
+                if (result.code == 1) {
+                    DoubleLog(`账号[${this.index}]  提交答案成功: ${result.msg}`);
+                } else {
+                    DoubleLog(`账号[${this.index}]  提交答案:失败 ❌ 了呢,原因未知！`);
+                    console.log(result);
+                    console.log(options.body.papers);
+                }
             } else {
-                DoubleLog(`账号[${this.index}]  提交答案:失败 ❌ 了呢,原因未知！`);
-                console.log(result);
-                console.log(options.body.papers);
+                console.log("题库中没有这道题呢现在为你重新答题延迟30s");
+                await wait(30);
+                await this.get_qlist(r4)
             }
         } catch (error) {
             console.log(error);
@@ -540,7 +553,7 @@ async function httpRequest(options, name) { var request = require("request"); re
 // 等待 X 秒
 function wait(n) { return new Promise(function (resolve) { setTimeout(resolve, n * 1000) }) }
 // 双平台log输出
-function DoubleLog(data) { if ($.isNode()) { if (data) { console.log(`${data}`); msg += `${data}` } } else { console.log(`${data}`); msg += `${data}` } }
+function DoubleLog(data) { if ($.isNode()) { if (data) { console.log(`${data}`); msg += `\n${data}` } } else { console.log(`${data}`); msg += `\n${data}` } }
 // 发送消息
 async function SendMsg(message) { if (!message) return; if (Notify > 0) { if ($.isNode()) { var notify = require("./sendNotify"); await notify.sendNotify($.name, message) } else { $.msg($.name, '', message) } } else { console.log(message) } }
 // 完整 Env
