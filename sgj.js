@@ -1,16 +1,16 @@
 /**
  * 拾光家 app https://www.shiguangjia.cn , 内测拾光码:130239
- * cron 10 11 * * *  sgj.js
+ * cron 10 10 * * *  sgj.js
  *
  * 22/12/7   每日答题1块钱低保
  * 22/12/8   请在执行前手动完成所有的剩余任务 一天运行10次
  * ========= 青龙--配置文件 ===========
  * # 项目名称
- * export sgj_data='token&c-shebei-id'
+ * export sgj_data='token'
  * 
  * 多账号用 换行 或 @ 分割
  * 抓包 api.shiguangjia.cn/api中
- * headers 中 token的值 和 c-shebei-id的值 用&连接
+ * headers 中 token 需要自动提现请填写 c-shebei-id 用&连接
  * ====================================
  *   
  */
@@ -54,13 +54,7 @@ async function start() {
         await wait(15); //延迟
     }
     await Promise.all(taskall);
-    console.log('\n================== 开始提现 ==================\n');
-    taskall = [];
-    for (let user of userList) {
-        taskall.push(await user.tx_check());
-        await wait(15); //延迟
-    }
-    await Promise.all(taskall);
+
 
 
 
@@ -226,6 +220,13 @@ class UserInfo {
                 await this.get_rw(r2, r4);
             } else if (result.code == -1) {
                 DoubleLog(`账号[${this.index}]  接受答题任务:失败 ❌ 了呢,原因${result.msg}！`);
+                if (this.shebei_id !== undefined) {
+                    console.log('\n================== 开始提现 ==================\n');
+                    await wait(3)
+                    await this.tx_check();
+                } else {
+                    console.log("未填写c-shebei-id,不执行提现");
+                }
             } else {
                 DoubleLog(`账号[${this.index}]  接受答题任务:失败 ❌ 了呢,原因未知！`);
                 console.log(result);
@@ -427,10 +428,24 @@ class UserInfo {
                 //console.log(result);
                 if (result.code == 1) {
                     DoubleLog(`账号[${this.index}]  提交答案成功: ${result.msg}`);
+                    if (this.shebei_id !== undefined) {
+                        console.log('\n================== 开始提现 ==================\n');
+                        await wait(3)
+                        await this.tx_check();
+                    } else {
+                        console.log("未填写c-shebei-id,不执行提现");
+                    }
                 } else {
                     DoubleLog(`账号[${this.index}]  提交答案:失败 ❌ 了呢,原因未知！`);
                     console.log(result);
                     console.log(options.body.papers);
+                    if (this.shebei_id !== undefined) {
+                        console.log('\n================== 开始提现 ==================\n');
+                        await wait(3)
+                        await this.tx_check();
+                    } else {
+                        console.log("未填写c-shebei-id,不执行提现");
+                    }
                 }
             } else {
                 console.log("题库中没有这道题呢现在为你重新答题延迟15s");
