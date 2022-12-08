@@ -10,7 +10,7 @@
  * 
  * 多账号用 换行 或 @ 分割
  * 抓包 api.shiguangjia.cn/api中
- * headers 中 token 需要自动提现请填写 c-shebei-id 用&连接
+ * headers 中 token 需要自动提现请填写 c-shebei-id 用&连接 c-shebei-id为可选参数
  * ====================================
  *   
  */
