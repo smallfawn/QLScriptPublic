@@ -44,29 +44,23 @@ async function start() {
     //    async sub_papers(name) { // 提交答案
     console.log('\n更新：题库内没有就会重新获取题库,直到所有的题目都在题库内才会答题,建议一天跑12次,一小时一次');
     console.log('\n如果一直出现循环10次以上,那么您就手动做一下,可能答案真的不全,\n然后把答案和日志截图发我QQ860562056就行.主要是题目ID题目和答案这三个,在此感谢你');
-    console.log('\n如果一直出现循环10次以上,那么您就手动做一下,可能答案真的不全,\n然后把答案和日志截图发我QQ860562056就行.主要是题目ID题目和答案这三个,在此感谢你');
     console.log('\n请先完成进行中的拾光!！这个报错是因为你那边积攒的未完成的太多了!');
     console.log('\n达到完成次数上限!！ 这个报错是因为这条任务你已经上限了,可以多运行几次');
+
     console.log('\n================== 开始获取答题 ==================\n');
-    //console.log(this.shebei_id);
     taskall = [];
     for (let user of userList) {
         taskall.push(await user.task_accept('开始获取答题'));
         await wait(15); //延迟
     }
     await Promise.all(taskall);
-    if (this.shebei_id !== undefined) {
-        console.log('\n================== 开始提现 ==================\n');
-        taskall = [];
-        for (let user of userList) {
-            taskall.push(await user.tx_check());
-            await wait(15); //延迟
-        }
-        await Promise.all(taskall);
-    } else {
-        console.log("未填写c-shebei-id,不执行自动提现");
+    console.log('\n================== 开始提现 ==================\n');
+    taskall = [];
+    for (let user of userList) {
+        taskall.push(await user.tx_check());
+        await wait(15); //延迟
     }
-
+    await Promise.all(taskall);
 
 
 
