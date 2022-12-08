@@ -3,7 +3,7 @@
  * cron 10 10 * * *  sgj.js
  *
  * 22/12/7   每日答题1块钱低保
- * 22/12/8   请在执行前手动完成所有的剩余任务 一天运行5次
+ * 22/12/8   请在执行前手动完成所有的剩余任务 一天运行10次
  * ========= 青龙--配置文件 ===========
  * # 项目名称
  * export sgj_data='token'
@@ -42,14 +42,15 @@ async function start() {
     //    async get_recoord(name) { // 进入答题
     //    async get_qlist(name) { // 获取答题列表
     //    async sub_papers(name) { // 提交答案
-    console.log('\n答题错误就是题库不全 你们发现就手动答题,答案截图发我  \nhttps://api.shiguangjia.cn/api/task/get_qlist 这个数据包中的响应截图给我 qq860562056 感谢\n');
+    console.log('\n答题错误就是题库不全 你们发现就手动答题,答案截图发我');
+    console.log('\nhttps://api.shiguangjia.cn/api/task/get_qlist 这个数据包中的响应=>预览/raw截图给我 \n 我的qq860562056 感谢\n');
+    console.log('\n请先完成进行中的拾光!！这个报错是因为你那边积攒的未完成的太多了,手动答题且把截图发我谢谢\n');
+    console.log('\n达到完成次数上限!！ 这个报错是因为这条任务你已经上限了多运行几次\n');
     console.log('\n================== 开始获取答题 ==================\n');
     taskall = [];
     for (let user of userList) {
-        for (let i = 0; i < 2; i++) {
-            taskall.push(await user.task_accept('开始获取答题'));
-            await wait(15); //延迟
-        }
+        taskall.push(await user.task_accept('开始获取答题'));
+        await wait(15); //延迟
     }
     await Promise.all(taskall);
     console.log('\n================== 开始提现 ==================\n');
