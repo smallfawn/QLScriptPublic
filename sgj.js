@@ -81,7 +81,7 @@ class UserInfo {
         this.d = utils.local_day_two()
         this.random = utils.randomszxx(10)
         this.pushid = "push" + this.y + this.m.toString() + this.d + this.random
-        this.randomNum = utils.randomInt(0, 41)
+        this.randomNum = utils.randomInt(0, 47)
     }
 
     /** 
