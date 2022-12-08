@@ -6,11 +6,11 @@
  * 22/12/8   请在执行前手动完成所有的剩余任务 一天运行10次
  * ========= 青龙--配置文件 ===========
  * # 项目名称
- * export sgj_data='token'
+ * export sgj_data='token&c-shebei-id'
  * 
  * 多账号用 换行 或 @ 分割
  * 抓包 api.shiguangjia.cn/api中
- * headers 中 token 需要自动提现请填写 c-shebei-id 用&连接
+ * headers 中 token的值 和 c-shebei-id的值 用&连接
  * ====================================
  *   
  */
