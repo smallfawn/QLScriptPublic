@@ -42,8 +42,8 @@ async function start() {
     //    async get_recoord(name) { // 进入答题
     //    async get_qlist(name) { // 获取答题列表
     //    async sub_papers(name) { // 提交答案
-    console.log('\n更新：题库内没有就会重新获取题库,直到所有的题目都在题库内才会答题,建议一天跑12次,一小时一次');
-    console.log('\n如果一直出现循环10次以上,那么您就手动做一下,可能答案真的不全,\n把答案和日志截图发我QQ860562056就行.主要是题目ID题目和答案这三个,在此感谢你');
+    console.log('\n更新：题库内没有就会重新获取题库,直到所有的题目都在题库内才会答题,建议一天跑11次,一小时一次');
+    console.log('\n如果一直出现循环5次以上,那么您就手动做一下,可能答案真的不全,\n把答案和日志截图发我QQ860562056就行.主要是题目ID题目和答案这三个,在此感谢你');
     console.log('\n题目均为人工收集,如有正确答案请及时发送我正确答案和脚本运行日志');
     console.log('\n请先完成进行中的拾光!！这个报错是因为你那边积攒的未完成的太多了!');
     console.log('\n达到完成次数上限!！ 这个报错是因为这条任务你已经上限了,可以多运行几次');
@@ -186,7 +186,7 @@ class UserInfo {
             console.log(error);
         }
     }
-    async task_accept() { // 接受任务
+    async task_accept() { // 查看是否在已做完的列表中
         let r2list = await this.api()
         //console.log(r2list);
         let tidArr = r2list.tid
@@ -194,56 +194,128 @@ class UserInfo {
         //console.log("开始获取远程仓库任务" + r2);
         let rd = utils.randomInt(0, l)
         let ti = tidArr[rd]
+        let rArr = await this.s_task2()
+        await this.task_accept2(rArr, ti)
+    }
+    async task_accept2(rArr, ti) { // 接受任务
+        if (rArr.indexOf(ti) == -1) {
+            try {
+                let options = {
+                    method: 'POST',
+                    url: 'https://api.shiguangjia.cn/api/task/accept',
+                    headers: {
+                        'C-model': 'android',
+                        'C-type': 'app-miniapp',
+                        'C-version': '2.7.7',
+                        token: this.token,
+                        'user-agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36 uni-app Html5Plus/1.0 (Immersed/29.818182)',
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        Host: 'api.shiguangjia.cn',
+                        Connection: 'Keep-Alive',
+                        //Cookie: this.cookie,
+                        'content-type': 'application/json'
+                    },
+                    body: { rw_id: ti, pk: this.pushid },
+                    json: true
+                };
+                //console.log(options);
+                let result = await httpRequest(options, "接受任务");
+                //console.log(result);
+                if (result.code == 1 && result.msg == "接受拾光成功!") {
+                    DoubleLog(`账号[${this.index}]  接受答题任务成功: ${result.msg},${result.data.record_id}广告ID` + ti);
+                    await wait(3);
+                    let r4 = result.data.record_id
+                    await this.get_rw(ti, r4);
+                } else if (result.code == -1 && result.msg == "已经接受了此拾光!") { //理论上不存在这个了 因为加了判定了
+                    DoubleLog(`账号[${this.index}]  接受答题任务:失败 ❌ 了呢,原因${result.msg}！`);
+                    await wait(1)
+                    console.log("将为你重新获取广告");
+                    await this.task_accept()
+                } else if (result.code == -1 && result.msg == "达到完成次数上限!") { //理论上不存在这个了 因为加了判定了
+                    DoubleLog(`账号[${this.index}]  接受答题任务:失败 ❌ 了呢,原因${result.msg}！`);
+                    await wait(1)
+                    console.log("将为你重新获取广告");
+                    console.log(ti);
+                    await this.task_accept()
+                } else if (result.code == -1 && result.msg == "请先完成进行中的拾光!") {
+                    console.log(`账号[${this.index}]当前账号积攒的未完成的数量太多了,手动完成再来运行吧`);
+                } else {
+                    console.log(result);
+                }
 
+
+            } catch (error) {
+                console.log(error);
+            }
+        } else {
+            console.log(rArr, ti);
+            console.log("本次随机抽到的题,已经做过,现在重新获取");
+            await this.task_accept()
+        }
+
+    }
+    async my_task(n) { // 查询已经做过的
         try {
             let options = {
                 method: 'POST',
-                url: 'https://api.shiguangjia.cn/api/task/accept',
+                url: 'https://api.shiguangjia.cn/api/task/mytask',
                 headers: {
-                    'C-model': 'android',
-                    'C-type': 'app-miniapp',
-                    'C-version': '2.7.7',
-                    token: this.token,
-                    'user-agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36 uni-app Html5Plus/1.0 (Immersed/29.818182)',
-                    'Content-Type': 'application/json;charset=UTF-8',
                     Host: 'api.shiguangjia.cn',
-                    Connection: 'Keep-Alive',
-                    //Cookie: this.cookie,
-                    'content-type': 'application/json'
+                    'c-model': 'android',
+                    'c-type': 'app',
+                    //'c-shebei-id': this.shebei_id,
+                    'c-versioncode': '215',
+                    'c-app-channel': 'official',
+                    'c-shebei-info': '{"product":"platina","version_type":"user","display":"QKQ1.190910.002 test-keys","push_qx":"1","sdk_int":"29","manufacturer":"Xiaomi","hardward":"qcom","system":"Android 10","build_id":"QKQ1.190910.002","device_resolution":"1080x2154","bootloader":"unknown","fingerprint":"Xiaomi/platina/platina:10/QKQ1.190910.002/V12.0.1.0.QDTCNXM:user/release-keys","model":"MI 8 Lite","lang":"zh","device":"platina","brand":"Xiaomi","board":"sdm660"}',
+                    token: this.token,
+                    'c-version': '2.1.2',
+                    'content-type': 'application/x-www-form-urlencoded',
+                    //cookie: this.cookie,
+                    'user-agent': 'okhttp/4.7.2'
                 },
-                body: { rw_id: ti, pk: this.pushid },
-                json: true
+                form: { page: n, lx: '2' }  //2是已完成  1是未完成  3是过期  
             };
             //console.log(options);
-            let result = await httpRequest(options, "接受任务");
+            let result = await httpRequest(options, "查询已经做过的");
             //console.log(result);
-            if (result.code == 1 && result.msg == "接受拾光成功!") {
-                DoubleLog(`账号[${this.index}]  接受答题任务成功: ${result.msg},${result.data.record_id}广告ID` + ti);
-                await wait(3);
-                let r4 = result.data.record_id
-                await this.get_rw(ti, r4);
-            } else if (result.code == -1 && result.msg == "已经接受了此拾光!") {
-                DoubleLog(`账号[${this.index}]  接受答题任务:失败 ❌ 了呢,原因${result.msg}！`);
-                await wait(1)
-                console.log("将为你重新获取广告");
-                await this.task_accept()
-            } else if (result.code == -1 && result.msg == "达到完成次数上限!") {
-                DoubleLog(`账号[${this.index}]  接受答题任务:失败 ❌ 了呢,原因${result.msg}！`);
-                await wait(1)
-                console.log("将为你重新获取广告");
-                await this.task_accept()
-            } else if (result.code == -1 && result.msg == "请先完成进行中的拾光!") {
-                console.log(`账号[${this.index}]当前账号积攒的未完成的数量太多了,手动完成再来运行吧`);
+            if (result.code == 1) {
+                //console.log("当前已做过的广告数量" + result.count);
+                return result
             } else {
                 console.log(result);
             }
-
-
         } catch (error) {
             console.log(error);
         }
     }
+    async s_task2() { // 查询已经做过的
+        let rArr = []//已完成的数组
+        try {
+            let rlist1 = await this.my_task("1")
+            console.log("当前已做过的广告数量" + rlist1.count);
+            if (rlist1.count <= 20) {
+                for (let l = 0; l < rlist1.data.length; l++) {
+                    let id1 = rlist1.data[l].rw_id
+                    rArr.push(id1)
+                }
+            }
+            if (rlist1.count > 20) {
+                let num = Math.ceil(rlist1.count / 20)
+                for (let o = 2; o <= num; o++) {
+                    let rlist2 = await this.my_task(o.toString())
+                    for (let n = 0; n < rlist2.data.length; n++) {
+                        let id2 = rlist2.data[n].rw_id
+                        rArr.push(id2)
+                    }
 
+                }
+            }
+            console.log("已经做过的广告列表" + rArr);
+            return rArr
+        } catch (error) {
+            console.log(error);
+        }
+    }
     async get_rw(r2, r4) { // 进入答题任务
         try {
             let options = {
