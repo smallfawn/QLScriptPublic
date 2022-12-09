@@ -10,7 +10,7 @@
  * 
  * 多账号用 换行 或 @ 分割
  * 抓包 api.shiguangjia.cn/api中
- * headers 中 token 需要自动提现请填写 c-shebei-id 用&连接 c-shebei-id为可选参数
+ * headers 中 token 需要自动提现请填写 c-shebei-id 用&连接
  * ====================================
  *   
  */
@@ -43,7 +43,8 @@ async function start() {
     //    async get_qlist(name) { // 获取答题列表
     //    async sub_papers(name) { // 提交答案
     console.log('\n更新：题库内没有就会重新获取题库,直到所有的题目都在题库内才会答题,建议一天跑12次,一小时一次');
-    console.log('\n如果一直出现循环10次以上,那么您就手动做一下,可能答案真的不全,\n然后把答案和日志截图发我QQ860562056就行.主要是题目ID题目和答案这三个,在此感谢你');
+    console.log('\n如果一直出现循环10次以上,那么您就手动做一下,可能答案真的不全,\n把答案和日志截图发我QQ860562056就行.主要是题目ID题目和答案这三个,在此感谢你');
+    console.log('\n题目均为人工收集,如有正确答案请及时发送我正确答案和脚本运行日志');
     console.log('\n请先完成进行中的拾光!！这个报错是因为你那边积攒的未完成的太多了!');
     console.log('\n达到完成次数上限!！ 这个报错是因为这条任务你已经上限了,可以多运行几次');
 
@@ -81,7 +82,7 @@ class UserInfo {
         this.d = utils.local_day_two()
         this.random = utils.randomszxx(10)
         this.pushid = "push" + this.y + this.m.toString() + this.d + this.random
-        this.randomNum = utils.randomInt(0, 47)
+        //this.randomNum = utils.randomInt(0, 49)
     }
 
     /** 
@@ -188,8 +189,11 @@ class UserInfo {
     async task_accept() { // 接受任务
         let r2list = await this.api()
         //console.log(r2list);
-        let r2 = r2list.tid[this.randomNum]
-        console.log("开始获取远程仓库任务" + r2);
+        let tidArr = r2list.tid
+        let l = tidArr.length
+        //console.log("开始获取远程仓库任务" + r2);
+        let rd = utils.randomInt(0, l)
+        let ti = tidArr[rd]
 
         try {
             let options = {
@@ -207,30 +211,34 @@ class UserInfo {
                     //Cookie: this.cookie,
                     'content-type': 'application/json'
                 },
-                body: { rw_id: r2, pk: this.pushid },
+                body: { rw_id: ti, pk: this.pushid },
                 json: true
             };
             //console.log(options);
             let result = await httpRequest(options, "接受任务");
             //console.log(result);
-            if (result.code == 1) {
-                DoubleLog(`账号[${this.index}]  接受答题任务成功: ${result.msg},${result.data.record_id}`);
+            if (result.code == 1 && result.msg == "接受拾光成功!") {
+                DoubleLog(`账号[${this.index}]  接受答题任务成功: ${result.msg},${result.data.record_id}广告ID` + ti);
                 await wait(3);
                 let r4 = result.data.record_id
-                await this.get_rw(r2, r4);
-            } else if (result.code == -1) {
+                await this.get_rw(ti, r4);
+            } else if (result.code == -1 && result.msg == "已经接受了此拾光!") {
                 DoubleLog(`账号[${this.index}]  接受答题任务:失败 ❌ 了呢,原因${result.msg}！`);
-                if (this.shebei_id !== undefined) {
-                    console.log('\n================== 开始提现 ==================\n');
-                    await wait(3)
-                    await this.tx_check();
-                } else {
-                    console.log("未填写c-shebei-id,不执行提现");
-                }
+                await wait(1)
+                console.log("将为你重新获取广告");
+                await this.task_accept()
+            } else if (result.code == -1 && result.msg == "达到完成次数上限!") {
+                DoubleLog(`账号[${this.index}]  接受答题任务:失败 ❌ 了呢,原因${result.msg}！`);
+                await wait(1)
+                console.log("将为你重新获取广告");
+                await this.task_accept()
+            } else if (result.code == -1 && result.msg == "请先完成进行中的拾光!") {
+                console.log(`账号[${this.index}]当前账号积攒的未完成的数量太多了,手动完成再来运行吧`);
             } else {
-                DoubleLog(`账号[${this.index}]  接受答题任务:失败 ❌ 了呢,原因未知！`);
                 console.log(result);
             }
+
+
         } catch (error) {
             console.log(error);
         }
@@ -260,7 +268,7 @@ class UserInfo {
             let result = await httpRequest(options, "进入答题任务");
             //console.log(result);
             if (result.code == 1) {
-                DoubleLog(`账号[${this.index}]  进入答题任务成功: ${result.msg}`);
+                //DoubleLog(`账号[${this.index}]  进入答题任务成功: ${result.msg}`);
                 //console.log(`本次答题id为[${result.data.rw.id}&${result.data.rw.rw_id}]`)
                 //console.log(`广告标题为${result.data.rw.name},任务标题为${result.data.rw.short_name}`)
                 //console.log(`任务类型为${result.data.rw.tags_text}&${result.data.rw.type_text},任务状况为${result.data.rw.status_text}`);
@@ -301,7 +309,7 @@ class UserInfo {
             //console.log(result);
             if (result.code == 1) {
                 DoubleLog(`账号[${this.index}]  进入答题成功: ${result.msg}`);
-                console.log(`本次答题id为[${result.data.rw.id}&${result.data.rw.rw_id}]`)
+                console.log(`本次答题id为[${result.data.rw.rw_id}]`)
                 console.log(`广告标题[${result.data.rw.name}]`)
                 //console.log(`任务类型[${result.data.rw.tags_text}]&[${result.data.rw.type_text}],任务状况[${result.data.rw.status_text}]`);
                 await wait(3)
