@@ -4,6 +4,7 @@
  *
  * 22/12/7   每日答题1块钱低保
  * 22/12/8   请在执行前手动完成所有的剩余任务 一天运行10次
+ * 22/12/9   判断每日完成数量超过10次不再执行,判断每日未完成5个不再执行,判断已做过的和随机获取的一样,不再执行
  * ========= 青龙--配置文件 ===========
  * # 项目名称
  * export sgj_data='token'
@@ -82,6 +83,7 @@ class UserInfo {
         this.d = utils.local_day_two()
         this.random = utils.randomszxx(10)
         this.pushid = "push" + this.y + this.m.toString() + this.d + this.random
+        this.date = utils.tmtoDate().slice(0, 10)
         //this.randomNum = utils.randomInt(0, 49)
     }
 
@@ -194,67 +196,76 @@ class UserInfo {
         //console.log("开始获取远程仓库任务" + r2);
         let rd = utils.randomInt(0, l)
         let ti = tidArr[rd]
-        let rArr = await this.s_task2()
-        await this.task_accept2(rArr, ti)
-    }
-    async task_accept2(rArr, ti) { // 接受任务
-        if (rArr.indexOf(ti) == -1) {
-            try {
-                let options = {
-                    method: 'POST',
-                    url: 'https://api.shiguangjia.cn/api/task/accept',
-                    headers: {
-                        'C-model': 'android',
-                        'C-type': 'app-miniapp',
-                        'C-version': '2.7.7',
-                        token: this.token,
-                        'user-agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36 uni-app Html5Plus/1.0 (Immersed/29.818182)',
-                        'Content-Type': 'application/json;charset=UTF-8',
-                        Host: 'api.shiguangjia.cn',
-                        Connection: 'Keep-Alive',
-                        //Cookie: this.cookie,
-                        'content-type': 'application/json'
-                    },
-                    body: { rw_id: ti, pk: this.pushid },
-                    json: true
-                };
-                //console.log(options);
-                let result = await httpRequest(options, "接受任务");
-                //console.log(result);
-                if (result.code == 1 && result.msg == "接受拾光成功!") {
-                    DoubleLog(`账号[${this.index}]  接受答题任务成功: ${result.msg},${result.data.record_id}广告ID` + ti);
-                    await wait(3);
-                    let r4 = result.data.record_id
-                    await this.get_rw(ti, r4);
-                } else if (result.code == -1 && result.msg == "已经接受了此拾光!") { //理论上不存在这个了 因为加了判定了
-                    DoubleLog(`账号[${this.index}]  接受答题任务:失败 ❌ 了呢,原因${result.msg}！`);
-                    await wait(1)
-                    console.log("将为你重新获取广告");
-                    await this.task_accept()
-                } else if (result.code == -1 && result.msg == "达到完成次数上限!") { //理论上不存在这个了 因为加了判定了
-                    DoubleLog(`账号[${this.index}]  接受答题任务:失败 ❌ 了呢,原因${result.msg}！`);
-                    await wait(1)
-                    console.log("将为你重新获取广告");
-                    console.log(ti);
-                    await this.task_accept()
-                } else if (result.code == -1 && result.msg == "请先完成进行中的拾光!") {
-                    console.log(`账号[${this.index}]当前账号积攒的未完成的数量太多了,手动完成再来运行吧`);
+        let rArr = await this.s_task2() //已经做过的
+        let rArr3 = await this.s_task3() // 正在进行的
+        let rArr4 = await this.s_task4() // 今日完成的  
+        await this.task_accept2(rArr, ti, rArr3, rArr4)
+    } //rArr3.length < 5 //rArr.indexOf(ti) == -1 //rArr4.length < 10
+    async task_accept2(rArr, ti, rArr3, rArr4) { // 接受任务
+        if (rArr3.length < 5) {
+            if (rArr4.length < 10) {
+                if (rArr.indexOf(ti) == -1) {
+                    try {
+                        let options = {
+                            method: 'POST',
+                            url: 'https://api.shiguangjia.cn/api/task/accept',
+                            headers: {
+                                'C-model': 'android',
+                                'C-type': 'app-miniapp',
+                                'C-version': '2.7.7',
+                                token: this.token,
+                                'user-agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36 uni-app Html5Plus/1.0 (Immersed/29.818182)',
+                                'Content-Type': 'application/json;charset=UTF-8',
+                                Host: 'api.shiguangjia.cn',
+                                Connection: 'Keep-Alive',
+                                //Cookie: this.cookie,
+                                'content-type': 'application/json'
+                            },
+                            body: { rw_id: ti, pk: this.pushid },
+                            json: true
+                        };
+                        //console.log(options);
+                        let result = await httpRequest(options, "接受任务");
+                        //console.log(result);
+                        if (result.code == 1 && result.msg == "接受拾光成功!") {
+                            DoubleLog(`账号[${this.index}]  接受答题任务成功: ${result.msg},${result.data.record_id}广告ID` + ti);
+                            await wait(3);
+                            let r4 = result.data.record_id
+                            await this.get_rw(ti, r4);
+                        } else if (result.code == -1 && result.msg == "已经接受了此拾光!") { //理论上不存在这个了 因为加了判定了
+                            DoubleLog(`账号[${this.index}]  接受答题任务:失败 ❌ 了呢,原因${result.msg}！`);
+                            await wait(1)
+                            console.log("将为你重新获取广告");
+                            await this.task_accept()
+                        } else if (result.code == -1 && result.msg == "达到完成次数上限!") { //理论上不存在这个了 因为加了判定了
+                            DoubleLog(`账号[${this.index}]  接受答题任务:失败 ❌ 了呢,原因${result.msg}！`);
+                            await wait(1)
+                            console.log("将为你重新获取广告");
+                            console.log(ti);
+                            await this.task_accept()
+                        } else if (result.code == -1 && result.msg == "请先完成进行中的拾光!") {//理论上不存在这个了 因为加了判定了
+                            console.log(`账号[${this.index}]当前账号积攒的未完成的数量太多了,手动完成再来运行吧`);
+                        } else {
+                            console.log(result);
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
                 } else {
-                    console.log(result);
+                    console.log(rArr, ti);
+                    console.log("本次随机抽到的题,已经做过,现在重新获取");
+                    await this.task_accept()
                 }
-
-
-            } catch (error) {
-                console.log(error);
+            } else {
+                console.log(`账号[${this.index}]当前账号今日任务已完成`);
             }
+
         } else {
-            console.log(rArr, ti);
-            console.log("本次随机抽到的题,已经做过,现在重新获取");
-            await this.task_accept()
+            console.log(`账号[${this.index}]当前账号积攒的未完成的数量太多了,手动完成再来运行吧`);
         }
 
     }
-    async my_task(n) { // 查询已经做过的
+    async my_task(n, m) { // 查询已经做过的
         try {
             let options = {
                 method: 'POST',
@@ -273,7 +284,7 @@ class UserInfo {
                     //cookie: this.cookie,
                     'user-agent': 'okhttp/4.7.2'
                 },
-                form: { page: n, lx: '2' }  //2是已完成  1是未完成  3是过期  
+                form: { page: n, lx: m }  //2是已完成  1是未完成  3是过期  
             };
             //console.log(options);
             let result = await httpRequest(options, "查询已经做过的");
@@ -291,7 +302,7 @@ class UserInfo {
     async s_task2() { // 查询已经做过的
         let rArr = []//已完成的数组
         try {
-            let rlist1 = await this.my_task("1")
+            let rlist1 = await this.my_task("1", "2")
             console.log("当前已做过的广告数量" + rlist1.count);
             if (rlist1.count <= 20) {
                 for (let l = 0; l < rlist1.data.length; l++) {
@@ -302,7 +313,7 @@ class UserInfo {
             if (rlist1.count > 20) {
                 let num = Math.ceil(rlist1.count / 20)
                 for (let o = 2; o <= num; o++) {
-                    let rlist2 = await this.my_task(o.toString())
+                    let rlist2 = await this.my_task(o.toString(), "2")
                     for (let n = 0; n < rlist2.data.length; n++) {
                         let id2 = rlist2.data[n].rw_id
                         rArr.push(id2)
@@ -312,6 +323,54 @@ class UserInfo {
             }
             console.log("已经做过的广告列表" + rArr);
             return rArr
+        } catch (error) {
+            console.log(error);
+        }
+    }
+    async s_task3() { // 查询正在进行的
+        let rArr3 = []//正在进行的数组
+        try {
+            let rlist1 = await this.my_task("1", "1")
+            console.log("当前正在进行广告数量" + rlist1.count);
+            if (rlist1.count <= 20) {
+                for (let l = 0; l < rlist1.data.length; l++) {
+                    let id1 = rlist1.data[l].rw_id
+                    rArr3.push(id1)
+                }
+            }
+            if (rlist1.count > 20) {
+                let num = Math.ceil(rlist1.count / 20)
+                for (let o = 2; o <= num; o++) {
+                    let rlist2 = await this.my_task(o.toString(), "1")
+                    for (let n = 0; n < rlist2.data.length; n++) {
+                        let id2 = rlist2.data[n].rw_id
+                        rArr3.push(id2)
+                    }
+
+                }
+            }
+            console.log("当前正在进行广告列表" + rArr3);
+            return rArr3
+        } catch (error) {
+            console.log(error);
+        }
+    }
+    async s_task4() { // 今日完成了的任务
+        let rArr4 = []//今日完成了的任务
+        try {
+            let rlist1 = await this.my_task("1", "2")
+            if (rlist1.count <= 20) {
+                for (let l = 0; l < rlist1.data.length; l++) {
+                    if (rlist1.data[l].done_time.slice(0, 10) == this.date) {
+                        let id1 = rlist1.data[l].rw_id
+                        rArr4.push(id1)
+                    }
+
+                }
+            }
+            console.log("今日完成了的任务数量" + rArr4.length);
+            console.log("今日完成了的任务" + rArr4);
+            return rArr4
         } catch (error) {
             console.log(error);
         }
