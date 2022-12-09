@@ -258,10 +258,24 @@ class UserInfo {
                 }
             } else {
                 console.log(`账号[${this.index}]当前账号今日任务已完成`);
+                if (this.shebei_id !== undefined) {
+                    console.log('\n================== 开始提现 ==================\n');
+                    await wait(3)
+                    await this.tx_check();
+                } else {
+                    console.log("未填写c-shebei-id,不执行提现");
+                }
             }
 
         } else {
             console.log(`账号[${this.index}]当前账号积攒的未完成的数量太多了,手动完成再来运行吧`);
+            if (this.shebei_id !== undefined) {
+                console.log('\n================== 开始提现 ==================\n');
+                await wait(3)
+                await this.tx_check();
+            } else {
+                console.log("未填写c-shebei-id,不执行提现");
+            }
         }
 
     }
