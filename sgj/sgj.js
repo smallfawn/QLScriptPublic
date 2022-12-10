@@ -782,7 +782,8 @@ class UserInfo {
                         console.log("未填写c-shebei-id,不执行提现");
                     }
                 }
-            } else {
+            } else { 
+                console.log('题库中没有您的这条题目,请手动答题后将答案发送给QQ860562056');
             }
         } catch (error) {
             console.log(error);
