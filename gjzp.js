@@ -105,9 +105,9 @@ class UserInfo {
             let result = await httpRequest(options, name);
             //console.log(result);
             if (result.code == 20000) {
-                DoubleLog(`账号[${this.index}]  签到成功获得: ${result.msg}`);
+                DoubleLog(`账号[${this.index}]  签到成功获得: ${result.message}`);
             } else if (result.code == 40005) {
-                DoubleLog(`账号[${this.index}]  签到:失败 ❌ 了呢,原因${result.msg}！`);
+                DoubleLog(`账号[${this.index}]  签到:失败 ❌ 了呢,原因${result.message}！`);
             } else {
                 console.log(result)
             }
