@@ -45,16 +45,23 @@ async function start() {
     //    async get_qlist(name) { // 获取答题列表
     //    async sub_papers(name) { // 提交答案
     console.log('\n更新：题库内没有就会重新获取题库,直到所有的题目都在题库内才会答题,建议一天跑11次,一小时一次');
-    console.log('\n如果一直出现循环5次以上,那么您就手动做一下,可能答案真的不全,\n把答案和日志截图发我QQ860562056就行.主要是题目ID题目和答案这三个,在此感谢你');
+    console.log('\n如果一直出现循环5次以上,那么您就手动做一下,可能答案真的不全\n把答案和日志截图发我QQ860562056就行.主要是题目ID题目和答案这三个,在此感谢你');
     console.log('\n题目均为人工收集,如有正确答案请及时发送我正确答案和脚本运行日志');
-    console.log('\n请先完成进行中的拾光!！这个报错是因为你那边积攒的未完成的太多了!');
-    console.log('\n达到完成次数上限!！ 这个报错是因为这条任务你已经上限了,可以多运行几次');
+    //console.log('\n请先完成进行中的拾光!！这个报错是因为你那边积攒的未完成的太多了!');
+    //console.log('\n达到完成次数上限!！ 这个报错是因为这条任务你已经上限了,可以多运行几次');
 
+    console.log('\n================== 用户信息 ==================\n');
+    taskall = [];
+    for (let user of userList) {
+        taskall.push(await user.user_info());
+        await wait(3); //延迟
+    }
+    await Promise.all(taskall);
     console.log('\n================== 开始获取答题 ==================\n');
     taskall = [];
     for (let user of userList) {
         taskall.push(await user.task_accept('开始获取答题'));
-        await wait(15); //延迟
+        await wait(10); //延迟
     }
     await Promise.all(taskall);
 
@@ -259,30 +266,15 @@ class UserInfo {
                 }
             } else {
                 console.log(`账号[${this.index}]当前账号今日任务已完成`);
-                if (this.shebei_id !== undefined) {
-                    console.log('\n================== 开始提现 ==================\n');
-                    await wait(3)
-                    await this.tx_check();
-                } else {
-                    console.log("未填写c-shebei-id,不执行提现");
-                }
             }
 
         } else {
-            console.log(`账号[${this.index}]当前账号积攒的未完成的数量太多了,手动完成再来运行吧`);
+            console.log(`账号[${this.index}]当前账号积攒的未完成的数量太多了`);
             console.log(`尝试做正在进行的任务`);
             let recordArr = await this.s_task33()
             for (let i in recordArr) {
                 await this.get_qlist2(recordArr[i])
                 await wait(2)
-            }
-
-            if (this.shebei_id !== undefined) {
-                console.log('\n================== 开始提现 ==================\n');
-                await wait(3)
-                await this.tx_check();
-            } else {
-                console.log("未填写c-shebei-id,不执行提现");
             }
         }
 
@@ -325,7 +317,6 @@ class UserInfo {
         let rArr = []//已完成的数组
         try {
             let rlist1 = await this.my_task("1", "2")
-            console.log("当前已做过的广告数量" + rlist1.count);
             if (rlist1.count <= 20) {
                 for (let l = 0; l < rlist1.data.length; l++) {
                     let id1 = rlist1.data[l].rw_id
@@ -343,7 +334,8 @@ class UserInfo {
 
                 }
             }
-            console.log("已经做过的广告列表" + rArr);
+            console.log("当前已做过的广告数量" + rlist1.count + "列表[" + rArr + "]");
+            //console.log("已经做过的广告列表" + rArr);
             return rArr
         } catch (error) {
             console.log(error);
@@ -371,7 +363,7 @@ class UserInfo {
 
                 }
             }
-            console.log("当前正在进行广告列表" + rArr3);
+            console.log("当前正在进行的广告数量" + rlist1.count + "列表[" + rArr3 + "]");
             return rArr3
         } catch (error) {
             console.log(error);
@@ -399,7 +391,7 @@ class UserInfo {
 
                 }
             }
-            console.log("当前正在进行广告列表" + rArr33);
+            console.log("当前正在进行的广告数量临时代码数量" + rlist1.count + "列表[" + rArr33 + "]");
             return rArr33
         } catch (error) {
             console.log(error);
@@ -418,8 +410,9 @@ class UserInfo {
 
                 }
             }
-            console.log("今日完成了的任务数量" + rArr4.length);
-            console.log("今日完成了的任务" + rArr4);
+            //console.log("今日完成了的任务数量" + rArr4.length);
+            //console.log("今日完成了的任务" + rArr4);
+            console.log("今日完成数量" + rArr4.length + "列表[" + rArr4 + "]");
             return rArr4
         } catch (error) {
             console.log(error);
@@ -618,24 +611,12 @@ class UserInfo {
                 if (result.code == 1) {
                     DoubleLog(`账号[${this.index}]  提交答案成功: ${result.msg}`);
                     console.log(options.body.papers);
-                    if (this.shebei_id !== undefined) {
-                        console.log('\n================== 开始提现 ==================\n');
-                        await wait(3)
-                        await this.tx_check();
-                    } else {
-                        console.log("未填写c-shebei-id,不执行提现");
-                    }
+
                 } else {
                     DoubleLog(`账号[${this.index}]  提交答案:失败 ❌ 了呢,原因未知！`);
                     console.log(result);
                     console.log(options.body.papers);
-                    if (this.shebei_id !== undefined) {
-                        console.log('\n================== 开始提现 ==================\n');
-                        await wait(3)
-                        await this.tx_check();
-                    } else {
-                        console.log("未填写c-shebei-id,不执行提现");
-                    }
+
                 }
             } else {
                 console.log("题库中没有这道题呢现在为你重新答题延迟15s");
@@ -763,17 +744,47 @@ class UserInfo {
                 if (result.code == 1) {
                     DoubleLog(`账号[${this.index}]  提交答案成功: ${result.msg}`);
                     console.log(options.body.papers);
-                    if (this.shebei_id !== undefined) {
-                        console.log('\n================== 开始提现 ==================\n');
-                        await wait(3)
-                        await this.tx_check();
-                    } else {
-                        console.log("未填写c-shebei-id,不执行提现");
-                    }
+
                 } else {
                     DoubleLog(`账号[${this.index}]  提交答案:失败 ❌ 了呢,原因未知！`);
                     console.log(result);
                     console.log(options.body.papers);
+
+                }
+            } else {
+                console.log('题库中没有您的这条题目,请手动答题后将答案发送给QQ860562056');
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async user_info() { // 个人信息
+        try {
+            let options = {
+                method: 'POST',
+                url: 'https://api.shiguangjia.cn/api/user/get_userinfo',
+                headers: {
+                    Host: 'api.shiguangjia.cn',
+                    'c-model': 'android',
+                    'c-type': 'app',
+                    'c-shebei-id': this.shebei_id,
+                    'c-versioncode': '215',
+                    'c-app-channel': 'official',
+                    'c-shebei-info': '{"product":"platina","version_type":"user","display":"QKQ1.190910.002 test-keys","push_qx":"1","sdk_int":"29","manufacturer":"Xiaomi","hardward":"qcom","system":"Android 10","build_id":"QKQ1.190910.002","device_resolution":"1080x2154","bootloader":"unknown","fingerprint":"Xiaomi/platina/platina:10/QKQ1.190910.002/V12.0.1.0.QDTCNXM:user/release-keys","model":"MI 8 Lite","lang":"zh","device":"platina","brand":"Xiaomi","board":"sdm660"}',
+                    token: this.token,
+                    'c-version': '2.1.2',
+                    //cookie: 'PHPSESSID=7c7tk2fplm01u3nv5oail8aj8v',
+                    'user-agent': 'okhttp/4.7.2'
+                }
+            };
+            //console.log(options);
+            let result = await httpRequest(options, "个人信息");
+            //console.log(result);
+            if (result.code == 1) {
+                DoubleLog(`账号[${this.index}]  UID: ${result.data.user.uid},名字[${result.data.user.mc}]当前光子[${result.data.user.zqian}]`);
+                if (result.data.user.zqian >= 1000) {
+                    console.log('该账号当前可以提现')
                     if (this.shebei_id !== undefined) {
                         console.log('\n================== 开始提现 ==================\n');
                         await wait(3)
@@ -782,8 +793,10 @@ class UserInfo {
                         console.log("未填写c-shebei-id,不执行提现");
                     }
                 }
-            } else { 
-                console.log('题库中没有您的这条题目,请手动答题后将答案发送给QQ860562056');
+            } else if (result.code == -1) {
+                DoubleLog(`账号[${this.index}]  查询失败,原因${result.msg}！`);
+            } else {
+                console.log(result);
             }
         } catch (error) {
             console.log(error);
