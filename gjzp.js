@@ -40,29 +40,34 @@ async function start() {
     console.log('\n================== 用户查询 ==================\n');
     taskall = [];
     for (let user of userList) {
-        taskall.push(await user.user_info('信息'));
+        taskall.push(await user.user_info('信息', 1));
         await wait(3); //延迟
     }
     await Promise.all(taskall);
     console.log('\n================== 红包签到 ==================\n');
+    taskall = [];
     for (let user of userList) {
         await user.task_sign('红包签到')
         await wait(3); //延迟
     }
-
+    await Promise.all(taskall);
     console.log('\n================== 日常任务 ==================\n');
+    taskall = [];
     for (let user of userList) {
         await user.task_see();
         await wait(3); //延迟
     }
-
+    await Promise.all(taskall);
     console.log('\n================== 抽奖 ==================\n');
+    taskall = [];
     for (let user of userList) {
         for (let i = 0; i < 2; i++) {
             await user.task_lottery('抽奖')
             await wait(3); //延迟
         }
     }
+    await Promise.all(taskall);
+
 
 }
 
@@ -81,7 +86,7 @@ class UserInfo {
 
     }
 
-    async user_info(name) { // userinfo
+    async user_info(name, type) { // userinfo
         try {
             let options = {
                 method: 'POST',
@@ -108,16 +113,34 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options, name);
             //console.log(result);
-            if (result.code == 20000) {
-                DoubleLog(`账号[${this.index}]  账号: [${result.data.userId}] 昵称[${result.data.name}] 工分余额[${result.data.totalScore}]`);
-            } else if (result.code == 40005) {
-                DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因${result.message}`);//没次数
-                console.log(result);
-            } else {
-                DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因未知`);
-                console.log(result);
+            if (type == 1) {
+
+                if (result.code == 20000) {
+                    DoubleLog(`账号[${this.index}]  账号: [${result.data.userId}] 昵称[${result.data.name}] 工分余额[${result.data.totalScore}]`);
+                    //let userId = result.data.userId
+                    //return userId
+                } else if (result.code == 40005) {
+                    DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因${result.message}`);//没次数
+                    console.log(result);
+                } else {
+                    DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因未知`);
+                    console.log(result);
+                }
+            } else if (type == 0) {
+
+                if (result.code == 20000) {
+                    //DoubleLog(`账号[${this.index}]  账号: [${result.data.userId}] 昵称[${result.data.name}] 工分余额[${result.data.totalScore}]`);
+                    let userId = result.data.userId
+                    return userId
+                } else if (result.code == 40005) {
+                    //DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因${result.message}`);//没次数
+                    console.log(result);
+                } else {
+                    //DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因未知`);
+                    //console.log(result);
+                }
             }
-            return result
+
         } catch (error) {
             console.log(error);
         }
@@ -321,19 +344,19 @@ class UserInfo {
             for (let o in t1.data.dailyTasks) {
                 if (t1.data.dailyTasks[o].code == "SCORE_VIEW_INDEX" && t1.data.dailyTasks[o].status == 0) {
                     for (let i = 0; i < 2; i++) {
-                        this.task_see1("浏览首页")
+                        await this.task_see1("浏览首页")
                         await wait(10)
                     }
                 } else if (t1.data.dailyTasks[o].code == "SCORE_VIEW_INDEX" && t1.data.dailyTasks[o].status == 1) {
-                    console.log('浏览首页任务已完成');
+                    console.log(`账号[${this.index}]浏览首页任务已完成`);
                 }
                 if (t1.data.dailyTasks[o].code == "SCORE_VIEW_POSITION" && t1.data.dailyTasks[o].status == 0) {
                     for (let i = 0; i < 5; i++) {
-                        this.task_see2("浏览详情页")
+                        await this.task_see2("浏览详情页")
                         await wait(10)
                     }
                 } else if (t1.data.dailyTasks[o].code == "SCORE_VIEW_POSITION" && t1.data.dailyTasks[o].status == 1) {
-                    console.log('浏览详情页任务已完成');
+                    console.log(`账号[${this.index}] 浏览详情页任务已完成`);
                 }
                 //共获得12分
             }
@@ -341,19 +364,22 @@ class UserInfo {
         let t2 = await this.task2('红包任务列表')
         if (t2.code == 20000) {
             for (let o in t2.data) {
+                let id =await this.user_info('信息',0)
                 if (t2.data[o].id == "13" && t2.data[o].status == 0) {
-                    this.task_see3("红包浏览首页")
+                    await this.task_see3("红包浏览首页")
                     await wait(10)
                 } else if (t2.data[o].id == "13" && t2.data[o].status == 1) {
-                    console.log('任务红包浏览首页完成');
+                    console.log(`账号[${this.index}]任务红包浏览首页完成`);
                 }
                 if (t2.data[o].id == "18" && t2.data[o].status == 0) {
+                    //console.log(t2.data[o]);
                     for (let i = 0; i < 2; i++) {
-                        this.task_see4("红包分享职位")
+                        await this.task_see4("红包分享职位",id)
                         await wait(10)
                     }
                 } else if (t2.data[o].id == "18" && t2.data[o].status == 1) {
-                    console.log('任务红包分享职位完成');
+                    //await this.task_see4("红包分享职位",id)
+                    console.log(`账号[${this.index}]任务红包分享职位完成`);
                 }
 
             }
@@ -484,7 +510,7 @@ class UserInfo {
         }
     }
 
-    async task_see4(name) { // 红包任务 分享职业卡片
+    async task_see4(name, userId) { // 红包任务 分享职业卡片
         try {
             let options = {
                 method: 'POST',
@@ -497,7 +523,7 @@ class UserInfo {
                     appsourcetype: '1',
                     'content-type': 'application/json'
                 },
-                body: { shareTarget: 0, userId: 1008217, shareType: 1, shareOtherId: 44207 },
+                body: { shareTarget: 0, userId: userId, shareType: 1, shareOtherId: 44207 },
                 json: true
             };
 
