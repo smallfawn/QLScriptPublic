@@ -3,7 +3,7 @@
  * cron 52 8 * * *  gjzp.js
  *
  * 22/12/10 每日签到 赚工分 抽奖
- * 22/12/11 每日红包奖励 判定CK是否有效 每日两次抽奖 
+ * 22/12/11 每日红包奖励 判定CK是否有效 每日两次抽奖
  * ========= 青龙--配置文件 ===========
  * # 项目名称
  * export gjzp_data='authorization&android'
@@ -343,7 +343,7 @@ class UserInfo {
                         this.task_see1("浏览首页")
                         await wait(10)
                     }
-                } else if ((t1.data.dailyTasks[o].code == "SCORE_VIEW_INDEX" && t1.data.dailyTasks[o].status == 1)) {
+                } else if (t1.data.dailyTasks[o].code == "SCORE_VIEW_INDEX" && t1.data.dailyTasks[o].status == 1) {
                     console.log('浏览首页任务已完成');
                 }
                 if (t1.data.dailyTasks[o].code == "SCORE_VIEW_POSITION" && t1.data.dailyTasks[o].status == 0) {
@@ -351,7 +351,7 @@ class UserInfo {
                         this.task_see2("浏览详情页")
                         await wait(10)
                     }
-                } else if ((t1.data.dailyTasks[o].code == "CORE_VIEW_POSITION" && t1.data.dailyTasks[o].status == 1)) {
+                } else if (t1.data.dailyTasks[o].code == "SCORE_VIEW_POSITION" && t1.data.dailyTasks[o].status == 1) {
                     console.log('浏览详情页任务已完成');
                 }
                 //共获得12分
