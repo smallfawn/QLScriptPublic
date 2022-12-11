@@ -3,6 +3,7 @@
  * cron 52 8 * * *  gjzp.js
  *
  * 22/12/10 每日签到 赚工分 抽奖
+ * 22/12/11 每日红包奖励 判定CK是否有效 每日两次抽奖
  * ========= 青龙--配置文件 ===========
  * # 项目名称
  * export gjzp_data='authorization&android'
@@ -36,28 +37,10 @@ let userCount = 0;
 //---------------------------------------------------------
 
 async function start() {
-
-
-    console.log('\n================== 红包签到 ==================\n');
+    //console.log('\n================== 用户查询 ==================\n');
     taskall = [];
     for (let user of userList) {
-        taskall.push(await user.task_sign('红包签到'));
-        await wait(3); //延迟
-    }
-    await Promise.all(taskall);
-
-    console.log('\n================== 日常任务 ==================\n');
-    taskall = [];
-    for (let user of userList) {
-        taskall.push(await user.task_see());
-        await wait(3); //延迟
-    }
-    await Promise.all(taskall);
-
-    console.log('\n================== 抽奖 ==================\n');
-    taskall = [];
-    for (let user of userList) {
-        taskall.push(await user.task_lottery('抽奖'));
+        taskall.push(await user.user_info2());
         await wait(3); //延迟
     }
     await Promise.all(taskall);
@@ -80,6 +63,160 @@ class UserInfo {
 
     }
 
+
+    async user_info(name) { // userinfo
+        try {
+            let options = {
+                method: 'POST',
+                url: 'https://api-recruitment.yzw.cn/v2/labor/app/user/getUserBaseInfo',
+                headers: {
+                    Host: 'api-recruitment.yzw.cn',
+                    accept: 'application/json, text/plain, */*',
+                    version: '2.14.0',
+                    authorization: this.ck,
+                    appsourcetype: '1',
+                    //'x-device-id': this.deviceid,
+                    //'x-flow-num': 'f4a3d43f-50c8-4d50-9287-834894e86339',
+                    //'x-device': 'zhipin/android/29/2.14.0/392.72727272727275/829.0909090909091/2.75',
+                    'content-type': 'application/json',
+                    //'content-length': '11',
+                    //'accept-encoding': 'gzip',
+                    //cookie: 'acw_tc=2f624a4016706498913978918e4b42d68638eccb6145bcc0a89b50a20dab88',
+                    //'user-agent': 'okhttp/4.9.2'
+                },
+                body: {},
+                json: true
+            };
+
+            //console.log(options);
+            let result = await httpRequest(options, name);
+            //console.log(result);
+            if (result.code == 20000) {
+                //DoubleLog(`账号[${this.index}]  账号: [${result.data.userId}] 昵称[${result.data.name}] 工分余额[${result.data.totalScore}]`);
+            } else if (result.code == 40005) {
+                //DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因${result.message}`);//没次数
+                //console.log(result);
+            } else {
+                //DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因未知`);
+                //console.log(result);
+            }
+            return result
+        } catch (error) {
+            console.log(error);
+        }
+    }
+    async task1(name) { // task1 工分任务列表
+        try {
+            let options = {
+                method: 'GET',
+                url: 'https://api-recruitment.yzw.cn/v2/labor/app/common/tasks',
+                headers: {
+                    Host: 'api-recruitment.yzw.cn',
+                    accept: 'application/json, text/plain, */*',
+                    version: '2.14.0',
+                    authorization: this.ck,
+                    appsourcetype: '1',
+                    //'x-device-id': this.deviceid,
+                    //'x-flow-num': 'f4a3d43f-50c8-4d50-9287-834894e86339',
+                    //'x-device': 'zhipin/android/29/2.14.0/392.72727272727275/829.0909090909091/2.75',
+                    //'accept-encoding': 'gzip',
+                    //cookie: 'acw_tc=2f624a4016706498913978918e4b42d68638eccb6145bcc0a89b50a20dab88',
+                    //'user-agent': 'okhttp/4.9.2'
+                }
+            };
+
+            //console.log(options);
+            let result = await httpRequest(options, name);
+            //console.log(result);
+            if (result.code == 20000) {
+                //DoubleLog(`账号[${this.index}]  账号: [${result.data.userId}] 昵称[${result.data.name}] 工分余额[${result.data.totalScore}]`);
+            } else if (result.code == 40005) {
+                //DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因${result.message}`);//没次数
+                //console.log(result);
+            } else {
+                //DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因未知`);
+                //console.log(result);
+            }
+            return result
+        } catch (error) {
+            console.log(error);
+        }
+    }
+    async task2(name) { // task2 红包任务列表
+        try {
+            let options = {
+                method: 'GET',
+                url: 'https://api-recruitment.yzw.cn/v2/labor/app/sign/tasks',
+                headers: {
+                    Host: 'api-recruitment.yzw.cn',
+                    accept: 'application/json, text/plain, */*',
+                    version: '2.14.0',
+                    authorization: this.ck,
+                    appsourcetype: '1',
+                    //'x-device-id': this.deviceid,
+                    //'x-flow-num': 'f4a3d43f-50c8-4d50-9287-834894e86339',
+                    //'x-device': 'zhipin/android/29/2.14.0/392.72727272727275/829.0909090909091/2.75',
+                    //'accept-encoding': 'gzip',
+                    //cookie: 'acw_tc=2f624a4016706498913978918e4b42d68638eccb6145bcc0a89b50a20dab88',
+                    //'user-agent': 'okhttp/4.9.2'
+                }
+            };
+
+            //console.log(options);
+            let result = await httpRequest(options, name);
+            //console.log(result);
+            if (result.code == 20000) {
+                //DoubleLog(`账号[${this.index}]  账号: [${result.data.userId}] 昵称[${result.data.name}] 工分余额[${result.data.totalScore}]`);
+            } else if (result.code == 40005) {
+                //DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因${result.message}`);//没次数
+                //console.log(result);
+            } else {
+                //DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因未知`);
+                //console.log(result);
+            }
+            return result
+        } catch (error) {
+            console.log(error);
+        }
+    }
+    async user_info2() {
+        console.log('\n================== 用户信息 ==================\n');
+        let s = await this.user_info('用户信息查询')
+        if (s.code == 20000) {
+            let i = s.data.userId
+            let n = s.data.name
+            let m = s.data.totalScore
+            DoubleLog(`账号[${this.index}]  账号: [${i}] 昵称[${n}] 工分余额[${m}]`);
+            console.log('\n================== 红包签到 ==================\n');
+            taskall = [];
+            for (let user of userList) {
+                taskall.push(await user.task_sign('红包签到'));
+                await wait(3); //延迟
+            }
+            await Promise.all(taskall);
+
+            console.log('\n================== 日常任务 ==================\n');
+            taskall = [];
+            for (let user of userList) {
+                taskall.push(await user.task_see());
+                await wait(3); //延迟
+            }
+            await Promise.all(taskall);
+
+            console.log('\n================== 抽奖 ==================\n');
+            taskall = [];
+            for (let user of userList) {
+                for (let i = 0; i < 2; i++) {
+                    taskall.push(await user.task_lottery('抽奖'));
+                    await wait(3); //延迟}
+                }
+                await Promise.all(taskall);
+            }
+        } else {
+            DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因${result.message}`);
+        }
+
+    }
     async task_sign(name) { // 红包签到
         //console.log(this.cktest.replace('Bearer', ''))
         try {
@@ -198,14 +335,52 @@ class UserInfo {
     }
 
     async task_see() {
-        for (let i = 0; i < 2; i++) {
-            this.task_see1("浏览首页")
-            await wait(10)
+        let t1 = await this.task1('工分任务列表')
+        if (t1.code == 20000) {
+            for (let o in t1.data.dailyTasks) {
+                if (t1.data.dailyTasks[o].code == "SCORE_VIEW_INDEX" && t1.data.dailyTasks[o].status == 0) {
+                    for (let i = 0; i < 2; i++) {
+                        this.task_see1("浏览首页")
+                        await wait(10)
+                    }
+                } else if ((t1.data.dailyTasks[o].code == "SCORE_VIEW_INDEX" && t1.data.dailyTasks[o].status == 1)) {
+                    console.log('浏览首页任务已完成');
+                }
+                if (t1.data.dailyTasks[o].code == "SCORE_VIEW_POSITION" && t1.data.dailyTasks[o].status == 0) {
+                    for (let i = 0; i < 5; i++) {
+                        this.task_see2("浏览详情页")
+                        await wait(10)
+                    }
+                } else if ((t1.data.dailyTasks[o].code == "CORE_VIEW_POSITION" && t1.data.dailyTasks[o].status == 1)) {
+                    console.log('浏览详情页任务已完成');
+                }
+                //共获得12分
+            }
         }
-        for (let i = 0; i < 5; i++) {
-            this.task_see2("浏览详情页")
-            await wait(10)
+        let t2 = await this.task2('红包任务列表')
+        if (t2.code == 20000) {
+            for (let o in t2.data) {
+                if (t2.data[o].id == "13" && t2.data[o].status == 0) {
+                    this.task_see3("红包浏览首页")
+                    await wait(10)
+                } else if (t2.data[o].id == "13" && t2.data[o].status == 1) {
+                    console.log('任务红包浏览首页完成');
+                }
+                if (t2.data[o].id == "18" && t2.data[o].status == 0) {
+                    for (let i = 0; i < 2; i++) {
+                        this.task_see4("红包分享职位")
+                        await wait(10)
+                    }
+                } else if (t2.data[o].id == "18" && t2.data[o].status == 1) {
+                    console.log('任务红包分享职位完成');
+                }
+
+            }
         }
+
+
+
+
     }
 
     async task_see1(name) { // 工匠 浏览首页  2次
@@ -281,6 +456,81 @@ class UserInfo {
                 //console.log(result);
             } else {
                 DoubleLog(`账号[${this.index}]  任务职位详情页:失败 ❌ 了呢,原因未知`);
+                console.log(result);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async task_see3(name) { //红包任务 浏览首页
+        try {
+            let options = {
+                method: 'POST',
+                url: 'https://api-recruitment.yzw.cn/v2/labor/app/browseCollectRecord/add',
+                headers: {
+                    Host: 'api-recruitment.yzw.cn',
+                    accept: 'application/json, text/plain, */*',
+                    version: '2.14.0',
+                    authorization: this.ck,
+                    appsourcetype: '1',
+                    //'x-device-id': 'd310c38476e58308d310c38476e58308d310c38476e58308d310c38476e58308',
+                    //'x-flow-num': 'd019070d-f032-4ffc-9737-188c477cb2ee',
+                    //'x-device': 'zhipin/android/29/2.14.0/392.72727272727275/829.0909090909091/2.75',
+                    'content-type': 'application/json',
+                    'user-agent': 'okhttp/4.9.2'
+                },
+                body: { type: 1, recordType: 7 },
+                json: true
+            };
+
+
+            //console.log(options);
+            let result = await httpRequest(options, name);
+            //console.log(result);
+            if (result.code == 20000) {
+                DoubleLog(`账号[${this.index}]  红包任务浏览首页成功${result.data}`);
+                console.log('本次可能获得0.05');
+            } else if (result.code == 40005) {
+                DoubleLog(`账号[${this.index}]  红包任务浏览首页:失败 ❌ 了呢,原因${result.message}`);
+                //console.log(result);
+            } else {
+                DoubleLog(`账号[${this.index}]  红包任务浏览首页:失败 ❌ 了呢,原因未知`);
+                console.log(result);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async task_see4(name) { // 红包任务 分享职业卡片
+        try {
+            let options = {
+                method: 'POST',
+                url: 'https://api-recruitment.yzw.cn/v2/labor/app/userShareRecord/add',
+                headers: {
+                    Host: 'api-recruitment.yzw.cn',
+                    accept: 'application/json, text/plain, */*',
+                    version: '2.14.0',
+                    authorization: this.ck,
+                    appsourcetype: '1',
+                    'content-type': 'application/json'
+                },
+                body: { shareTarget: 0, userId: 1008217, shareType: 1, shareOtherId: 44207 },
+                json: true
+            };
+
+            //console.log(options);
+            let result = await httpRequest(options, name);
+            //console.log(result);
+            if (result.code == 20000) {
+                DoubleLog(`账号[${this.index}]  红包任务 分享职位 成功${result.data}`);
+                console.log('本次可能获得0.02');
+            } else if (result.code == 40005) {
+                DoubleLog(`账号[${this.index}]  红包任务 分享职位:失败 ❌ 了呢,原因${result.message}`);
+                //console.log(result);
+            } else {
+                DoubleLog(`账号[${this.index}]  红包任务 分享职位:失败 ❌ 了呢,原因未知`);
                 console.log(result);
             }
         } catch (error) {
