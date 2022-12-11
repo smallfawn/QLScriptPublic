@@ -37,14 +37,32 @@ let userCount = 0;
 //---------------------------------------------------------
 
 async function start() {
-    //console.log('\n================== 用户查询 ==================\n');
+    console.log('\n================== 用户查询 ==================\n');
     taskall = [];
     for (let user of userList) {
-        taskall.push(await user.user_info2());
+        taskall.push(await user.user_info('信息'));
         await wait(3); //延迟
     }
     await Promise.all(taskall);
+    console.log('\n================== 红包签到 ==================\n');
+    for (let user of userList) {
+        await user.task_sign('红包签到')
+        await wait(3); //延迟
+    }
 
+    console.log('\n================== 日常任务 ==================\n');
+    for (let user of userList) {
+        await user.task_see();
+        await wait(3); //延迟
+    }
+
+    console.log('\n================== 抽奖 ==================\n');
+    for (let user of userList) {
+        for (let i = 0; i < 2; i++) {
+            await user.task_lottery('抽奖')
+            await wait(3); //延迟
+        }
+    }
 
 }
 
@@ -62,7 +80,6 @@ class UserInfo {
         //this.hostname = "https://" + this.host;
 
     }
-
 
     async user_info(name) { // userinfo
         try {
@@ -92,19 +109,20 @@ class UserInfo {
             let result = await httpRequest(options, name);
             //console.log(result);
             if (result.code == 20000) {
-                //DoubleLog(`账号[${this.index}]  账号: [${result.data.userId}] 昵称[${result.data.name}] 工分余额[${result.data.totalScore}]`);
+                DoubleLog(`账号[${this.index}]  账号: [${result.data.userId}] 昵称[${result.data.name}] 工分余额[${result.data.totalScore}]`);
             } else if (result.code == 40005) {
-                //DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因${result.message}`);//没次数
-                //console.log(result);
+                DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因${result.message}`);//没次数
+                console.log(result);
             } else {
-                //DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因未知`);
-                //console.log(result);
+                DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因未知`);
+                console.log(result);
             }
             return result
         } catch (error) {
             console.log(error);
         }
     }
+
     async task1(name) { // task1 工分任务列表
         try {
             let options = {
@@ -179,44 +197,7 @@ class UserInfo {
             console.log(error);
         }
     }
-    async user_info2() {
-        console.log('\n================== 用户信息 ==================\n');
-        let s = await this.user_info('用户信息查询')
-        if (s.code == 20000) {
-            let i = s.data.userId
-            let n = s.data.name
-            let m = s.data.totalScore
-            DoubleLog(`账号[${this.index}]  账号: [${i}] 昵称[${n}] 工分余额[${m}]`);
-            console.log('\n================== 红包签到 ==================\n');
-            taskall = [];
-            for (let user of userList) {
-                taskall.push(await user.task_sign('红包签到'));
-                await wait(3); //延迟
-            }
-            await Promise.all(taskall);
 
-            console.log('\n================== 日常任务 ==================\n');
-            taskall = [];
-            for (let user of userList) {
-                taskall.push(await user.task_see());
-                await wait(3); //延迟
-            }
-            await Promise.all(taskall);
-
-            console.log('\n================== 抽奖 ==================\n');
-            taskall = [];
-            for (let user of userList) {
-                for (let i = 0; i < 2; i++) {
-                    taskall.push(await user.task_lottery('抽奖'));
-                    await wait(3); //延迟}
-                }
-                await Promise.all(taskall);
-            }
-        } else {
-            DoubleLog(`账号[${this.index}]  用户信息查询:失败 ❌ 了呢,原因${result.message}`);
-        }
-
-    }
     async task_sign(name) { // 红包签到
         //console.log(this.cktest.replace('Bearer', ''))
         try {
