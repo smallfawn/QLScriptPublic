@@ -248,7 +248,9 @@ class UserInfo {
         try {
             let commentTxt = this.commentTxt,
                 ts = Number(ts10()),
-                sign = await this.sign(commentTxt, artid, ts)
+                randomNum = randomInt(0, 100),
+                urlpath = 'https://app.geely.com/apis/api/v2/comment/publisherComment',
+                sign = await this.sign(commentTxt, artid, ts, randomNum, urlpath)
             const options = {
                 url: 'https://app.geely.com/apis/api/v2/comment/publisherComment',
                 headers: {
