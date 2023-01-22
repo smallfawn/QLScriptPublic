@@ -400,8 +400,14 @@ function randomszdx(e) {
     return n;
 }
 function changeCode(oldoptions) {
-    let newoptions = new Object()
-    'qs' in oldoptions ? newoptions.url = changeUrl('qs') : ('params' in oldoptions ? newoptions.url = changeUrl('params') : newoptions.url = oldoptions.url)
+    let newoptions = new Object(),
+        urlTypeArr = ['qs', 'params'], urlTypeStr,
+        bodyTypeArr = ['body', 'data', 'form', 'formData'], bodyTypeStr
+    for (let e in urlTypeArr) {
+        urlTypeStr = urlTypeArr[e]
+        urlTypeArr[e] in oldoptions ? newoptions.url = changeUrl(urlTypeStr) : newoptions.url = oldoptions.url
+    }
+    //'qs' in oldoptions ? newoptions.url = changeUrl('qs') : ('params' in oldoptions ? newoptions.url = changeUrl('params') : newoptions.url = oldoptions.url)
     'content-type' in oldoptions.headers ? newoptions.headers = changeHeaders(oldoptions.headers) : newoptions.headers = oldoptions.headers
     function changeUrl(type) {
         url = oldoptions.url + '?'
@@ -415,10 +421,16 @@ function changeCode(oldoptions) {
         headers['Content-Type'] = tmp
         return headers
     }
-    'body' in oldoptions ? ((Object.prototype.toString.call(oldoptions.body) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions.body) : newoptions.body = oldoptions.body) : ''
-    'data' in oldoptions ? ((Object.prototype.toString.call(oldoptions.data) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions.data) : newoptions.body = oldoptions.data) : ''
-    'form' in oldoptions ? ((Object.prototype.toString.call(oldoptions.form) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions.form) : newoptions.body = oldoptions.form) : ''
-    'formData' in oldoptions ? ((Object.prototype.toString.call(oldoptions.formData) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions.formData) : newoptions.body = oldoptions.formData) : ''
+    //'body' in oldoptions ? ((Object.prototype.toString.call(oldoptions.body) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions.body) : newoptions.body = oldoptions.body) : ''
+    //'data' in oldoptions ? ((Object.prototype.toString.call(oldoptions.data) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions.data) : newoptions.body = oldoptions.data) : ''
+    //'form' in oldoptions ? ((Object.prototype.toString.call(oldoptions.form) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions.form) : newoptions.body = oldoptions.form) : ''
+    //'formData' in oldoptions ? ((Object.prototype.toString.call(oldoptions.formData) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions.formData) : newoptions.body = oldoptions.formData) : ''
+    for (let o in bodyTypeArr) {
+        bodyTypeStr = bodyTypeArr[o]
+        if (bodyTypeArr[o] in oldoptions) {
+            (Object.prototype.toString.call(oldoptions[bodyTypeStr]) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions[bodyTypeStr]) : newoptions.body = oldoptions[bodyTypeStr]
+        }
+    }
     return newoptions
 }
 function httpRequest(options, method) {
