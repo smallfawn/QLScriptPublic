@@ -402,7 +402,7 @@ function randomszdx(e) {
 function changeCode(oldoptions) {
     let newoptions = new Object()
     newoptions.url = changeUrl(oldoptions)
-    newoptions.headers = oldoptions.headers
+    'content-type' in oldoptions.headers ? newoptions.headers = changeHeaders(oldoptions.headers) : newoptions.headers = oldoptions.headers
     function changeUrl(options) {
         let urlParameter
         'qs' in options ? urlParameter = changeUrlParameter('qs') : ('params' in options ? urlParameter = changeUrlParameter('params') : urlParameter = options.url)
@@ -413,6 +413,12 @@ function changeCode(oldoptions) {
             return url
         }
         return urlParameter
+    }
+    function changeHeaders(headers) {
+        let tmp = headers['content-type']
+        delete headers['content-type']
+        headers['Content-Type'] = tmp
+        return headers
     }
     'body' in oldoptions ? ((Object.prototype.toString.call(oldoptions.body) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions.body) : newoptions.body = oldoptions.body) : ''
     'data' in oldoptions ? ((Object.prototype.toString.call(oldoptions.data) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions.data) : newoptions.body = oldoptions.data) : ''
