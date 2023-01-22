@@ -407,11 +407,8 @@ function changeCode(oldoptions) {
         let urlParameter
         'qs' in options ? urlParameter = changeUrlParameter('qs') : ('params' in options ? urlParameter = changeUrlParameter('params') : urlParameter = options.url)
         function changeUrlParameter(type) {
-            url = options.url
-            url += '?'
-            for (let key in options[type]) {
-                url += key + '=' + options[type][key] + '&'
-            }
+            url = options.url + '?'
+            for (let key in options[type]) { url += key + '=' + options[type][key] + '&' }
             url = url.substring(0, url.length - 1)
             return url
         }
