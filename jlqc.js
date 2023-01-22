@@ -420,7 +420,7 @@ function changeCode(oldoptions) {
     'body' in oldoptions ? ((Object.prototype.toString.call(oldoptions.body) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions.body) : newoptions.body = oldoptions.body) : ''
     'data' in oldoptions ? ((Object.prototype.toString.call(oldoptions.data) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions.data) : newoptions.body = oldoptions.data) : ''
     'form' in oldoptions ? ((Object.prototype.toString.call(oldoptions.form) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions.form) : newoptions.body = oldoptions.form) : ''
-    'formData' in oldoptions ? newoptions.body = oldoptions.formData : ''
+    'formData' in oldoptions ? ((Object.prototype.toString.call(oldoptions.formData) === '[object Object]') ? newoptions.body = JSON.stringify(oldoptions.formData) : newoptions.body = oldoptions.formData) : ''
     return newoptions
 }
 function httpRequest(options, method) {
