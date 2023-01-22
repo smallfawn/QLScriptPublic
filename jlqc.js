@@ -401,18 +401,13 @@ function randomszdx(e) {
 }
 function changeCode(oldoptions) {
     let newoptions = new Object()
-    newoptions.url = changeUrl(oldoptions)
+    'qs' in oldoptions ? newoptions.url = changeUrl('qs') : ('params' in oldoptions ? newoptions.url = changeUrl('params') : newoptions.url = oldoptions.url)
     'content-type' in oldoptions.headers ? newoptions.headers = changeHeaders(oldoptions.headers) : newoptions.headers = oldoptions.headers
-    function changeUrl(options) {
-        let urlParameter
-        'qs' in options ? urlParameter = changeUrlParameter('qs') : ('params' in options ? urlParameter = changeUrlParameter('params') : urlParameter = options.url)
-        function changeUrlParameter(type) {
-            url = options.url + '?'
-            for (let key in options[type]) { url += key + '=' + options[type][key] + '&' }
-            url = url.substring(0, url.length - 1)
-            return url
-        }
-        return urlParameter
+    function changeUrl(type) {
+        url = oldoptions.url + '?'
+        for (let key in oldoptions[type]) { url += key + '=' + oldoptions[type][key] + '&' }
+        url = url.substring(0, url.length - 1)
+        return url
     }
     function changeHeaders(headers) {
         let tmp = headers['content-type']
@@ -437,7 +432,7 @@ function httpRequest(options, method) {
                     //console.log(JSON.parse(err));
                     $.logErr(err);
                     //throw new Error(err);
-                    console.log(err);
+                    //console.log(err);
                 } else {
                     //httpResult = data;
                     //httpResponse = resp;
