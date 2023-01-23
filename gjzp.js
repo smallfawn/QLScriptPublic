@@ -1,20 +1,26 @@
 /**
- * 演示模板
- * cron 10 7 * * *  demoV5.js
- * 23/01/22 利用$.函数 &and  增加changeCode函数 将options转换为通用  优化httpRequest函数
+ * 工匠职聘
+ * cron 52 8 * * *  gjzp.js
+ *
+ * 22/12/10 每日签到 赚工分 
+ * 22/12/11 每日红包奖励 判定CK是否有效 
+ * 23/01/23 删除抽奖,修复BUG
  * ========= 青龙--配置文件 ===========
  * # 项目名称
- * export demo_data='token @ token'
+ * export gjzp_data='authorization&android'
  * 
- * 多账号用 换行 或 @ 分割
- * 抓包 xxx.xxx.xxx , 找到 token 即可
+ * 多账号用  @ 分割
+ * 抓包 api-recruitment.yzw.cn , 找到 headers中 authorization 即可 
+ * 如果你是ios端请在authorization后加上ios如果是android请输入android  必须小写
+ * 首次使用请 去本APP => 我的 => 横幅 > 工分夺宝处首抽一次(绑定你的微信小程序)  否则不绑定抽不了奖
+ * 如果是先注册小程序后再去APP,就无需绑定了 直接抓CK即可
  * ====================================
  *   
  */
 
 
 
-const $ = new Env("演示模板");
+const $ = new Env("工匠职聘");
 const ckName = "gjzp_data";
 //-------------------- 一般不动变量区域 -------------------------------------
 const Notify = 1;		 //0为关闭通知,1为打开通知,默认为1
