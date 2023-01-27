@@ -5,9 +5,13 @@
  * ========= 青龙--配置文件 ===========
  * # 项目名称
  * export gqft_data='Authorization&deviceId'
- * 
- * 多账号用 换行 或 @ 分割
  * 抓包https://gw.nevapp.gtmc.com.cn , 找到请求头 Authorization&deviceId 即可 多账号@ 连接
+ * 
+ * CK过期后不要打开APP等第二天 先打开抓包后打开APP  
+ * https://gw.nevapp.gtmc.com.cn/ha/iam/api/lgn/checkAndUpdateToken
+ * 抓这个连接的响应中的refreshToken  该CK有效期为一个月
+ * 第一次抓应该有效期是3-7天 需要抓取上面连接的响应
+ * 
  * ====================================
  *   
  */
@@ -28,7 +32,13 @@ let userCount = 0;
 //---------------------------------------------------------
 
 async function start() {
-
+    //console.log('\n================== 更新TOKEN ==================\n');
+    //taskall = [];
+    //for (let user of userList) {
+    //taskall.push(await user.changeToken());
+    //await $.wait(10000);
+    //}
+    //await Promise.all(taskall);
 
     console.log('\n================== 信息 ==================\n');
     taskall = [];
@@ -69,7 +79,47 @@ class UserInfo {
         this.ts = ts13()
         $.ckStatus = true
     }
-
+    async changeToken() {
+        try {
+            let ts = this.ts,
+                noncestr = nonce('a'),
+                sig = gqft_gqft(ts, this.ck, noncestr, '1')
+            let options = {
+                method: 'POST',
+                url: 'https://gw.nevapp.gtmc.com.cn/ha/iam/api/lgn/checkAndUpdateToken',
+                headers: {
+                    'Authorization': 'Bearer ' + this.ck,
+                    'sig': sig,
+                    'appVersion': '1.1.1',
+                    'operateSystem': 'android',
+                    'appId': '8c4131ff-e326-43ea-b333-decb23936673',
+                    'deviceId': this.deviceId,
+                    'nonce': noncestr,
+                    'timestamp': ts,
+                    'Content-Type': 'application/json;charset=utf-8',
+                    'Host': 'gw.nevapp.gtmc.com.cn',
+                    'Connection': 'Keep-Alive',
+                    'User-Agent': 'okhttp/4.8.1'
+                },
+                body: { refreshToken: this.ck },
+                json: true
+            };
+            options = changeCode(options)
+            console.log(options);
+            let result = await httpRequest(options);
+            console.log(result);
+            if (result.header.code == 10000000) {
+                DoubleLog(`账号[${this.index}] 刷新token成功:[${result.body.accessToken}]`);
+            } else {
+                //DoubleLog(`账号[${this.index}]  用户查询:失败 ❌ 了呢,原因未知！`);
+                DoubleLog('ck 失效或错误')
+                $.ckStatus = false
+                console.log(result);
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
     async user_info() {
         try {
             let ts = this.ts,
@@ -199,9 +249,9 @@ class UserInfo {
                     DoubleLog(`账号[${this.index}]  文章列表[${result.body.list[i].id}]`);
                     let artId = result.body.list[i].id
                     DoubleLog('开始浏览')
-                    $.wait(3000)
+                    await $.wait(5000)
                     await this.task_detail(artId)
-                    $.wait(3000)
+                    await $.wait(5000)
                     DoubleLog('开始点赞')
                     await this.task_like(artId)
                 }
