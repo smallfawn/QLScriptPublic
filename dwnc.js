@@ -222,30 +222,8 @@ class UserInfo {
             'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7'
         }
     }
-    async s() { // 农场水滴剩余 和信息
-        return new Promise((resolve) => {
-            const request = require("request")
-            try {
-                let options = {
-                    method: 'GET',
-                    url: "https://gitee.com/smallfawn/share/raw/master/dw.txt",
-                };
-                //console.log(options);
-                request(options, function (error, response, body) {
-                    if (error) throw new Error(error);
 
-                    console.log(body);
-                    resolve(body)
-                    return body
-                });
-
-            } catch (error) {
-                console.log(error);
-            }
-        })
-    }
     async user_info(name) { // 农场水滴剩余 和信息
-        let skey = await this.s()
         let path = "/hacking-tree/v1/user/init"
         try {
             let options = {
@@ -253,7 +231,7 @@ class UserInfo {
                 url: this.hostname + path,
                 qs: { sign: this.userInfoKey },
                 headers: this.headersPost,
-                body: { keyword: skey },
+                body: { keyword: '' },
                 json: true
             };
             //console.log(options);
