@@ -112,11 +112,11 @@ class UserInfo {
             Headers['bt-auth-timestamp'] = this.ts
             Headers['bt-auth-sign'] = await this.getSign('GET', url, this.nonce, this.ts, data)
             let options = {
-                url: `https://gw-app.beantechyun.com` + url,
+                url: `https://gw-app.beantechyun.com` + url + '?' + data,
                 headers: Headers
             }
             options = changeCode(options) //把某软件生成的代码(request或axios或jquery)转换为got通用
-            //console.log(options);
+            console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
             if (result.code == '000000') {
