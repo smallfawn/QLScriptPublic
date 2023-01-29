@@ -121,6 +121,9 @@ class UserInfo {
             //console.log(result);
             if (result.code == '000000') {
                 DoubleLog(`账号[${this.index}]  积分剩余: ${result.data.remindPoint}`);
+                if (!result.data.signIn) {
+                    //签到
+                }
             } else {
                 DoubleLog(`账号[${this.index}]  积分剩余:失败 ❌ 了呢,原因未知！`);
                 console.log(result);
@@ -129,6 +132,7 @@ class UserInfo {
             console.log(e);
         }
     }
+
     async art_list() {
         try {
             let body = `{"newVersion":"1","pageParam":{"pageNo":1,"pageSize":21},"queryParam":{"firstThreadId":"","homeRecommendation":"0","lastThreadCreateTime":"202301280730000","lastThreadId":"","newVersion":"1","operatingTime":"202301291603577"},"routeRecommendDTO":{"latitude":"37.190615","longitude":"114.551969","startCity":"邢台市","startCityCode":"0319"},"sortParam":{"order":"1","type":"6"}}`
@@ -153,10 +157,12 @@ class UserInfo {
                     if ('posts' in result.data.list[i]) {
                         artId = result.data.list[i].posts[0].threadBasic.id
                         value = result.data.list[i].posts[0].threadBasic.author.beanId
+                        await $.wait(5000)
                         await this.task_like(artId, value)
                     } else {
                         artId = result.data.list[i].threadBasic.id
                         value = result.data.list[i].threadBasic.author.userBasic.beanId
+                        await $.wait(5000)
                         await this.task_like(artId, value)
                     }
                 }
