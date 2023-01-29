@@ -116,7 +116,7 @@ class UserInfo {
                 headers: Headers
             }
             options = changeCode(options) //把某软件生成的代码(request或axios或jquery)转换为got通用
-            console.log(options);
+            //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
             if (result.code == '000000') {
