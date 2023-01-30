@@ -1,7 +1,8 @@
 /**
  * 哈弗智家
  * cron 14 14 * * *  hfzj.js
- * 23/01/29 积分查询和点赞文章 (未更新签到)
+ * 23/01/29 积分查询和点赞文章
+ * 23/01/30 更新签到
  * ========= 青龙--配置文件 ===========
  * # 项目名称
  * export hfzj_data='accessToken @ accessToken'
@@ -122,7 +123,9 @@ class UserInfo {
             if (result.code == '000000') {
                 DoubleLog(`账号[${this.index}]  积分剩余: ${result.data.remindPoint}`);
                 if (!result.data.signIn) {
-                    //签到
+                    //签到 
+                    DoubleLog(`检测到未签到,执行签到`)
+                    await this.task_signin()
                 }
             } else {
                 DoubleLog(`账号[${this.index}]  积分剩余:失败 ❌ 了呢,原因未知！`);
@@ -132,7 +135,53 @@ class UserInfo {
             console.log(e);
         }
     }
-
+    async task_signin() {
+        try {
+            let options = {
+                url: `https://bt-h5-gateway.beantechyun.com/app-api/api/v1.0/point/sign`,
+                headers: {
+                    'Host': 'bt-h5-gateway.beantechyun.com',
+                    'Connection': 'keep-alive',
+                    //'Content-Length': 17,
+                    'Cache-Control': 'max-age=0',
+                    'accessToken': this.ck,
+                    'rs': '2',
+                    'terminal': 'GW_APP_Haval',
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/89.0.4389.72 MQQBrowser/6.2 TBS/046141 Mobile Safari/537.36 fromapp fromapp_Android_havalcVer=4.4.900',
+                    'Content-Type': 'application/json;charset=UTF-8',
+                    'cVer': '4.4.900',
+                    //'Accept': 'application/json, textain, */*',
+                    'bt-auth-appKey': '7849495624',
+                    'brand': '1',
+                    'If-Modified-Since': '0',
+                    'tokenId': '3177c9de1b5841d39b4dd85cc119edad',
+                    'enterpriseId': 'CC01',
+                    'os': 'ANDROID',
+                    'Origin': 'https://haval-restructure-h5.beantechyun.com',
+                    'X-Requested-With': 'com.navinfo.gw',
+                    'Sec-Fetch-Site': 'same-site',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Dest': 'empty',
+                    'Referer': 'https://haval-restructure-h5.beantechyun.com/',
+                    //'Accept-Encoding': 'gzip, deflate, br',
+                    //'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7'
+                },
+                body: { "port": "HJ0002" }
+            }
+            options = changeCode(options) //把某软件生成的代码(request或axios或jquery)转换为got通用
+            //console.log(options);
+            let result = await httpRequest(options);
+            //console.log(result);
+            if (result.code == '000000') {
+                DoubleLog(`账号[${this.index}]  签到成功: 获得[${result.data.pointResultMessage}]`);
+            } else {
+                DoubleLog(`账号[${this.index}]  签到:失败 ❌ 了呢,原因未知！`);
+                console.log(result);
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
     async art_list() {
         try {
             let body = `{"newVersion":"1","pageParam":{"pageNo":1,"pageSize":21},"queryParam":{"firstThreadId":"","homeRecommendation":"0","lastThreadCreateTime":"202301280730000","lastThreadId":"","newVersion":"1","operatingTime":"202301291603577"},"routeRecommendDTO":{"latitude":"37.190615","longitude":"114.551969","startCity":"邢台市","startCityCode":"0319"},"sortParam":{"order":"1","type":"6"}}`
