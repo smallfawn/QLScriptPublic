@@ -34,6 +34,7 @@ let userCount = 0;
 //---------------------- 自定义变量区域 -----------------------------------
 
 async function start() {
+    await script_notice()
     console.log('\n================== 积分查询 ==================\n');
     taskall = [];
     for (let user of userList) {
@@ -381,6 +382,30 @@ async function checkEnv() {
     return console.log(`共找到${userCount}个账号`), true;//true == !0
 }
 // =========================================== 不懂不要动 =========================================================
+async function script_notice() {
+    try {
+        let options = {
+            url: `https://gitee.com/smallfawn/api/raw/master/notice.json`,
+            //https://gh.api.99988866.xyz/https://raw.githubusercontent.com/smallfawn/api/main/notice.json
+            //https://gitee.com/smallfawn/api/raw/master/notice.json
+            //https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/api/main/notice.json
+            headers: {
+                'user-agent': ''
+            }
+        }
+        options = changeCode(options) //把某软件生成的代码(request或axios或jquery)转换为got通用
+        //console.log(options);
+        let result = await httpRequest(options);
+        //console.log(result);
+        if (result) {
+            DoubleLog(result.notice)
+        } else {
+            console.log(result)
+        }
+    } catch (e) {
+        console.log(e);
+    }
+}
 function ts10() {
     return Math.round(new Date().getTime() / 1000).toString();
 }
