@@ -1,7 +1,7 @@
 /**
  * Hi星途(APP)
- * cron 10 7 * * *  hixingtu.js
- * 
+ * cron 10 10 * * *  hixingtu.js
+ * https://xt-manage.exeedcars.com/exeedCC/retainedCapital.html?id=&invitationCode=0100810357443031730176
  * ========= 青龙--配置文件 ===========
  * # 项目名称
  * export hixingtu_data='token @ token'
