@@ -1,13 +1,15 @@
 /**
  * Hi星途(APP)
  * cron 10 10 * * *  hixingtu.js
+ * 下载地址
  * https://xt-manage.exeedcars.com/exeedCC/retainedCapital.html?id=&invitationCode=0100810357443031730176
+ * 果园在我的左上角-梦想星球
  * ========= 青龙--配置文件 ===========
  * # 项目名称
  * export hixingtu_data='token @ token'
  * 
  * 多账号用 换行 或 @ 分割
- * 抓包 https://starway.exeedcars.com , 找到 Authorization 去掉Bearer
+ * 抓包 https://starway.exeedcars.com , 找到 Authorization 去掉Bearer 去掉Bearer 去掉Bearer
  * ====================================
  *   
  */
