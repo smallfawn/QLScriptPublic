@@ -273,7 +273,7 @@ class UserInfo {
                     'Content-Type': 'application/json; charset=utf-8',
                     'devicesn': '356617505697247',
                     'accept': 'application/json, text/plain, */*',
-                    //txcookie: this.ck1,
+                    txcookie: this.ck1,
                     'platform': 'Android',
                     'token': this.ck2,
                     'origin': 'https://app.geely.com',
