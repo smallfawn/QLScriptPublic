@@ -7,12 +7,13 @@
  * 22/11/25 修复长图文 删除评论
  * 23/01/21 增加评论 目前一天17分左右
  * 23/02/11 减少风控 随机API
+ * 23/03/03 修复
  * ========= 青龙--配置文件 ===========
  * # 吉利汽车
- * export jlqc_data='txcookie&token'
+ * export jlqc_data='token'
  * 
  * 多账号用 换行 或 @ 分割
- * 抓包 app.geely.com , 找到 txcookie 和 token 的值 , 用&连接。
+ * 抓包 app.geely.com , 找到 token 的值 , 
  * ====================================
  * 交流 BUG反馈 投稿 群: 862839604
  */
@@ -53,7 +54,7 @@ async function start() {
 
     }
     await Promise.all(taskall);
-    console.log('\n================== 每日分享 ==================\n');
+    /*console.log('\n================== 每日分享 ==================\n');
     taskall = [];
     for (let user of userList) {
         if (user.ckstatus) {
@@ -63,7 +64,7 @@ async function start() {
             }
         }
     }
-    await Promise.all(taskall);
+    await Promise.all(taskall);*/
     console.log('\n================== 发布文章 ==================\n');
     taskall = [];
     for (let user of userList) {
@@ -73,7 +74,7 @@ async function start() {
         }
     }
     await Promise.all(taskall);
-    console.log('\n================== 发布图文 ==================\n');
+    /*console.log('\n================== 发布图文 ==================\n');
     taskall = [];
     for (let user of userList) {
         if (user.ckstatus) {
@@ -81,49 +82,49 @@ async function start() {
             await $.wait(10000);
         }
     }
-    await Promise.all(taskall);
-    console.log('\n================== 评论文章 ==================\n');
+    await Promise.all(taskall);*/
+    /*console.log('\n================== 评论文章 ==================\n');
     taskall = [];
     for (let user of userList) {
         if (user.ckstatus) {
             taskall.push(await user.task_artlist());
         }
     }
-    await Promise.all(taskall);
+    await Promise.all(taskall);*/
 }
 
 
 class UserInfo {
     constructor(str) {
         this.index = ++userIdx;
-        this.ck1 = str.split('&')[0];
-        this.ck2 = str.split('&')[1];
+        //this.ck1 = str.split('&')[0];
+        this.ck = str.split('&')[0];
         this.host = "app.geely.com";
         this.hostname = "https://" + this.host;
         this.ckstatus = true
         this.headersGet = {
-            txcookie: this.ck1,
+            //txcookie: this.ck1,
             devicesn: '356617505697247',
             Host: 'app.geely.com',
             platform: 'Android',
-            token: this.ck2,
+            token: this.ck,
             'user-agent': 'okhttp/4.5.0'
         }
         this.headersPostv1 = {
-            txcookie: this.ck1,
+            // txcookie: this.ck1,
             devicesn: '356617505697247',
             Host: 'app.geely.com',
             platform: 'Android',
-            token: this.ck2,
+            token: this.ck,
             'Content-Type': 'application/json; charset=utf-8',
             'user-agent': 'okhttp/4.5.0'
         }
         this.headersPostv2 = {
-            txcookie: this.ck1,
+            // txcookie: this.ck1,
             devicesn: '356617505697247',
             Host: 'app.geely.com',
             platform: 'Android',
-            token: this.ck2,
+            token: this.ck,
             'Content-Type': 'application/json; charset=utf-8',
             'user-agent': 'okhttp/4.3.1',
             appversion: '2.6.0'
