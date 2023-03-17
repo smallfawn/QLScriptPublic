@@ -182,11 +182,12 @@ class UserInfo {
     }
 
     async task_sign() { // 执行签到
+        var date = new Date(+new Date()+8*3600*1000).toISOString().replace(/T/g,' ').replace(/\.[\d]{3}Z/,'')
         try {
             const options = {
                 url: 'https://app.geely.com/api/v1/user/sign/',
                 headers: this.headersPostv1,
-                body: ``,
+                body: JSON.stringify({"signDate": date}),
             };
             //console.log(options);
             let result = await httpRequest(options);
