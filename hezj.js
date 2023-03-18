@@ -1,5 +1,5 @@
 /**
- * 海尔智佳
+ * 海尔智家
  * cron 8 1 * * *  hezj.js
  * 活动入口 首页 智慧小屋
  * 2023/03/18 修复BUG
@@ -15,7 +15,7 @@
 
 
 
-const $ = new Env("海尔智佳");
+const $ = new Env("海尔智家");
 const ckName = "hezj_data";
 //-------------------- 一般不动变量区域 -------------------------------------
 const Notify = 1;		 //0为关闭通知,1为打开通知,默认为1
@@ -177,11 +177,11 @@ class UserInfo {
                 headers: this.headersPost,
                 body: JSON.stringify({ "taskCode": taskCode, "sourceClient": 1 })
             }
-            console.log(options);
+            //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
             if (result.retCode == '00000') {
-                DoubleLog(`账号[${this.index}]  任务执行成功: [${result.data.signinQueryDetailList[0].dailyDate}] [${result.data.signinQueryDetailList[1].dailyDate}] `);
+                DoubleLog(`账号[${this.index}]  任务执行成功: [${taskCode}] `);
 
             } else {
                 DoubleLog(`账号[${this.index}]  任务执行失效:,原因未知！`);
