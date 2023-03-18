@@ -2,12 +2,13 @@
  * 海尔智佳
  * cron 8 1 * * *  hezj.js
  * 活动入口 首页 智慧小屋
+ * 2023/03/18 修复BUG
  * ========= 青龙--配置文件 ===========
  * # 项目名称
- * export hezj_data='token @ token'
+ * export hezj_data='token&clientId @ token&clientId '
  * 
  * 多账号用 换行 或 @ 分割
- * 抓包 https://mps.haiersmarthomes.com/api-gw , 找到accounttoken/accesstoken即可
+ * 抓包 https://mps.haiersmarthomes.com/api-gw , 找到accounttoken/accesstoken & clientId即可
  * ====================================
  *   
  */
@@ -82,6 +83,7 @@ class UserInfo {
     constructor(str) {
         this.index = ++userIdx;
         this.ck = str.split('&')[0]; //单账号多变量分隔符
+        this.clientid = str.split('&')[1];
         //let ck = str.split('&')
         //this.data1 = ck[0]
         this.ckStatus = true
@@ -93,7 +95,7 @@ class UserInfo {
             'user-agent': 'Mozilla/5.0 (Linux; U; Android 10; zh-CN; MI 8 Lite Build/QKQ1.190910.002) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 UWS/3.22.2.55 Mobile Safari/537.36 UCBS/3.22.2.55_220929181439 ChannelId(1) NebulaSDK/1.8.100112 Nebula  App/Uplus Nebula mPaaSClient',
             'Content-Type': 'application/json;charset=UTF-8',
             'accept': 'application/json, text/plain, */*',
-            'clientid': 'BFD83F74EB909B3D4B271F4B540727F5',
+            'clientid': this.clientid,
             'timestamp': ts13(),
             'accounttoken': this.ck,
             'appid': 'MB-UZHSH-0000',
