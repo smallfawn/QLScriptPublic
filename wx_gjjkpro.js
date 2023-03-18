@@ -48,7 +48,16 @@ async function start() {
 
     }
     await Promise.all(taskall);
+    console.log('\n================== 签到 ==================\n');
+    taskall = [];
+    for (let user of userList) {
+        if (user.ckStatus) {
+            taskall.push(await user.task_do());
+            await $.wait(3000); //延迟  1秒  可充分利用 $.环境函数
+        }
 
+    }
+    await Promise.all(taskall);
 
 
 
@@ -116,6 +125,53 @@ class UserInfo {
             console.log(e);
         }
     }
+    async task_do() {//userinfo
+        try {
+            let options = {
+                url: `https://api.gaojihealth.cn/gulosity/api/dkUserEvent/browsePageCompleteTaskEvent`,
+                headers: this.headersPost,
+                body: JSON.stringify({ "browsePageId": "100015", "browsePageUrl": "/modules/storeEmployeeQRcode/index?pageType=1", "taskId": 730 })
+            }
+            //console.log(options);
+            /*return new Promise((resolve) => {
+                $.post(options, (err, resp, data) => {
+                    try {
+                        if (err) {
+                            //console.log(`post请求失败`);
+                            $.logErr(err);
+                        } else {
+                            if (data) {
+                                //console.log(data);
+                                if (data == 'true') {
+                                    DoubleLog(`账号[${this.index}]  执行任务成功: [] `);
+                                } else {
+                                    DoubleLog(`账号[${this.index}]  执行任务失效,原因未知！`);
+                                    console.log(data);
+                                }
+                            } else {
+                                console.log(`请求api返回数据为空，请检查自身原因`)
+                            }
+                        }
+                    } catch (e) {
+                        $.logErr(e, resp);
+                    } finally {
+                        resolve();
+                    }
+                })
+            })*/
+            let result = await httpRequest(options)
+            if (result == 'true') {
+                DoubleLog(`账号[${this.index}]  执行任务成功: [] `);
+            } else {
+                DoubleLog(`账号[${this.index}]  执行任务失效,原因未知！`);
+                console.log(result);
+            }
+            //console.log(result);
+
+        } catch (e) {
+            console.log(e);
+        }
+    }
 
 
 
@@ -155,14 +211,12 @@ async function checkEnv() {
 /////////////////////////////////////////////////////////////////////////////////////
 
 function httpRequest(options, method) {
-    //options = changeCode(options)
     typeof (method) === 'undefined' ? ('body' in options ? method = 'post' : method = 'get') : method = method
     return new Promise((resolve) => {
         $[method](options, (err, resp, data) => {
             try {
                 if (err) {
                     console.log(`${method}请求失败`);
-                    //console.log(JSON.parse(err));
                     $.logErr(err);
                     //throw new Error(err);
                     //console.log(err);
@@ -171,7 +225,7 @@ function httpRequest(options, method) {
                     //httpResponse = resp;
                     if (data) {
                         //console.log(data);
-                        data = JSON.parse(data);
+                        typeof JSON.parse(data) == 'object' ? data = JSON.parse(data) : data = data
                         resolve(data)
                     } else {
                         console.log(`请求api返回数据为空，请检查自身原因`)
