@@ -168,7 +168,7 @@ class UserInfo {
         // console.log(result)
         if (result.errorCode == 20000) {
             this.box = result.data
-            console.log(`账号[${this.index}], 共有宝箱:${this.box.length}个!`)
+            DoubleLog(`账号[${this.index}], 共有宝箱:${this.box.length}个!`)
 
             if (this.box.length > 0) {
                 for (let i = 0; i < this.box.length; i++) {
@@ -193,7 +193,7 @@ class UserInfo {
         let result = await httpRequest(options)
         // console.(result)
         if (result.errorCode == 20000) {
-            console.log(`账号[${this.index}], 开宝箱:${result.errorMessage} ,恭喜你获得 ${result.data.medalName} 奖品为 ${result.data.medalDescription}`)
+            DoubleLog(`账号[${this.index}], 开宝箱:${result.errorMessage} ,恭喜你获得 ${result.data.medalName} 奖品为 ${result.data.medalDescription}`)
         } else {
 
         }
@@ -277,7 +277,7 @@ class UserInfo {
                 headers: this.headersTwo,
                 body: "activityCode=shop-draw"
             }
-            console.log(options);
+            //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
             if (result.errorCode == 20000) {
