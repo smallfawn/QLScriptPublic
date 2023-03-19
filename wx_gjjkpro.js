@@ -18,6 +18,7 @@ const $ = new Env("高济健康pro小程序签到");
 const ckName = "wx_gjjkpro_data";
 //-------------------- 一般不动变量区域 -------------------------------------
 const Notify = 1;		 //0为关闭通知,1为打开通知,默认为1
+const notify = $.isNode() ? require('./sendNotify') : '';
 let debug = 1;           //Debug调试   0关闭  1开启
 let envSplitor = ["@"]; //多账号分隔符
 let ck = msg = '';       //let ck,msg
@@ -48,12 +49,17 @@ async function start() {
 
     }
     await Promise.all(taskall);
-    console.log('\n================== 签到 ==================\n');
+    console.log('\n================== 任务 ==================\n');
     taskall = [];
+    let tasktmp;
     for (let user of userList) {
         if (user.ckStatus) {
-            taskall.push(await user.task_do());
-            await $.wait(3000); //延迟  1秒  可充分利用 $.环境函数
+            for(let tasknum in user.taskList){
+                tasktmp = user.taskList[tasknum]
+                taskall.push(await user.task_do(tasktmp));
+                await $.wait(3000); //延迟  1秒  可充分利用 $.环境函数
+           }
+
         }
 
     }
@@ -69,6 +75,7 @@ class UserInfo {
         this.index = ++userIdx;
         this.userId = str.split('&')[0]; //单账号多变量分隔符
         this.ck = str.split('&')[1];
+        this.ck = this.ck.replace('bearer', 'bearer ')
         //let ck = str.split('&')
         //this.data1 = ck[0]
         this.ckStatus = true
@@ -81,6 +88,7 @@ class UserInfo {
             'Host': 'api.gaojihealth.cn',
             'authorization': this.ck,
         }
+        this.taskList = [{ "browsePageId": "100004", "browsePageUrl": "/modules/integral/integral-mall/index", "taskId": 729 }, { "browsePageId": "100015", "browsePageUrl": "/modules/storeEmployeeQRcode/index?pageType=1", "taskId": 730 }]
 
     }
 
@@ -112,6 +120,8 @@ class UserInfo {
                 headers: this.headersPost,
                 body: JSON.stringify({ "businessId": 212798, "userId": this.userId, "taskId": 372 })
             }
+            this.headersPost['Content-Length'] = options.body.length
+
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
@@ -125,43 +135,21 @@ class UserInfo {
             console.log(e);
         }
     }
-    async task_do() {//userinfo
+    async task_do(tasktmp) {//DO
+
         try {
             let options = {
                 url: `https://api.gaojihealth.cn/gulosity/api/dkUserEvent/browsePageCompleteTaskEvent`,
                 headers: this.headersPost,
-                body: JSON.stringify({ "browsePageId": "100015", "browsePageUrl": "/modules/storeEmployeeQRcode/index?pageType=1", "taskId": 730 })
+                body: JSON.stringify(tasktmp)
             }
+            this.headersPost['Content-Length'] = options.body.length
+
             //console.log(options);
-            /*return new Promise((resolve) => {
-                $.post(options, (err, resp, data) => {
-                    try {
-                        if (err) {
-                            //console.log(`post请求失败`);
-                            $.logErr(err);
-                        } else {
-                            if (data) {
-                                //console.log(data);
-                                if (data == 'true') {
-                                    DoubleLog(`账号[${this.index}]  执行任务成功: [] `);
-                                } else {
-                                    DoubleLog(`账号[${this.index}]  执行任务失效,原因未知！`);
-                                    console.log(data);
-                                }
-                            } else {
-                                console.log(`请求api返回数据为空，请检查自身原因`)
-                            }
-                        }
-                    } catch (e) {
-                        $.logErr(e, resp);
-                    } finally {
-                        resolve();
-                    }
-                })
-            })*/
+            
             let result = await httpRequest(options)
             if (result == 'true') {
-                DoubleLog(`账号[${this.index}]  执行任务成功: [] `);
+                DoubleLog(`账号[${this.index}]  执行任务成功: [${tasktmp.taskId}] `);
             } else {
                 DoubleLog(`账号[${this.index}]  执行任务失效,原因未知！`);
                 console.log(result);
@@ -260,7 +248,6 @@ async function SendMsg(message) {
     if (!message) return;
     if (Notify > 0) {
         if ($.isNode()) {
-            var notify = require("./sendNotify");
             await notify.sendNotify($.name, message)
         } else {
             $.msg($.name, '', message)
