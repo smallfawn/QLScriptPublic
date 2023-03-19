@@ -81,9 +81,6 @@ class UserInfo {
                     'sec-fetch-mode': 'cors',
                     'sec-fetch-dest': 'empty',
                     'referer': 'https://superapp-public.kiwa-tech.com/app-sign-in/?SignInToken=TOKEN_APP_43d25436-b429-4233-b8b2-1154d2f20cb1&source=MiniApp',
-                    //'accept-encoding': 'gzip, deflate',
-                    //'accept-language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-                    //'cookie': 'acw_tc=276077d816790340702268060ebd6e7110d795d232fb1ab1f149da5eab9f10'
                 },
                 body: ''
             }
@@ -122,9 +119,6 @@ class UserInfo {
                     'sec-fetch-mode': 'cors',
                     'sec-fetch-dest': 'empty',
                     'referer': 'https://superapp-public.kiwa-tech.com/app-sign-in/?SignInToken=TOKEN_APP_43d25436-b429-4233-b8b2-1154d2f20cb1&source=MiniApp',
-                    //'accept-encoding': 'gzip, deflate',
-                    //'accept-language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-                    //'cookie': 'acw_tc=276077d816790340702268060ebd6e7110d795d232fb1ab1f149da5eab9f10'
                 },
                 body: JSON.stringify({ "signinSource": "MiniApp" })
             }
@@ -132,7 +126,7 @@ class UserInfo {
             let result = await httpRequest(options);
             //console.log(result);
             if (result.success == true) {
-                DoubleLog(`账号[${this.index}]  签到成功: [${result.data.signinQueryDetailList[0].dailyDate}] [${result.data.signinQueryDetailList[1].dailyDate}] `);
+                DoubleLog(`账号[${this.index}]  签到成功: `);
 
             } else {
                 DoubleLog(`账号[${this.index}]  签到失效:,原因未知！`);
