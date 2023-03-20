@@ -20,7 +20,7 @@ const ckName = "gqcq_data";
 const Notify = 1;		 //0为关闭通知,1为打开通知,默认为1
 const notify = $.isNode() ? require('./sendNotify') : '';
 let envSplitor = ["@"]; //多账号分隔符
-let msg;       //let ck,msg
+let msg;//声明通知变量
 let userCookie = ($.isNode() ? process.env[ckName] : $.getdata(ckName)) || '';
 let userList = [];
 let userIdx = 0;
@@ -97,9 +97,10 @@ class UserInfo {
             "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
             "Content-Type": "application/x-www-form-urlencoded",
         }
+        this.randomTime1 = this.getRandomTime('1')
+        this.randomTime2 = this.getRandomTime('1')
 
-        this.randomTime1 = randomInt(2000,9000)
-        this.randomTime2 = randomInt(11000,19000)
+
 
     }
     getSign(ts, reqNonc) {
@@ -118,6 +119,18 @@ class UserInfo {
         let ranNum = randomInt(1, add_comment_text_arr.length)
         let text = add_comment_text_arr[ranNum]
         return text
+    }
+    getRandomTime(type) {
+        let randomTime;
+        switch (type) {
+            case '1':
+                randomTime = randomInt(2000, 9000)
+                break;
+            case '2':
+                randomTime = randomInt(11000, 19000)
+                break
+        }
+        return randomTime;
     }
     async user_info() {//userinfo
         try {
@@ -172,7 +185,7 @@ class UserInfo {
         // console.log(result)
         if (result.errorCode == 20000) {
             this.box = result.data
-            DoubleLog(`账号[${this.index}], 共有宝箱:${this.box.length}个!`)
+            DoubleLog(`账号[${this.index}] 共有宝箱:${this.box.length}个!`)
 
             if (this.box.length > 0) {
                 for (let i = 0; i < this.box.length; i++) {
@@ -197,7 +210,7 @@ class UserInfo {
         let result = await httpRequest(options)
         // console.(result)
         if (result.errorCode == 20000) {
-            DoubleLog(`账号[${this.index}], 开宝箱:${result.errorMessage} ,恭喜你获得 ${result.data.medalName} 奖品为 ${result.data.medalDescription}`)
+            DoubleLog(`账号[${this.index}] 开宝箱:${result.errorMessage} ,恭喜你获得 ${result.data.medalName} 奖品为 ${result.data.medalDescription}`)
         } else {
 
         }
