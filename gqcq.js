@@ -1,7 +1,7 @@
 /**
  * 广汽传祺
  * cron 9 5 * * *  gqcq.js
- * 
+ * 2023/03/20 随机延迟
  * ========= 青龙--配置文件 ===========
  * # 项目名称
  * export gqcq_data='token'
@@ -218,8 +218,8 @@ class UserInfo {
                 if (result.data[0].finishedNum == 0) {
                     DoubleLog(`账号[${this.index}] 签到状态： 未签到，去执行签到 ,顺便抽个奖`);
                     await this.task_signin();
-                    await $.wait(this.randomTime1)
                     DoubleLog(`随机延迟${this.randomTime1}ms`)
+                    await $.wait(this.randomTime1)
                     await this.task_lottery();
                 } else if (result.data[0].finishedNum == 1) {
                     DoubleLog(`账号[${this.index}] 签到状态：今天已经签到过了鸭，明天再来吧！`);
@@ -230,8 +230,8 @@ class UserInfo {
                     DoubleLog(`账号[${this.index}] 发帖：${result.data[1].finishedNum} / ${result.data[1].total}`);
                     DoubleLog(`账号[${this.index}] 发帖：执行第一次发帖,评论，删除评论`);
                     await this.post_topic();
-                    await $.wait(this.randomTime2)
                     DoubleLog(`随机延迟${this.randomTime2}ms`)
+                    await $.wait(this.randomTime2)
                     DoubleLog(`账号[${this.index}] 发帖：执行第二次发帖,评论，删除评论`);
                     await this.post_topic();
                 } else if (result.data[1].finishedNum == 2) {
@@ -242,8 +242,8 @@ class UserInfo {
                 if (result.data[3].finishedNum < 2) {
                     DoubleLog(`账号[${this.index}] 分享状态：${result.data[3].finishedNum} / ${result.data[3].total}`);
                     await this.task_share();
-                    await $.wait(this.randomTime2)
                     DoubleLog(`随机延迟${this.randomTime2}ms`)
+                    await $.wait(this.randomTime2)
                     await this.task_share();
                 } else if (result.data[3].finishedNum == 2) {
                     DoubleLog(`账号[${this.index}] 今天已经分享过了鸭，明天再来吧!`);
@@ -313,8 +313,8 @@ class UserInfo {
             if (result.errorCode == 20000) {
                 DoubleLog(`账号[${this.index}]  发布帖子:${result.errorMessage} ,帖子ID: ${result.data.postId}`);
                 let topic_id = result.data.postId;
-                await $.wait(this.randomTime2)
                 DoubleLog(`随机延迟${this.randomTime2}ms`)
+                await $.wait(this.randomTime2)
                 await this.add_comment(topic_id);
 
             } else {
@@ -337,8 +337,8 @@ class UserInfo {
             //console.log(result);
             if (result.errorCode == 20000) {
                 DoubleLog(`账号[${this.index}]  评论帖子: 评论 ${topic_id} 帖子 ${result.errorMessage}`);
-                await $.wait(this.randomTime2)
                 DoubleLog(`随机延迟${this.randomTime2}ms`)
+                await $.wait(this.randomTime2)
                 await this.delete_topic(topic_id);
             } else {
                 DoubleLog(`账号[${this.index}]  评论帖子失效,原因未知！`);
