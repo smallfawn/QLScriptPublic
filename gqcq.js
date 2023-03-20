@@ -98,7 +98,7 @@ class UserInfo {
             "Content-Type": "application/x-www-form-urlencoded",
         }
         this.randomTime1 = this.getRandomTime('1')
-        this.randomTime2 = this.getRandomTime('1')
+        this.randomTime2 = this.getRandomTime('2')
 
 
 
