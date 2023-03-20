@@ -74,7 +74,7 @@ class UserInfo {
             'platformNo': 'Android',
             'osVersion': '10',
             'version': '3.8.0',
-            'imei': 'a4dad7a1b1f865bc',
+            'imei': 'a4dad7a1b1f865bc', 
             'imsi': 'unknown',
             'deviceModel': 'MI 8',
             'deviceType': 'Android',
