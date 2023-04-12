@@ -31,7 +31,7 @@ let userCount = 0;
 
 async function start() {
 
-
+    await notice()
     console.log('\n================== 用户CK ==================\n');
     taskall = [];
     for (let user of userList) {
@@ -206,6 +206,33 @@ function getSHA256withRSA(content) {
     const sign64u = rs.hextob64u(originSign);
 
     return sign64u;
+}
+async function notice() {
+    try {
+        let options = {
+            url: `https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/api/main/notice.json`,
+            headers: {
+                'User-Agent': ''
+            },
+        }
+        //console.log(options);
+        let result = await httpRequest(options);
+        //console.log(result);
+        if (result) {
+            if ('notice' in result) {
+                DoubleLog(`${result.notice}`);
+            } else {
+                options.url = `https://gitee.com/smallfawn/api/raw/master/notice.json`
+                result = await httpRequest(options);
+                if ('notice' in result) {
+                    DoubleLog(`${result.notice}`);
+                }
+            }
+        } else {
+        }
+    } catch (e) {
+        console.log(e);
+    }
 }
 function ts13() {
     return Math.round(new Date().getTime()).toString();
