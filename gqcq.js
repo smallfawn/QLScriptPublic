@@ -29,7 +29,7 @@ let userCount = 0;
 //---------------------------------------------------------
 
 async function start() {
-
+    await notice()
     console.log('\n============= 用户CK有效性验证 =============\n');
     taskall = [];
     for (let user of userList) {
@@ -489,6 +489,31 @@ function httpRequest(options, method) {
             }
         })
     })
+}
+async function notice() {
+    try {
+        let options = {
+            url: `https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/api/main/notice.json`,
+            headers: {},
+        }
+        //console.log(options);
+        let result = await httpRequest(options);
+        //console.log(result);
+        if (result) {
+            if ('notice' in result) {
+                DoubleLog(`${result.notice}`);
+            } else {
+                /* options.url = `https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/api/main/notice.json`
+                result = await httpRequest(options); 
+                 if ('notice' in result) {
+                DoubleLog(`${result.notice}`);
+                  } */
+            }
+        } else {
+        }
+    } catch (e) {
+        console.log(e);
+    }
 }
 function ts13() {
     return Math.round(new Date().getTime()).toString();
