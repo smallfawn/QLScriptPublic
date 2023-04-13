@@ -4,7 +4,7 @@
  * 2023/04/12
  * ========= 青龙--配置文件 ===========
  * # 项目名称
- * export qtx_data='token'
+ * export qtxtk='token'
  * 
  * 多账号用 换行 或 @ 分割
  * 抓包 carbon.lcago.cn 这个域名 请求体 的body部分的 token 和 deviceCoding
@@ -51,6 +51,9 @@ async function start() {
             await $.wait(user.randomTime);
             taskall.push(await user.get_cal());
             await $.wait(user.randomTime);
+            if (user.calIdArr.length !== 0) {
+                console.log(`未收取精力列表${user.calIdArr}`);
+            }
             for (let l = 0; l < user.calIdArr.length; l++) {
                 taskall.push(await user.do_cal(user.calIdArr[l]));
                 await $.wait(user.randomTime);
@@ -78,13 +81,11 @@ class UserInfo {
         this.answer = ''
         this.calIdArr = []
         this.headers = {
-
             'Content-Type': 'application/json; charset=utf-8',
             'Host': 'carbon.lcago.cn',
             'Connection': 'Keep-Alive',
             //'Accept-Encoding': 'gzip',
             'User-Agent': 'okhttp/3.12.'
-
         }
         this.randomTime = this.getRandomTime()
 
@@ -203,10 +204,10 @@ class UserInfo {
                 if (result.data.dataList.length != 0) {
                     for (let i = 0; i < result.data.dataList.length; i++) {
                         this.calIdArr[i] = result.data.dataList[i].id;
-                        console.log(`未收取精力ID为${this.calIdArr[i]}`);
+                        //console.log(`未收取精力ID为${this.calIdArr[i]}`);
                     }
                 }
-                else console.log("获取未收取精力失败");
+                else { console.log("无未收取的精力") }
             } else {
                 DoubleLog(`账号[${this.index}]  获取精力失效,原因未知！`);
                 console.log(result);
@@ -304,13 +305,23 @@ async function notice() {
     try {
         let options = {
             url: `https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/api/main/notice.json`,
-            headers: {},
+            headers: {
+                'User-Agent': ''
+            },
         }
         //console.log(options);
         let result = await httpRequest(options);
         //console.log(result);
         if (result) {
-            DoubleLog(`${result.notice}`);
+            if ('notice' in result) {
+                DoubleLog(`${result.notice}`);
+            } else {
+                options.url = `https://gitee.com/smallfawn/api/raw/master/notice.json`
+                result = await httpRequest(options);
+                if ('notice' in result) {
+                    DoubleLog(`${result.notice}`);
+                }
+            }
         } else {
         }
     } catch (e) {
