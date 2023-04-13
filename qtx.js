@@ -33,30 +33,30 @@ async function start() {
     console.log('\n============= 用户CK有效性验证 =============\n');
     taskall = [];
     for (let user of userList) {
-        console.log(`随机延迟${user.randomTime}ms`);
+        console.log(`随机延迟${user.getRandomTime()}ms`);
         taskall.push(await user.user_info());
-        await $.wait(user.randomTime); //延迟  1秒  可充分利用 $.环境函数
+        await $.wait(user.getRandomTime()); //延迟  1秒  可充分利用 $.环境函数
     }
     await Promise.all(taskall);
     console.log('\n================== 任务 ==================\n');
     taskall = [];
     for (let user of userList) {
         if (user.ckStatus) {
-            console.log(`随机延迟${user.randomTime}ms`);
+            console.log(`随机延迟${user.getRandomTime()}ms`);
             taskall.push(await user.task_signIn());
-            await $.wait(user.randomTime);
+            await $.wait(user.getRandomTime());
             taskall.push(await user.get_question());
-            await $.wait(user.randomTime);
+            await $.wait(user.getRandomTime());
             taskall.push(await user.do_question());
-            await $.wait(user.randomTime);
+            await $.wait(user.getRandomTime());
             taskall.push(await user.get_cal());
-            await $.wait(user.randomTime);
+            await $.wait(user.getRandomTime());
             if (user.calIdArr.length !== 0) {
                 console.log(`未收取精力列表${user.calIdArr}`);
             }
             for (let l = 0; l < user.calIdArr.length; l++) {
                 taskall.push(await user.do_cal(user.calIdArr[l]));
-                await $.wait(user.randomTime);
+                await $.wait(user.getRandomTime());
             }
 
         }
@@ -87,7 +87,6 @@ class UserInfo {
             //'Accept-Encoding': 'gzip',
             'User-Agent': 'okhttp/3.12.'
         }
-        this.randomTime = this.getRandomTime()
 
 
 
