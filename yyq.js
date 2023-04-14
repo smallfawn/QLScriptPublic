@@ -4,10 +4,10 @@
  * 23/04/14  签到 点赞 评论 分享
  * ========= 青龙--配置文件 ===========
  * # 项目名称
- * export yyq_data='Cookie @ Cookie'
+ * export yyq_data='Cookie&13111111 @ Cookie&13111111'
  * 
  * 多账号用 换行 或 @ 分割
- * 抓包 https://customer.yueyequan.cn/ , 找到 headers中的Cookie 即可
+ * 抓包 https://customer.yueyequan.cn/ , 找到 headers中的 Cookie和userid=后面的值  即可
  * ====================================
  *   
  */
@@ -107,7 +107,8 @@ class UserInfo {
         //let ck = str.split('&')
         //this.data1 = ck[0]
         this.ckStatus = true
-        this.userId = this.ck.match(/userid=(\S*);Path=\/;usersig=/)[1];
+        //this.userId = this.ck.match(/userid=(\S*);Path=\/;usersig=/)[1];
+        this.userId = str.split('&')[1]; //单账号多变量分隔符;
         this.headers = {
             'User-Agent': 'okhttp/3.14.9 (Android 10; Xiaomi MI 8 Lite Build/V12.0.1.0.QDTCNXM 2.1.0 20100 release baicorvApp)',
             'appInfo': '{"appVersion":"2.1.0","osVersion":"Android 10","appType":"Android","deviceId":"4390c5f92dd2fa05a38f8bd6c10775f6@1681389949113","deviceName":"Xiaomi MI 8 Lite"}',
@@ -120,7 +121,7 @@ class UserInfo {
             'Connection': 'Keep-Alive',
         }
         this.articleIdArr = []
-        
+
     }
     getRandomTime() {
         return randomInt(3000, 9000)
@@ -231,10 +232,11 @@ class UserInfo {
     }
     async task_add(articleId) {
         try {
+            let txt = await hitokoto()
             let options = {
                 url: `https://customer.yueyequan.cn/comu-core/v1.0/comment/addComment`,
                 headers: this.headers,
-                body: JSON.stringify({ "content": "加油", "parentId": "0", "targetName": "", "entityId": `${articleId}`, "entityType": "002", "source": "" })
+                body: JSON.stringify({ "content": "" + txt + "" + + "", "parentId": "0", "targetName": "", "entityId": `${articleId}`, "entityType": "002", "source": "" })
             }
             options.headers['Content-Type'] = 'application/json;charset=UTF-8'
             options.headers['ice-auth-timestamp'] = ts13()
