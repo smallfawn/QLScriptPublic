@@ -15,7 +15,7 @@
 
 
 const $ = new Env("悦野圈");
-const ckName = "demo_data";
+const ckName = "yyq_data";
 //-------------------- 一般不动变量区域 -------------------------------------
 const Notify = 1;         //0为关闭通知,1为打开通知,默认为1
 const notify = $.isNode() ? require('./sendNotify') : '';
