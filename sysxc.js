@@ -175,7 +175,7 @@ class UserInfo {
                     let res = await this.SignIn(SignInpointJson)
                     if (res == '0') { 
                         //console.log(`签到成功`);
-                        return 
+                        return '0'
                     }
                 }
                 console.log(`签到结束`);
