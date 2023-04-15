@@ -1,6 +1,6 @@
 /**
  * 书亦烧仙草
- * cron 10 7 * * *  sysxc.js
+ * cron 11 8 * * *  sysxc.js
  * 23/04/15 内部使用
  * ========= 青龙--配置文件 ===========
  * # 项目名称
@@ -34,7 +34,7 @@ const crypto = require('crypto');
 
 async function start() {
 
-    //await notice()
+    await notice()
     console.log('\n================== 用户信息 ==================\n');
     taskall = [];
     for (let user of userList) {
