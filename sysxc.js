@@ -58,6 +58,10 @@ class UserInfo {
         //this.data1 = ck[0]
         this.ckStatus = true
         this.timestamp = ts13()
+        this.signInStatus = ''//签到状态
+        this.getVcodeStatus = ''//HK 获取状态
+        this.checkVcodeStatus = ''//HK 验证状态
+
     }
 
     async getVcode() {
@@ -113,15 +117,15 @@ class UserInfo {
                 aesRes += '=='
                 //console.log(`加密后${aesRes}`);
                 //console.log(VcodeKey);
-                for(let i =0;i<10;i++){
+                for (let i = 0; i < 10; i++) {
                     checkRes = await this.checkVcode(aesRes, VcodeToken, VcodeKey, aesStrStar)
-                    if (checkRes == '0'){
+                    if (checkRes == '0') {
                         return
                     }
                 }
 
             } else {
-                console.log(`获取滑块失败了呢`);
+                DoubleLog(`账号[${this.index}]获取失败了呢`);
             }
         } catch (e) {
             console.log(e);
@@ -158,7 +162,7 @@ class UserInfo {
             //console.log(result);
             if (result.resultCode == '0000') {
                 //console.log(result);
-                console.log('验证成功');
+                DoubleLog(`账号[${this.index}]验证成功`);
 
                 let SignInParams = VcodeToken + '---' + aesStrStar
                 SignInParams = SignInParams.replace(/\ +/g, "");
@@ -173,17 +177,17 @@ class UserInfo {
                     SignInpointJson += '=='
                     //console.log(SignInpointJson);
                     let res = await this.SignIn(SignInpointJson)
-                    if (res == '0') { 
+                    if (res == '0') {
                         //console.log(`签到成功`);
                         return '0'
                     }
                 }
-                console.log(`签到结束`);
+                DoubleLog(`账号[${this.index}]签到结束`);
                 //console.log(aesDecrypt(key, aesEncrypt(VcodeKey, SignInParams)));
                 return '0'
             } else {
                 //console.log(result);
-                console.log('验证失败');
+                DoubleLog(`账号[${this.index}]验证失败`);
                 return '1'
             }
         } catch (e) {
@@ -220,7 +224,7 @@ class UserInfo {
             //console.log(result);
             if (result.resultCode == '0') {
                 //console.log(result);
-                console.log(`成功啦`);
+                DoubleLog(`账号[${this.index}]签到成功啦`);
                 return '0'
             } else {
                 await $.wait(2000)
