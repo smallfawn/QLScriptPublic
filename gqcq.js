@@ -1,7 +1,7 @@
 /**
  * 广汽传祺
  * cron 9 5 * * *  gqcq.js
- * 2023/03/20 随机延迟
+ * 2023/03/20 随机延迟 一天运行3次
  * ========= 青龙--配置文件 ===========
  * # 项目名称
  * export gqcq_data='token'
@@ -30,6 +30,7 @@ let userCount = 0;
 
 async function start() {
     await notice()
+    console.log("一天运行3次,如果你有更多账号 N/3 次运行 N是你的账号数目");
     console.log('\n============= 用户CK有效性验证 =============\n');
     taskall = [];
     for (let user of userList) {
@@ -74,7 +75,7 @@ class UserInfo {
             'platformNo': 'Android',
             'osVersion': '10',
             'version': '3.8.0',
-            'imei': 'a4dad7a1b1f865bc', 
+            'imei': 'a4dad7a1b1f865bc',
             'imsi': 'unknown',
             'deviceModel': 'MI 8',
             'deviceType': 'Android',
@@ -141,16 +142,22 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if (result.errorCode == 200) {
-                //DoubleLog(`账号[${this.index}]  ck验证成功: G金[${result.integralResponse.currentFund}] `);
-                let username = result.data.nickname
-                await this.user_point(username)
-                this.ckStatus = true
+            if ('errorCode' in result) {
+                if (result.errorCode == 200) {
+                    //DoubleLog(`账号[${this.index}]  ck验证成功: G金[${result.integralResponse.currentFund}] `);
+                    let username = result.data.nickname
+                    await this.user_point(username)
+                    this.ckStatus = true
+                } else {
+                    DoubleLog(`账号[${this.index}]  ck验证失效,原因未知！`);
+                    this.ckStatus = false
+                    console.log(result);
+                }
             } else {
-                DoubleLog(`账号[${this.index}]  ck验证失效,原因未知！`);
-                this.ckStatus = false
-                console.log(result);
+                console.log(`Api请求频繁,退出请求`);
+                return
             }
+
         } catch (e) {
             console.log(e);
         }
@@ -164,12 +171,18 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if (result.errorCode == 200) {
-                DoubleLog(`账号[${this.index}]  CK验证成功: [${username}] 积分[${result.data.pointCount}] `);
+            if ('errorCode' in result) {
+                if (result.errorCode == 200) {
+                    DoubleLog(`账号[${this.index}]  CK验证成功: [${username}] 积分[${result.data.pointCount}] `);
+                } else {
+                    DoubleLog(`账号[${this.index}]  CK验证失效,原因未知！`);
+                    console.log(result);
+                }
             } else {
-                DoubleLog(`账号[${this.index}]  CK验证失效,原因未知！`);
-                console.log(result);
+                console.log(`Api请求频繁,退出请求`);
+                return
             }
+
         } catch (e) {
             console.log(e);
         }
@@ -183,20 +196,25 @@ class UserInfo {
         // console.log(options)
         let result = await httpRequest(options)
         // console.log(result)
-        if (result.errorCode == 20000) {
-            this.box = result.data
-            DoubleLog(`账号[${this.index}] 共有宝箱:${this.box.length}个!`)
+        if ('errorCode' in result) {
+            if (result.errorCode == 20000) {
+                this.box = result.data
+                DoubleLog(`账号[${this.index}] 共有宝箱:${this.box.length}个!`)
 
-            if (this.box.length > 0) {
-                for (let i = 0; i < this.box.length; i++) {
-                    this.boxid = this.box[i].recordId
-                    await this.task_openBox()
-                    await $.wait(2000)
+                if (this.box.length > 0) {
+                    for (let i = 0; i < this.box.length; i++) {
+                        this.boxid = this.box[i].recordId
+                        await this.task_openBox()
+                        await $.wait(2000)
+                    }
                 }
+            } else {
+                DoubleLog(`账号[${this.index}]  获取宝箱信息失效,原因未知！`);
+                console.log(result);
             }
         } else {
-            DoubleLog(`账号[${this.index}]  获取宝箱信息失效,原因未知！`);
-            console.log(result);
+            console.log(`Api请求频繁,退出请求`);
+            return
         }
 
     }
@@ -209,10 +227,15 @@ class UserInfo {
         // console.log(options)
         let result = await httpRequest(options)
         // console.(result)
-        if (result.errorCode == 20000) {
-            DoubleLog(`账号[${this.index}] 开宝箱:${result.errorMessage} ,恭喜你获得 ${result.data.medalName} 奖品为 ${result.data.medalDescription}`)
-        } else {
+        if ('errorCode' in result) {
+            if (result.errorCode == 20000) {
+                DoubleLog(`账号[${this.index}] 开宝箱:${result.errorMessage} ,恭喜你获得 ${result.data.medalName} 奖品为 ${result.data.medalDescription}`)
+            } else {
 
+            }
+        } else {
+            console.log(`Api请求频繁,退出请求`);
+            return
         }
 
     }
@@ -227,46 +250,51 @@ class UserInfo {
             //console.log(options);
 
             let result = await httpRequest(options)
-            if (result.errorCode == 20000) {
-                if (result.data[0].finishedNum == 0) {
-                    DoubleLog(`账号[${this.index}] 签到状态： 未签到，去执行签到 ,顺便抽个奖`);
-                    await this.task_signin();
-                    DoubleLog(`随机延迟${this.randomTime1}ms`)
-                    await $.wait(this.randomTime1)
-                    await this.task_lottery();
-                } else if (result.data[0].finishedNum == 1) {
-                    DoubleLog(`账号[${this.index}] 签到状态：今天已经签到过了鸭，明天再来吧！`);
+            if ('errorCode' in result) {
+                if (result.errorCode == 20000) {
+                    if (result.data[0].finishedNum == 0) {
+                        DoubleLog(`账号[${this.index}] 签到状态： 未签到，去执行签到 ,顺便抽个奖`);
+                        await this.task_signin();
+                        DoubleLog(`随机延迟${this.randomTime1}ms`)
+                        await $.wait(this.randomTime1)
+                        await this.task_lottery();
+                    } else if (result.data[0].finishedNum == 1) {
+                        DoubleLog(`账号[${this.index}] 签到状态：今天已经签到过了鸭，明天再来吧！`);
+                    } else {
+                        DoubleLog(`账号[${this.index}] 获取签到状态:  失败 ❌ 了呢,原因未知！`);
+                    }
+                    if (result.data[1].finishedNum < 2) {
+                        DoubleLog(`账号[${this.index}] 发帖：${result.data[1].finishedNum} / ${result.data[1].total}`);
+                        DoubleLog(`账号[${this.index}] 发帖：执行第一次发帖,评论，删除评论`);
+                        await this.post_topic();
+                        DoubleLog(`随机延迟${this.randomTime2}ms`)
+                        await $.wait(this.randomTime2)
+                        DoubleLog(`账号[${this.index}] 发帖：执行第二次发帖,评论，删除评论`);
+                        await this.post_topic();
+                    } else if (result.data[1].finishedNum == 2) {
+                        DoubleLog(`账号[${this.index}] 今天已经发帖了，明天再来吧!`);
+                    } else {
+                        DoubleLog(`账号[${this.index}] 获取发帖状态:  失败 ❌ 了呢,原因未知!`);
+                    }
+                    if (result.data[3].finishedNum < 2) {
+                        DoubleLog(`账号[${this.index}] 分享状态：${result.data[3].finishedNum} / ${result.data[3].total}`);
+                        await this.task_share();
+                        DoubleLog(`随机延迟${this.randomTime2}ms`)
+                        await $.wait(this.randomTime2)
+                        await this.task_share();
+                    } else if (result.data[3].finishedNum == 2) {
+                        DoubleLog(`账号[${this.index}] 今天已经分享过了鸭，明天再来吧!`);
+                    } else {
+                        DoubleLog(`账号[${this.index}] 获取分享状态:  失败 ❌ 了呢,原因未知!`);
+                    }
+                    //DoubleLog(`账号[${this.index}]  执行任务成功: [${tasktmp.taskId}] `);
                 } else {
-                    DoubleLog(`账号[${this.index}] 获取签到状态:  失败 ❌ 了呢,原因未知！`);
+                    DoubleLog(`账号[${this.index}]  获取任务失效,原因未知！`);
+                    console.log(result);
                 }
-                if (result.data[1].finishedNum < 2) {
-                    DoubleLog(`账号[${this.index}] 发帖：${result.data[1].finishedNum} / ${result.data[1].total}`);
-                    DoubleLog(`账号[${this.index}] 发帖：执行第一次发帖,评论，删除评论`);
-                    await this.post_topic();
-                    DoubleLog(`随机延迟${this.randomTime2}ms`)
-                    await $.wait(this.randomTime2)
-                    DoubleLog(`账号[${this.index}] 发帖：执行第二次发帖,评论，删除评论`);
-                    await this.post_topic();
-                } else if (result.data[1].finishedNum == 2) {
-                    DoubleLog(`账号[${this.index}] 今天已经发帖了，明天再来吧!`);
-                } else {
-                    DoubleLog(`账号[${this.index}] 获取发帖状态:  失败 ❌ 了呢,原因未知!`);
-                }
-                if (result.data[3].finishedNum < 2) {
-                    DoubleLog(`账号[${this.index}] 分享状态：${result.data[3].finishedNum} / ${result.data[3].total}`);
-                    await this.task_share();
-                    DoubleLog(`随机延迟${this.randomTime2}ms`)
-                    await $.wait(this.randomTime2)
-                    await this.task_share();
-                } else if (result.data[3].finishedNum == 2) {
-                    DoubleLog(`账号[${this.index}] 今天已经分享过了鸭，明天再来吧!`);
-                } else {
-                    DoubleLog(`账号[${this.index}] 获取分享状态:  失败 ❌ 了呢,原因未知!`);
-                }
-                //DoubleLog(`账号[${this.index}]  执行任务成功: [${tasktmp.taskId}] `);
             } else {
-                DoubleLog(`账号[${this.index}]  获取任务失效,原因未知！`);
-                console.log(result);
+                console.log(`Api请求频繁,退出请求`);
+                return
             }
             //console.log(result);
 
@@ -283,11 +311,17 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if (result.errorCode == 200) {
-                DoubleLog(`账号[${this.index}]  签到:${result.errorMessage} ,你已经连续签到 [${result.data.dayCount}] 天 ,签到获得G豆 [${result.data.operationValue}]个 `);
+            if ('errorCode' in result) {
+
+                if (result.errorCode == 200) {
+                    DoubleLog(`账号[${this.index}]  签到:${result.errorMessage} ,你已经连续签到 [${result.data.dayCount}] 天 ,签到获得G豆 [${result.data.operationValue}]个 `);
+                } else {
+                    DoubleLog(`账号[${this.index}]  签到失效,原因未知！`);
+                    console.log(result);
+                }
             } else {
-                DoubleLog(`账号[${this.index}]  签到失效,原因未知！`);
-                console.log(result);
+                console.log(`Api请求频繁,退出请求`);
+                return
             }
         } catch (e) {
             console.log(e);
@@ -303,11 +337,17 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if (result.errorCode == 20000) {
-                DoubleLog(`账号[${this.index}]  抽奖:${result.errorMessage} ,恭喜你获得 [${result.data.medalName}] 奖品为 [${result.data.medalDescription}]`);
+            if ('errorCode' in result) {
+
+                if (result.errorCode == 20000) {
+                    DoubleLog(`账号[${this.index}]  抽奖:${result.errorMessage} ,恭喜你获得 [${result.data.medalName}] 奖品为 [${result.data.medalDescription}]`);
+                } else {
+                    DoubleLog(`账号[${this.index}]  抽奖失效,原因未知！`);
+                    console.log(result);
+                }
             } else {
-                DoubleLog(`账号[${this.index}]  抽奖失效,原因未知！`);
-                console.log(result);
+                console.log(`Api请求频繁,退出请求`);
+                return
             }
         } catch (e) {
             console.log(e);
@@ -323,16 +363,22 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if (result.errorCode == 20000) {
-                DoubleLog(`账号[${this.index}]  发布帖子:${result.errorMessage} ,帖子ID: ${result.data.postId}`);
-                let topic_id = result.data.postId;
-                DoubleLog(`随机延迟${this.randomTime2}ms`)
-                await $.wait(this.randomTime2)
-                await this.add_comment(topic_id);
+            if ('errorCode' in result) {
 
+                if (result.errorCode == 20000) {
+                    DoubleLog(`账号[${this.index}]  发布帖子:${result.errorMessage} ,帖子ID: ${result.data.postId}`);
+                    let topic_id = result.data.postId;
+                    DoubleLog(`随机延迟${this.randomTime2}ms`)
+                    await $.wait(this.randomTime2)
+                    await this.add_comment(topic_id);
+
+                } else {
+                    DoubleLog(`账号[${this.index}]  发布帖子失效,原因未知！`);
+                    console.log(result);
+                }
             } else {
-                DoubleLog(`账号[${this.index}]  发布帖子失效,原因未知！`);
-                console.log(result);
+                console.log(`Api请求频繁,退出请求`);
+                return
             }
         } catch (e) {
             console.log(e);
@@ -348,14 +394,20 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if (result.errorCode == 20000) {
-                DoubleLog(`账号[${this.index}]  评论帖子: 评论 ${topic_id} 帖子 ${result.errorMessage}`);
-                DoubleLog(`随机延迟${this.randomTime2}ms`)
-                await $.wait(this.randomTime2)
-                await this.delete_topic(topic_id);
+            if ('errorCode' in result) {
+
+                if (result.errorCode == 20000) {
+                    DoubleLog(`账号[${this.index}]  评论帖子: 评论 ${topic_id} 帖子 ${result.errorMessage}`);
+                    DoubleLog(`随机延迟${this.randomTime2}ms`)
+                    await $.wait(this.randomTime2)
+                    await this.delete_topic(topic_id);
+                } else {
+                    DoubleLog(`账号[${this.index}]  评论帖子失效,原因未知！`);
+                    console.log(result);
+                }
             } else {
-                DoubleLog(`账号[${this.index}]  评论帖子失效,原因未知！`);
-                console.log(result);
+                console.log(`Api请求频繁,退出请求`);
+                return
             }
         } catch (e) {
             console.log(e);
@@ -371,11 +423,17 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if (result.errorCode == 20000) {
-                DoubleLog(`账号[${this.index}]  删除帖子: 帖子ID: ${topic_id} , 执行删除 ${result.errorMessage}`);
+            if ('errorCode' in result) {
+
+                if (result.errorCode == 20000) {
+                    DoubleLog(`账号[${this.index}]  删除帖子: 帖子ID: ${topic_id} , 执行删除 ${result.errorMessage}`);
+                } else {
+                    DoubleLog(`账号[${this.index}]  删除帖子失效,原因未知！`);
+                    console.log(result);
+                }
             } else {
-                DoubleLog(`账号[${this.index}]  删除帖子失效,原因未知！`);
-                console.log(result);
+                console.log(`Api请求频繁,退出请求`);
+                return
             }
         } catch (e) {
             console.log(e);
@@ -392,11 +450,17 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if (result.errorCode == '20000') {
-                DoubleLog(`账号[${this.index}]  分享帖子: 帖子ID: ${postId},分享文章:${result.errorMessage}`);
+            if ('errorCode' in result) {
+
+                if (result.errorCode == '20000') {
+                    DoubleLog(`账号[${this.index}]  分享帖子: 帖子ID: ${postId},分享文章:${result.errorMessage}`);
+                } else {
+                    DoubleLog(`账号[${this.index}]  分享帖子失效,原因未知！`);
+                    console.log(result);
+                }
             } else {
-                DoubleLog(`账号[${this.index}]  分享帖子失效,原因未知！`);
-                console.log(result);
+                console.log(`Api请求频繁,退出请求`);
+                return
             }
         } catch (e) {
             console.log(e);
@@ -411,16 +475,22 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if (result.errorCode == '20000') {
-                let num = randomInt(1, 19);
-                let postId = result.data.records[num].postId;
+            if ('errorCode' in result) {
 
-                DoubleLog(`账号[${this.index}]  分享的文章: ${result.data.records[num].topicNames}  文章ID:${result.data.records[num].postId}`);
-                return postId;
+                if (result.errorCode == '20000') {
+                    let num = randomInt(1, 19);
+                    let postId = result.data.records[num].postId;
 
+                    DoubleLog(`账号[${this.index}]  分享的文章: ${result.data.records[num].topicNames}  文章ID:${result.data.records[num].postId}`);
+                    return postId;
+
+                } else {
+                    DoubleLog(`账号[${this.index}]  获取分享文章失效,原因未知！`);
+                    console.log(result);
+                }
             } else {
-                DoubleLog(`账号[${this.index}]  获取分享文章失效,原因未知！`);
-                console.log(result);
+                console.log(`Api请求频繁,退出请求`);
+                return
             }
         } catch (e) {
             console.log(e);
