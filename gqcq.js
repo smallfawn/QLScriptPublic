@@ -154,8 +154,7 @@ class UserInfo {
                     console.log(result);
                 }
             } else {
-                console.log(`Api请求频繁,退出请求`);
-                return
+                return console.log(`Api请求频繁,退出请求`);
             }
 
         } catch (e) {
@@ -179,8 +178,7 @@ class UserInfo {
                     console.log(result);
                 }
             } else {
-                console.log(`Api请求频繁,退出请求`);
-                return
+                return console.log(`Api请求频繁,退出请求`);
             }
 
         } catch (e) {
@@ -213,8 +211,7 @@ class UserInfo {
                 console.log(result);
             }
         } else {
-            console.log(`Api请求频繁,退出请求`);
-            return
+            return console.log(`Api请求频繁,退出请求`);
         }
 
     }
@@ -234,8 +231,7 @@ class UserInfo {
 
             }
         } else {
-            console.log(`Api请求频繁,退出请求`);
-            return
+            return console.log(`Api请求频繁,退出请求`);
         }
 
     }
@@ -293,8 +289,7 @@ class UserInfo {
                     console.log(result);
                 }
             } else {
-                console.log(`Api请求频繁,退出请求`);
-                return
+                return console.log(`Api请求频繁,退出请求`);
             }
             //console.log(result);
 
@@ -320,8 +315,7 @@ class UserInfo {
                     console.log(result);
                 }
             } else {
-                console.log(`Api请求频繁,退出请求`);
-                return
+                return console.log(`Api请求频繁,退出请求`);
             }
         } catch (e) {
             console.log(e);
@@ -346,8 +340,7 @@ class UserInfo {
                     console.log(result);
                 }
             } else {
-                console.log(`Api请求频繁,退出请求`);
-                return
+                return console.log(`Api请求频繁,退出请求`);
             }
         } catch (e) {
             console.log(e);
@@ -377,8 +370,7 @@ class UserInfo {
                     console.log(result);
                 }
             } else {
-                console.log(`Api请求频繁,退出请求`);
-                return
+                return console.log(`Api请求频繁,退出请求`);
             }
         } catch (e) {
             console.log(e);
@@ -406,8 +398,7 @@ class UserInfo {
                     console.log(result);
                 }
             } else {
-                console.log(`Api请求频繁,退出请求`);
-                return
+                return console.log(`Api请求频繁,退出请求`);
             }
         } catch (e) {
             console.log(e);
@@ -432,8 +423,8 @@ class UserInfo {
                     console.log(result);
                 }
             } else {
-                console.log(`Api请求频繁,退出请求`);
-                return
+
+                return console.log(`Api请求频繁,退出请求`);
             }
         } catch (e) {
             console.log(e);
@@ -459,8 +450,7 @@ class UserInfo {
                     console.log(result);
                 }
             } else {
-                console.log(`Api请求频繁,退出请求`);
-                return
+                return console.log(`Api请求频繁,退出请求`);
             }
         } catch (e) {
             console.log(e);
@@ -489,8 +479,7 @@ class UserInfo {
                     console.log(result);
                 }
             } else {
-                console.log(`Api请求频繁,退出请求`);
-                return
+                return console.log(`Api请求频繁,退出请求`);
             }
         } catch (e) {
             console.log(e);
@@ -563,10 +552,11 @@ function httpRequest(options, method) {
 async function notice() {
     try {
         let options = {
-            url: `https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/api/main/notice.json`,
+            url: `https://fastly.jsdelivr.net/gh/smallfawn/Note@main/Notice.json`,
             headers: {
                 'User-Agent': ''
             },
+            timeout: 5000,
         }
         //console.log(options);
         let result = await httpRequest(options);
