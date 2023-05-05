@@ -64,7 +64,13 @@ async function start() {
         //await wait(1); //延迟
     }
     await Promise.all(taskall);
-
+    console.log('\n================== 浇水 ==================\n');
+    taskall = [];
+    for (let user of userList) {
+        await $.wait(3000)
+        taskall.push(await user.user_info());
+        //await wait(1); //延迟
+    }
     console.log('\n================== 领取完成任务奖励 ==================\n');
     taskall = [];
     for (let user of userList) {
@@ -73,13 +79,7 @@ async function start() {
         //await wait(1); //延迟
     }
     await Promise.all(taskall);
-    console.log('\n================== 浇水 ==================\n');
-    taskall = [];
-    for (let user of userList) {
-        await $.wait(3000)
-        taskall.push(await user.user_info());
-        //await wait(1); //延迟
-    }
+
     await Promise.all(taskall);
     taskall = [];
     for (let user of userList) {
@@ -158,8 +158,8 @@ class UserInfo {
                 this.ckStatus = true
                 DoubleLog(`账号[${this.index}] [${result.msg}]  剩余水滴[${result.data.droplet}g]`);
                 if (result.data.droplet > 0) {
-                    console.log(`判断当前可浇水${parseInt(result.data.droplet / 40)}次,开始浇水`);
-                    for (let i = 0; i < parseInt(result.data.droplet / 40); i++) {
+                    console.log(`判断当前可浇水${parseInt(result.data.droplet / 80)}次,开始浇水`);
+                    for (let i = 0; i < parseInt(result.data.droplet / 80); i++) {
                         await this.task_watering("浇水")
                         await $.wait(3000)
                     }
