@@ -305,9 +305,11 @@ class UserInfo {
         await this.task_watering_reward()//
         await this.droplet_extra_info()
         await this.get_generate_droplet()
+        let halfLength = Math.ceil(this.taskList.length / 2);
+        this.taskList = this.taskList.slice(halfLength);
         for (let i in this.taskList) {
-            if (this.taskList[i].isReceiveReward) {
-                console.log(`未发现可领取的奖励哦`);
+            if (this.taskList[i].isReceiveReward == true) {
+                console.log(`[${this.taskList[i].taskName}]已经领取过`);
             } else {
                 await this.task_receive(this.taskList[i].classify, this.taskList[i].taskId, this.taskList[i].taskType)
             }
@@ -512,7 +514,7 @@ class UserInfo {
                 DoubleLog(`账号[${this.index}]  领取任务奖励[${result.msg}][${result.data.num}g]`);
             } else if (result.code == 711020001) {
                 DoubleLog(`账号[${this.index}]  领取[${result.msg}]`);
-                console.log(result);
+                //console.log(result);
             } else {
                 DoubleLog(`账号[${this.index}]  领取[${result.msg}]`);
                 console.log(result);
