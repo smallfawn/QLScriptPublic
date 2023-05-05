@@ -73,6 +73,14 @@ async function start() {
         //await wait(1); //延迟
     }
     await Promise.all(taskall);
+    console.log('\n================== 浇水 ==================\n');
+    taskall = [];
+    for (let user of userList) {
+        await $.wait(3000)
+        taskall.push(await user.user_info());
+        //await wait(1); //延迟
+    }
+    await Promise.all(taskall);
     taskall = [];
     for (let user of userList) {
         await $.wait(3000)
@@ -513,11 +521,11 @@ class UserInfo {
             if (result.code == 200) {
                 DoubleLog(`账号[${this.index}]  领取任务奖励[${result.msg}][${result.data.num}g]`);
             } else if (result.code == 711020001) {
-                DoubleLog(`账号[${this.index}]  领取[${result.msg}]`);
+                //DoubleLog(`账号[${this.index}]  领取[${result.msg}]`);
                 //console.log(result);
             } else {
                 DoubleLog(`账号[${this.index}]  领取[${result.msg}]`);
-                console.log(result);
+                //console.log(result);
             }
         } catch (error) {
             console.log(error);
@@ -637,7 +645,7 @@ class UserInfo {
                 method: 'POST',
                 url: 'https://app.dewu.com/hacking-tree/v1/keyword/gen?sign=fe26befc49444d362c8f17463630bdba',
                 headers: this.headersPost,
-                body: '',
+                body: JSON.stringify({}),
 
             };
             //console.log(options);
