@@ -259,6 +259,7 @@ class UserInfo {
                     await taskIdObject[taskId]()
                 } else {
                     let btd = getMiddleValue('btd=', '&', jumpUrl)
+                    btd = Number(btd)
                     //console.log(`JUMP URL 数据${jumpUrl}`);
                     //console.log(`BTD 数据${btd}`);
                     let taskTypeIfObject = {
@@ -433,6 +434,8 @@ class UserInfo {
     async task_signIn2() { // 签到 领取水滴
         try {
             let options = {
+                method: 'POST',
+
                 url: `https://app.dewu.com/hacking-game-center/v1/sign/sign?sign=fe26befc49444d362c8f17463630bdba`,
                 headers: this.headersPost,
                 body: JSON.stringify({})
