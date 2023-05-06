@@ -10,8 +10,8 @@
  * 
  * 四个参数缺一不可
  * 得物APP => 购物 => 上方推荐 - 免费领好礼
- * 找不到的话去 我 => 星愿森林 进入活动
- * 抓app.dewu.com域名下headers参数x-auth-token   &    SK   &   shumeiId   &   uuid 多账号 @ 分割
+ * 找不到的话去 我 => 星愿森林 进入活动           x-auth-token去掉bearer
+ * 抓app.dewu.com域名下headers参数   x-auth-token   &    SK   &   shumeiId   &   uuid 多账号 @ 分割
  * ====================================
  *  
  */
@@ -352,7 +352,7 @@ class UserInfo {
     async task_true() { // 查询完成任务 && 未领取的任务
         await this.task_list()
         for (let i in this.extraAwardList) {
-            if (this.userStep > this.extraAwardList[i].condition && this.extraAwardList[i].status == 1) {
+            if (this.extraAwardList[i].status == 1) {
                 console.log("领取累计任务奖励");
                 await this.task_extra(this.extraAwardList[i].condition)
             } else {
