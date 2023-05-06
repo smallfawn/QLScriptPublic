@@ -9,9 +9,9 @@
  * export dwnc_data='x-auth-token   &    SK   &   shumeiId   &   uuid '
  * 
  * 四个参数缺一不可
- * 得物APP => 购物 => 上方推荐 - 免费领好礼
- * 找不到的话去 我 => 星愿森林 进入活动           x-auth-token去掉bearer
- * 抓app.dewu.com域名下headers参数   x-auth-token   &    SK   &   shumeiId   &   uuid 多账号 @ 分割
+ * 得物APP => 购物 => 上方推荐 - 免费领好礼     抓app.dewu.com域名下headers参数                   找不到UUID 就是 deviceId
+ * 找不到的话去 我 => 星愿森林 进入活动          抓app.dewu.com域名下headers参数                 x-auth-token去掉bearer
+ * 抓app.dewu.com域名下headers参数               抓app.dewu.com域名下headers参数              x-auth-token   &    SK   &   shumeiId   &   uuid 多账号 @ 分割
  * ====================================
  *  
  */
@@ -246,7 +246,7 @@ class UserInfo {
             let taskId = this.taskList[i].taskId
             let taskName = this.taskList[i].taskName
             let taskType = this.taskList[i].taskType
-            let classify = this.taskList[i].classify
+            //let classify = this.taskList[i].classify
             let jumpUrl = this.taskList[i].jumpUrl
             let rewardCount = this.taskList[i].rewardCount
             if (isComplete == false) {
@@ -588,12 +588,6 @@ class UserInfo {
         } catch (error) {
             console.log(error);
         }
-
-        //options.body = JSON.stringify({ classify: classify, taskId: taskId, completeFlag: 1 })
-
-
-
-
     }
 
     async task_extra(condition) { // 领取水滴任务累计奖励
@@ -696,7 +690,6 @@ class UserInfo {
     }
 
 
-
     async share_code() { // 获取助力码
         try {
             let options = {
@@ -732,6 +725,7 @@ class UserInfo {
             //console.log(result);
             if (result.code == 200) {
                 this.ckStatus = true
+                //$.msg(`账号[${this.index}]  [${result.data.treeId}] 成熟进度[${result.data.userWateringDroplet}/${result.data.currentLevelNeedWateringDroplet}g]`)
                 DoubleLog(`账号[${this.index}]  [${result.data.treeId}] 成熟进度[${result.data.userWateringDroplet}/${result.data.currentLevelNeedWateringDroplet}g]`);
             } else {
                 DoubleLog(`账号[${this.index}]  农场信息查询失败:原因未知`);
