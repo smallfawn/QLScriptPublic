@@ -159,7 +159,7 @@ class UserInfo {
 
             if (result.code == 200) {
                 this.ckStatus = true
-                console.log(`账号[${this.index}]  [${result.msg}] 奖品[${result.data.name}]`);
+                console.log(`账号[${this.index}]  [${result.msg}]  奖品[${result.data.name}]`);
             } else {
                 this.ckStatus = false
                 console.log(`账号[${this.index}]  查询奖励失败了呢`);
@@ -368,7 +368,7 @@ class UserInfo {
         this.taskList = this.taskList.slice(halfLength);
         for (let i in this.taskList) {
             if (this.taskList[i].isReceiveReward == true) {
-                console.log(`账号[${this.index}]  [${this.taskList[i].taskName}]已经领取过`);
+                console.log(`账号[${this.index}]  [${this.taskList[i].taskName}] --- 已领取`);
             } else {
                 await this.task_receive(this.taskList[i].classify, this.taskList[i].taskId, this.taskList[i].taskType)
             }
@@ -466,7 +466,7 @@ class UserInfo {
                 let result = await httpRequest(options);
                 //console.log(result);
                 if (result.code == 200) {
-                    DoubleLog(`账号[${this.index}]  签到领取水滴[${result.msg}][${result.data.Num}]`);
+                    DoubleLog(`账号[${this.index}]  签到领取水滴[${result.msg}] --- [${result.data.Num}]`);
                 } else if (result.code == 711110001) {
                     DoubleLog(`账号[${this.index}]  签到领取水滴[${result.msg}]`);
                     console.log(result);
@@ -495,7 +495,7 @@ class UserInfo {
             let result = await httpRequest(options);
             //console.log(result);
             if (result.code == 200) {
-                console.log(`账号[${this.index}]  签到[${result.msg}] [${result.data.coins}]`);
+                console.log(`账号[${this.index}]  签到[${result.msg}] --- [${result.data.coins}]`);
             } else {
                 console.log(`账号[${this.index}]  签到失败`);
                 console.log(result);
@@ -518,7 +518,7 @@ class UserInfo {
             //console.log(result);
             if (result.code == 200) {
                 if (result.data.wateringReward !== null) {
-                    DoubleLog(`账号[${this.index}]  浇水[${result.msg}][${result.data.wateringReward.rewardNum}g]`);
+                    DoubleLog(`账号[${this.index}]  浇水[${result.msg}] --- [${result.data.wateringReward.rewardNum}g]`);
                 } else {
                     DoubleLog(`账号[${this.index}]  浇水[${result.msg}]`);
                 }
@@ -545,7 +545,7 @@ class UserInfo {
             let result = await httpRequest(options);
             //console.log(result);
             if (result.code == 200) {
-                DoubleLog(`账号[${this.index}]  领取累计浇水奖励[${result.msg}][${result.data.rewardNum}g]`);
+                DoubleLog(`账号[${this.index}]  领取累计浇水奖励[${result.msg}] --- [${result.data.rewardNum}g]`);
             } else if (result.code == 711070005) {
                 DoubleLog(`账号[${this.index}]  领取累计浇水奖励[${result.msg}]`);
                 //console.log(result);
@@ -577,7 +577,7 @@ class UserInfo {
             }
             //console.log(result);
             if (result.code == 200) {
-                DoubleLog(`账号[${this.index}]  领取任务奖励[${result.msg}][${result.data.num}g]`);
+                DoubleLog(`账号[${this.index}]  领取任务奖励[${result.msg}] --- [${result.data.num}g]`);
             } else if (result.code == 711020001) {
                 //DoubleLog(`账号[${this.index}]  领取[${result.msg}]`);
                 //console.log(result);
@@ -602,7 +602,7 @@ class UserInfo {
             let result = await httpRequest(options);
             //console.log(result);
             if (result.code == 200) {
-                DoubleLog(`账号[${this.index}]  领取累计奖励:${result.msg}[${result.data.num}g]`);
+                DoubleLog(`账号[${this.index}]  领取累计奖励[${result.msg}] --- [${result.data.num}g]`);
             } else if (result.code == 711020001) {
                 DoubleLog(`账号[${this.index}]  领取累计奖励失败:${result.msg}`);
                 //console.log(result);
@@ -628,10 +628,10 @@ class UserInfo {
 
             if (result.code == 200) {
                 if ("onlineExtra" in result.data) {
-                    console.log(`账号[${this.index}]  气泡水滴已满,今日可领取${result.data.onlineExtra.totalDroplet}g`);
+                    console.log(`账号[${this.index}]  气泡水滴已满,今日可领取 --- [${result.data.onlineExtra.totalDroplet}]g`);
                     await this.droplet_extra_receive();
                 } else if (result.data.dailyExtra) {
-                    console.log(`账号[${this.index}]  气泡水滴未满,不可领取,明日再来领取吧！目前已经积攒了${result.data.dailyExtra.totalDroplet}g水滴呢!"`);
+                    console.log(`账号[${this.index}]  气泡水滴未满,不可领取,明日再来领取吧！目前已经积攒了 --- [${result.data.dailyExtra.totalDroplet}]g水滴呢!"`);
                 }
             } else {
                 console.log(`账号[${this.index}] 查询气泡水滴失败了呢`);
@@ -652,9 +652,9 @@ class UserInfo {
             let result = await httpRequest(options);
             //console.log(result);
             if (result.code == 200) {
-                DoubleLog(`账号[${this.index}]  领取气泡水滴:${result.msg}[${result.data.totalDroplet}g]`);
+                DoubleLog(`账号[${this.index}]  领取气泡水滴[${result.msg}] --- [${result.data.totalDroplet}g]`);
             } else if (result.code == 711030002) {
-                DoubleLog(`账号[${this.index}]  领取气泡水滴失败:${result.msg}`);
+                DoubleLog(`账号[${this.index}]  领取气泡水滴[${result.msg}]`);
                 //console.log(result);
             } else {
                 DoubleLog(`账号[${this.index}]  领取气泡水滴失败:原因未知`);
@@ -676,9 +676,9 @@ class UserInfo {
             let result = await httpRequest(options);
             //console.log(result);
             if (result.code == 200) {
-                DoubleLog(`账号[${this.index}]  领取小木桶积攒水滴:${result.msg}[${result.data.droplet}g]`);
+                DoubleLog(`账号[${this.index}]  领取小木桶积攒水滴[${result.msg}] --- [${result.data.droplet}g]`);
             } else if (result.code == 711070009) {
-                DoubleLog(`账号[${this.index}]  领取小木桶积攒水滴失败:${result.msg}`);
+                DoubleLog(`账号[${this.index}]  领取小木桶积攒水滴[${result.msg}]`);
                 //console.log(result);
             } else {
                 DoubleLog(`账号[${this.index}]  领取小木桶积攒水滴:原因未知`);
@@ -726,7 +726,7 @@ class UserInfo {
             if (result.code == 200) {
                 this.ckStatus = true
                 //$.msg(`账号[${this.index}]  [${result.data.treeId}] 成熟进度[${result.data.userWateringDroplet}/${result.data.currentLevelNeedWateringDroplet}g]`)
-                DoubleLog(`账号[${this.index}]  [${result.data.treeId}] 成熟进度[${result.data.userWateringDroplet}/${result.data.currentLevelNeedWateringDroplet}g]`);
+                DoubleLog(`账号[${this.index}]  [${result.data.treeId}] 成熟进度 --- [${result.data.userWateringDroplet}/${result.data.currentLevelNeedWateringDroplet}g]`);
             } else {
                 DoubleLog(`账号[${this.index}]  农场信息查询失败:原因未知`);
                 console.log(result);
