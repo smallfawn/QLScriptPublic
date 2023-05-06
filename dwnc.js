@@ -732,7 +732,7 @@ class UserInfo {
             //console.log(result);
             if (result.code == 200) {
                 this.ckStatus = true
-                DoubleLog(`账号[${this.index}]  [${result.data.treeId}] 成熟进度[${result.data.userWateringDroplet}/${result.data.currentLeveNeedWateringDroplet}g]`);
+                DoubleLog(`账号[${this.index}]  [${result.data.treeId}] 成熟进度[${result.data.userWateringDroplet}/${result.data.currentLevelNeedWateringDroplet}g]`);
             } else {
                 DoubleLog(`账号[${this.index}]  农场信息查询失败:原因未知`);
                 console.log(result);
