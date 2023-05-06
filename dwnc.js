@@ -256,7 +256,7 @@ class UserInfo {
                 }
                 let taskIdObject = {
                     "multi_times": async () => {
-                        if (this.hours = 8 || 12 | 18 | 22) {
+                        if (Number(this.hours) == 8 || Number(this.hours) == 12 || Number(this.hours) == 18 || Number(this.hours) == 22) {
                             console.log(`检测当前到达任务时间节点,开始执行任务`);
                             //await this.task_receive(1, 1, "multi_times")//领取
                         } else {
