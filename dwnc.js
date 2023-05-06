@@ -86,8 +86,6 @@ async function start() {
             //await wait(1); //延迟
         }
         await Promise.all(taskall);
-
-        await Promise.all(taskall);
         taskall = [];
         for (let user of userList) {
             await $.wait(3000)
@@ -96,7 +94,6 @@ async function start() {
         }
         await Promise.all(taskall);
         console.log('\n------------------- [进度] -------------------\n');
-
         taskall = [];
         for (let user of userList) {
             await $.wait(3000)
@@ -518,9 +515,9 @@ class UserInfo {
             let result = await httpRequest(options);
             //console.log(result);
             if (result.code == 200) {
-                if('rewardNum' in result.data.wateringReward){
+                if (result.data.wateringReward !== null) {
                     DoubleLog(`账号[${this.index}]  浇水[${result.msg}][${result.data.wateringReward.rewardNum}g]`);
-                }else{
+                } else {
                     DoubleLog(`账号[${this.index}]  浇水[${result.msg}]`);
                 }
             } else if (result.code == 711110001) {
