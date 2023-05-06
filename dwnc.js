@@ -183,7 +183,7 @@ class UserInfo {
                 this.ckStatus = true
                 DoubleLog(`账号[${this.index}] [${result.msg}]  剩余水滴[${result.data.droplet}g]`);
                 if (result.data.droplet > 0) {
-                    console.log(`判断当前可浇水${parseInt(result.data.droplet / 80)}次,开始浇水`);
+                    console.log(`账号[${this.index}]  判断当前可浇水${parseInt(result.data.droplet / 80)}次,开始浇水`);
                     for (let i = 0; i < parseInt(result.data.droplet / 80); i++) {
                         await this.task_watering("浇水")
                         await $.wait(3000)
@@ -230,7 +230,7 @@ class UserInfo {
                 //console.log(this.taskList);
                 //console.log(this.extraAwardList);
             } else {
-                console.log(`账号[${this.index}] 获取任务列表失败了呢`);
+                console.log(`账号[${this.index}]  获取任务列表失败了呢`);
                 console.log(result);
             }
         } catch (error) {
