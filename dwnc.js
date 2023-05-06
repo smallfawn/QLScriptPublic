@@ -158,9 +158,11 @@ class UserInfo {
             //console.log(result);
 
             if (result.code == 200) {
-                console.log(`账号[${this.index}] [${result.msg}] 奖品[${result.data.name}]`);
+                this.ckStatus = true
+                console.log(`账号[${this.index}]  [${result.msg}] 奖品[${result.data.name}]`);
             } else {
-                console.log(`账号[${this.index}] 查询奖励失败了呢`);
+                this.ckStatus = false
+                console.log(`账号[${this.index}]  查询奖励失败了呢`);
                 console.log(result);
             }
         } catch (error) {
@@ -180,7 +182,6 @@ class UserInfo {
             let result = await httpRequest(options);
             //console.log(result);
             if (result.code == 200) {
-                this.ckStatus = true
                 DoubleLog(`账号[${this.index}] [${result.msg}]  剩余水滴[${result.data.droplet}g]`);
                 if (result.data.droplet > 0) {
                     console.log(`账号[${this.index}]  判断当前可浇水${parseInt(result.data.droplet / 80)}次,开始浇水`);
@@ -190,7 +191,6 @@ class UserInfo {
                     }
                 }
             } else {
-                this.ckStatus = false
                 DoubleLog(`账号[${this.index}]  农场信息查询失败:原因未知`);
                 console.log(result);
             }
