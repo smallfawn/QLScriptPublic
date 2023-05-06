@@ -251,7 +251,7 @@ class UserInfo {
             let rewardCount = this.taskList[i].rewardCount
             if (isComplete == false) {
                 if (taskType == 49) {
-                    console.log('签到');
+                    console.log(`账号[${this.index}]  签到`);
                     await this.task_signIn2()  //提交完成任务 commit https://app.dewu.com/hacking-task/v1/task/commit?sign=34c4ac7855b7c592469c9d147483c2ea
                     //post传参taskId 和 taskType {}
                     await this.task_commit({ taskId: taskId, taskType: taskType.toString() })
@@ -259,12 +259,12 @@ class UserInfo {
                 let taskIdObject = {
                     "multi_times": async () => {
                         if (Number(this.hours) == 8 || Number(this.hours) == 12 || Number(this.hours) == 18 || Number(this.hours) == 22) {
-                            console.log(`检测当前到达任务时间节点,开始执行任务`);
+                            console.log(`账号[${this.index}]  检测当前到达任务时间节点,开始执行任务`);
                             await this.task_receive(1, "multi_times")//领取
                         } else {
-                            console.log(`检测未到达任务时间节点,不执行该任务`);
+                            console.log(`账号[${this.index}]  检测未到达任务时间节点,不执行该任务`);
                         }
-                        console.log(`时间段领水`);
+                        console.log(`账号[${this.index}]  时间段领水`);
                     },
                     'revisit': async () => { //做任务浏览【我】的右上角星愿森林入口  classify 1
                         //console.log(`特定任务${taskName}`);
@@ -295,45 +295,45 @@ class UserInfo {
                     let taskTypeIfObject = {
                         1: async () => {
                             if (taskName.indexOf('晒图') !== -1) {
-                                console.log('晒图');
+                                console.log(`账号[${this.index}]  晒图`);
                                 await this.task_commit_pre({ taskId: taskId, taskType: taskType })
                                 await $.wait(16000)
                                 await this.task_commit({ taskId: taskId, taskType: taskType.toString(), activityType: null, activityId: null, taskSetId: null, venueCode: null, venueUnitStyle: null, taskScene: null })
                             } else if (taskName.indexOf('国潮') !== -1) {
-                                console.log('国潮');
+                                console.log(`账号[${this.index}]  国潮`);
                                 await this.task_commit_pre({ taskId: taskId, taskType: taskType, btd: null })
                                 await $.wait(16000)
                                 await this.task_commit({ taskId: taskId, taskType: taskType.toString(), activityType: null, activityId: null, taskSetId: null, venueCode: null, venueUnitStyle: null, taskScene: null, btd: null })
                             } else {
-                                console.log('逛逛');
+                                console.log(`账号[${this.index}]  逛逛`);
                                 await this.task_commit_pre({ taskId: taskId, taskType: taskType, btd: btd })
                                 await $.wait(16000)
                                 await this.task_commit({ taskId: taskId, taskType: taskType.toString(), activityType: null, activityId: null, taskSetId: null, venueCode: null, venueUnitStyle: null, taskScene: null, btd: btd })
                             }
                         },
                         16: async () => {
-                            console.log('参与0元抽奖');
+                            console.log(`账号[${this.index}]  参与0元抽奖`);
                             await this.task_commit({ taskType: taskType.toString(), taskId: taskId, })
                         },
                         43: async () => {
-                            console.log('参与上上签');
+                            console.log(`账号[${this.index}]  参与上上签`);
                             await this.task_commit({ taskType: taskType.toString(), taskId: taskId })
                         },
                         47: async () => {
-                            console.log('订阅');
+                            console.log(`账号[${this.index}]  订阅`);
                             await this.task_commit({ taskId: taskId, taskType: taskType.toString(), btd: btd })
                         },
                         50: async () => {
-                            console.log('收藏');
+                            console.log(`账号[${this.index}]  收藏`);
                             await this.task_commit({ taskId: taskId, taskType: taskType.toString(), btd: btd, spuId: 0 })
                         },
                         123: async () => {
-                            console.log('从组件访问农场');
+                            console.log(`账号[${this.index}]  组件访问农场`);
                             await this.task_commit({ taskType: taskType.toString() })
                         },
                         251: async () => { //会场水滴大放送
                             if (rewardCount !== 10000) {
-                                console.log('会场水滴大放送');
+                                console.log(`账号[${this.index}]  会场水滴大放送`);
                                 await this.task_obtain(taskId, taskType)
                                 //console.log(`延迟6s`);
                                 await $.wait(6000)
@@ -355,7 +355,7 @@ class UserInfo {
         await this.task_list()
         for (let i in this.extraAwardList) {
             if (this.extraAwardList[i].status == 1) {
-                console.log("领取累计任务奖励");
+                console.log(`账号[${this.index}]  领取累计任务奖励`);
                 await this.task_extra(this.extraAwardList[i].condition)
             } else {
 
@@ -368,7 +368,7 @@ class UserInfo {
         this.taskList = this.taskList.slice(halfLength);
         for (let i in this.taskList) {
             if (this.taskList[i].isReceiveReward == true) {
-                console.log(`[${this.taskList[i].taskName}]已经领取过`);
+                console.log(`账号[${this.index}]  [${this.taskList[i].taskName}]已经领取过`);
             } else {
                 await this.task_receive(this.taskList[i].classify, this.taskList[i].taskId, this.taskList[i].taskType)
             }
@@ -455,7 +455,7 @@ class UserInfo {
                 url: 'https://app.dewu.com/hacking-tree/v1/sign/list?sign=fe26befc49444d362c8f17463630bdba',
                 headers: this.headersGet,
             })
-            if (signIn_info.data.list[Number(signIn_info.data.currentDay) - 1].IsSignIn == false) { 
+            if (signIn_info.data.list[Number(signIn_info.data.currentDay) - 1].IsSignIn == false) {
                 let options = {
                     method: 'POST',
                     url: 'https://app.dewu.com/hacking-tree/v1/sign/sign_in?sign=fe26befc49444d362c8f17463630bdba',
@@ -474,10 +474,10 @@ class UserInfo {
                     DoubleLog(`账号[${this.index}]  签到领取水滴失败:原因未知`);
                     console.log(result);
                 }
-            }else{
-                console.log(`今日已签到获得水滴`);
+            } else {
+                console.log(`账号[${this.index}]  今日已签到获得水滴`);
             }
-            
+
         } catch (error) {
             console.log(error);
         }
@@ -634,10 +634,10 @@ class UserInfo {
 
             if (result.code == 200) {
                 if ("onlineExtra" in result.data) {
-                    console.log("气泡水滴已满,今日可领取" + result.data.onlineExtra.totalDroplet + "g");
+                    console.log(`账号[${this.index}]  气泡水滴已满,今日可领取${result.data.onlineExtra.totalDroplet}g`);
                     await this.droplet_extra_receive();
                 } else if (result.data.dailyExtra) {
-                    console.log("气泡水滴未满,不可领取,明日再来领取吧！目前已经积攒了" + result.data.dailyExtra.totalDroplet + "g水滴呢!");
+                    console.log(`账号[${this.index}]  气泡水滴未满,不可领取,明日再来领取吧！目前已经积攒了${result.data.dailyExtra.totalDroplet}g水滴呢!"`);
                 }
             } else {
                 console.log(`账号[${this.index}] 查询气泡水滴失败了呢`);
