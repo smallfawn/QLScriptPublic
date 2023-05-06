@@ -105,6 +105,7 @@ class UserInfo {
         this.SK = str.split('&')[1];
         this.shumeiId = str.split('&')[2];
         this.uuid = str.split('&')[3];
+        this.deviceId = str.split('&')[3];
         this.shareCode = null
         this.hours = local_hours();
         this.ckStatus = null
@@ -118,10 +119,10 @@ class UserInfo {
             'ua': ua,
             'deviceTrait': deviceTrait,
             'channel': channel,
-            'SK': SK,
-            'shumeiId': shumeiId,
-            'uuid': uuid,
-            'deviceId': deviceId,
+            'SK': this.SK,
+            'shumeiId': this.shumeiId,
+            'uuid': this.uuid,
+            'deviceId': this.deviceId,
             'User-Agent': UserAgent
         };
         this.headersGet = {
@@ -130,10 +131,10 @@ class UserInfo {
             'ua': ua,
             'deviceTrait': deviceTrait,
             'channel': channel,
-            'SK': SK,
-            'shumeiId': shumeiId,
-            'uuid': uuid,
-            'deviceId': deviceId,
+            'SK': this.SK,
+            'shumeiId': this.shumeiId,
+            'uuid': this.uuid,
+            'deviceId': this.deviceId,
             'User-Agent': UserAgent
         }
 
