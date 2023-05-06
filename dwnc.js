@@ -78,11 +78,11 @@ async function start() {
     }
     await Promise.all(taskall);
     taskall = [];
-    for (let user of userList) {
+    /*for (let user of userList) {
         await $.wait(3000)
         taskall.push(await user.share_code());
         //await wait(1); //延迟
-    }
+    }*/
     await Promise.all(taskall);
     console.log('\n------------------- [进度] -------------------\n');
     taskall = [];
@@ -750,7 +750,7 @@ class UserInfo {
     if (userList.length > 0) {
         await start();
     }
-    console.log(`助力码数组${shareCodeArr}`);
+    //console.log(`助力码数组${shareCodeArr}`);
 
     await SendMsg(msg);
 })()
