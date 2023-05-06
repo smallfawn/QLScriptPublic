@@ -1,6 +1,6 @@
 /**
  * 得物农场
- * cron 55 10 * * *  dewu_farm.js
+ * cron 10 8,12,18,22 * * *  dewu_farm.js
  *
  * 22/11/29   浇水 签到 领取水滴 气泡水滴
  * rewrite 23/5/4 author:XL
