@@ -7,7 +7,10 @@
  * ========= 青龙--配置文件 ===========
  * # 得物农场
  * export dwnc_data='token @ token'
- * 
+ *          一定要改下自己脚本内的自定义参数  自定义变量 在35-42行
+ *          一定要改下自己脚本内的自定义参数  自定义变量 在35-42行
+ *          一定要改下自己脚本内的自定义参数  自定义变量 在35-42行
+ *          不改黑号不负责
  * 得物APP => 购物 => 上方推荐 - 免费领好礼
  * 找不到的话去 我 => 星愿森林 进入活动
  * 抓app.dewu.com域名下headers参数x-auth-token 多账号 @ 分割
@@ -27,67 +30,84 @@ let userCookie = ($.isNode() ? process.env[ckName] : $.getdata(ckName)) || '';
 let userList = [];
 let userIdx = 0;
 let userCount = 0;
-//---------------------- 自定义变量区域 -----------------------------------
 let shareCodeArr = []
-let ua = 'duapp/5.4.5(android;10)'
-let deviceTrait = 'MI+8+Lite'
-let channel = 'xiaomi'
+//---------------------- 自定义变量区域 -----------------------------------
+let ua = ''
+let deviceTrait = ''
+let channel = ''
 let SK = ''
 let shumeiId = ''
 let uuid = ''
-let deviceId = ''
-let UserAgent = 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36/duapp/5.4.5(android;10)'
+let deviceId = uuid
+let UserAgent = ''
 //---------------------------------------------------------
 
 async function start() {
-    console.log('\n================== 奖励 ==================\n');
-    taskall = [];
-    for (let user of userList) {
-        await $.wait(2000)
-        taskall.push(await user.tree_info());
-        //await wait(1); //延迟
-    }
-    await Promise.all(taskall);
 
-    console.log('\n================== 查询未完成任务 ==================\n');
-    taskall = [];
-    for (let user of userList) {
-        taskall.push(await user.task_list());
-        //await wait(1); //延迟
-    }
-    await Promise.all(taskall);
-    console.log('\n================== 执行未完成的任务 ==================\n');
-    taskall = [];
-    for (let user of userList) {
-        await $.wait(3000)
-        taskall.push(await user.task_false());
-        //await wait(1); //延迟
-    }
-    await Promise.all(taskall);
-    console.log('\n================== 浇水 ==================\n');
-    taskall = [];
-    for (let user of userList) {
-        await $.wait(3000)
-        taskall.push(await user.user_info());
-        //await wait(1); //延迟
-    }
-    console.log('\n================== 领取完成任务奖励 ==================\n');
-    taskall = [];
-    for (let user of userList) {
-        await $.wait(3000)
-        taskall.push(await user.task_true());
-        //await wait(1); //延迟
-    }
-    await Promise.all(taskall);
+    console.log('!!!一定要改下自己脚本内的自定义参数 自定义变量 在35-42行,不改黑号不负责!!!');
+    console.log(`拉完库记得改脚本文件名字 不要把脚本放到[smallfawn_QLScriptPublic]目录下  换其他目录 然后更换命令  因为脚本自动判断是否改了默认参数 每次拉库自动更新`);
+    if (ua && deviceTrait && channel && SK && shumeiId && uuid && deviceId && UserAgent) {
+        console.log('\n================== 奖励 ==================\n');
+        taskall = [];
+        for (let user of userList) {
+            await $.wait(2000)
+            taskall.push(await user.tree_info());
+            //await wait(1); //延迟
+        }
+        await Promise.all(taskall);
 
-    await Promise.all(taskall);
-    taskall = [];
-    for (let user of userList) {
-        await $.wait(3000)
-        taskall.push(await user.share_code());
-        //await wait(1); //延迟
+        //console.log('\n================== 查询未完成任务 ==================\n');
+        taskall = [];
+        for (let user of userList) {
+            taskall.push(await user.task_list());
+            //await wait(1); //延迟
+        }
+        await Promise.all(taskall);
+        console.log('\n================== 执行未完成的任务 ==================\n');
+        taskall = [];
+        for (let user of userList) {
+            await $.wait(3000)
+            taskall.push(await user.task_false());
+            //await wait(1); //延迟
+        }
+        await Promise.all(taskall);
+        console.log('\n================== 浇水 ==================\n');
+        taskall = [];
+        for (let user of userList) {
+            await $.wait(3000)
+            taskall.push(await user.user_info());
+            //await wait(1); //延迟
+        }
+        console.log('\n================== 领取完成任务奖励 ==================\n');
+        taskall = [];
+        for (let user of userList) {
+            await $.wait(3000)
+            taskall.push(await user.task_true());
+            //await wait(1); //延迟
+        }
+        await Promise.all(taskall);
+
+        await Promise.all(taskall);
+        taskall = [];
+        for (let user of userList) {
+            await $.wait(3000)
+            taskall.push(await user.share_code());
+            //await wait(1); //延迟
+        }
+        await Promise.all(taskall);
+        console.log('\n------------------- [进度] -------------------\n');
+
+        taskall = [];
+        for (let user of userList) {
+            await $.wait(3000)
+            taskall.push(await user.get_tree());
+            //await wait(1); //延迟
+        }
+        await Promise.all(taskall);
+    } else {
+        console.log(`未修改脚本默认参数停止执行`)
+        return
     }
-    await Promise.all(taskall);
 
 
 
@@ -109,10 +129,26 @@ class UserInfo {
             Host: 'app.dewu.com',
             'x-auth-token': "Bearer " + this.XAToken,
             'Content-Type': 'application/json',
+            'ua': ua,
+            'deviceTrait': deviceTrait,
+            'channel': channel,
+            'SK': SK,
+            'shumeiId': shumeiId,
+            'uuid': uuid,
+            'deviceId': deviceId,
+            'User-Agent': UserAgent
         };
         this.headersGet = {
             Host: 'app.dewu.com',
             'x-auth-token': "Bearer " + this.XAToken,
+            'ua': ua,
+            'deviceTrait': deviceTrait,
+            'channel': channel,
+            'SK': SK,
+            'shumeiId': shumeiId,
+            'uuid': uuid,
+            'deviceId': deviceId,
+            'User-Agent': UserAgent
         }
 
     }
@@ -149,7 +185,7 @@ class UserInfo {
                 method: 'POST',
                 url: 'https://app.dewu.com/hacking-tree/v1/user/init?sign=c921f91a4c0b7ca7f1640adcb16eb239',
                 headers: this.headersPost,
-                body: JSON.stringify({ keyword: '' }),
+                body: JSON.stringify({ keyword: '🌱😻🙉👶🌷💥' }),
             };
             //console.log(options);
             let result = await httpRequest(options);
@@ -215,7 +251,7 @@ class UserInfo {
 
     async task_false() { // 查看未完成的任务且执行
         console.log(`账号[${this.index}] 正在尝试完成所有任务`);
-
+        //console.log(this.taskList);
         for (let i in this.taskList) {
             let isComplete = this.taskList[i].isComplete
             let taskId = this.taskList[i].taskId
@@ -223,11 +259,13 @@ class UserInfo {
             let taskType = this.taskList[i].taskType
             let classify = this.taskList[i].classify
             let jumpUrl = this.taskList[i].jumpUrl
+            let rewardCount = this.taskList[i].rewardCount
             if (isComplete == false) {
                 if (taskType == 49) {
                     console.log('签到');
                     await this.task_signIn2()  //提交完成任务 commit https://app.dewu.com/hacking-task/v1/task/commit?sign=34c4ac7855b7c592469c9d147483c2ea
                     //post传参taskId 和 taskType {}
+                    await this.task_commit({ taskId: taskId, taskType: taskType.toString() })
                 }
                 let taskIdObject = {
                     "multi_times": async () => {
@@ -238,6 +276,9 @@ class UserInfo {
                             console.log(`检测未到达任务时间节点,不执行该任务`);
                         }
                         console.log(`时间段领水`);
+                    },
+                    'revisit': async () => { //做任务浏览【我】的右上角星愿森林入口  classify 1
+                        //console.log(`特定任务${taskName}`);
                     },
                     "1": async () => { //做任务一 完成五次浇灌 classify 1
                         //console.log(`特定任务${taskName}`);
@@ -264,18 +305,34 @@ class UserInfo {
                     //console.log(`BTD 数据${btd}`);
                     let taskTypeIfObject = {
                         1: async () => {
-                            console.log('逛逛');
-                            await this.task_commit_pre(taskId, taskType, btd)
-                            await this.task_commit({ taskId: taskId, taskType: taskType.toString(), activityType: null, activityId: null, taskSetId: null, venueCode: null, venueUnitStyle: null, taskScene: null, btd: btd })
+                            if (taskName.indexOf('晒图') !== -1) {
+                                console.log('晒图');
+                                await this.task_commit_pre({ taskId: taskId, taskType: taskType })
+                                await $.wait(16000)
+                                await this.task_commit({ taskId: taskId, taskType: taskType.toString(), activityType: null, activityId: null, taskSetId: null, venueCode: null, venueUnitStyle: null, taskScene: null })
+                            } else if (taskName.indexOf('国潮') !== -1) {
+                                console.log('国潮');
+                                await this.task_commit_pre({ taskId: taskId, taskType: taskType, btd: null })
+                                await $.wait(16000)
+                                await this.task_commit({ taskId: taskId, taskType: taskType.toString(), activityType: null, activityId: null, taskSetId: null, venueCode: null, venueUnitStyle: null, taskScene: null, btd: null })
+                            } else {
+                                console.log('逛逛');
+                                await this.task_commit_pre({ taskId: taskId, taskType: taskType, btd: btd })
+                                await $.wait(16000)
+                                await this.task_commit({ taskId: taskId, taskType: taskType.toString(), activityType: null, activityId: null, taskSetId: null, venueCode: null, venueUnitStyle: null, taskScene: null, btd: btd })
+                            }
                         },
                         16: async () => {
                             console.log('参与0元抽奖');
+                            await this.task_commit({ taskType: taskType.toString(), taskId: taskId, })
                         },
                         43: async () => {
                             console.log('参与上上签');
+                            await this.task_commit({ taskType: taskType.toString(), taskId: taskId })
                         },
                         47: async () => {
                             console.log('订阅');
+                            await this.task_commit({ taskId: taskId, taskType: taskType.toString(), btd: btd })
                         },
                         50: async () => {
                             console.log('收藏');
@@ -283,15 +340,19 @@ class UserInfo {
                         },
                         123: async () => {
                             console.log('从组件访问农场');
+                            await this.task_commit({ taskType: taskType.toString() })
                         },
                         251: async () => { //会场水滴大放送
-                            await this.task_obtain(taskId, taskType)
-                            console.log(`延迟6s`);
-                            await $.wait(6000)
-                            await this.task_commit_pre(taskId, taskType, btd)
-                            console.log(`延迟16s`);
-                            await $.wait(16000)
-                            await this.task_commit({ taskId: taskId, taskType: taskType.toString() })
+                            if (rewardCount !== 10000) {
+                                console.log('会场水滴大放送');
+                                await this.task_obtain(taskId, taskType)
+                                //console.log(`延迟6s`);
+                                await $.wait(6000)
+                                await this.task_commit_pre({ taskId: taskId, taskType: 16 })
+                                //console.log(`延迟16s`);
+                                await $.wait(16000)
+                                await this.task_commit({ taskId: taskId, taskType: taskType.toString() })
+                            }
                         },
                     }
                     if (taskType in taskTypeIfObject) {
@@ -324,9 +385,6 @@ class UserInfo {
             }
         }
         //await wait(1); //延迟
-
-
-
     }
     async task_obtain(taskId, taskType) { // 任务列表前置 OBTAIN
         try {
@@ -353,30 +411,26 @@ class UserInfo {
             console.log(error);
         }
     }
-    async task_commit_pre(taskId, taskType, btd) { // 任务 开始  且等待16s TaskType有变化  浏览15s会场会变成16
+    async task_commit_pre(body) {
+        // 任务 开始  且等待16s TaskType有变化  浏览15s会场会变成16
         try {
             let options = {
                 method: 'POST',
                 url: `https://app.dewu.com/hacking-task/v1/task/pre_commit`,
                 headers: this.headersPost,
-                body: JSON.stringify({ taskId: taskId, taskType: taskType }),
+                body: JSON.stringify(body),
             };
-            if (taskType == 1) {
-                options.body = JSON.stringify({ taskId: taskId, taskType: taskType, btd: btd })
-                let result = await httpRequest(options);
-                //console.log(result);
-                if (result.code == 200) {
-                    //DoubleLog(`账号[${this.index}]  任务开始${result.msg}${result.data.isOk}`);
-                    return true
-                } else {
-                    //DoubleLog(`账号[${this.index}]  任务开始失败:原因未知`);
-                    console.log(options);
 
-                    console.log(result);
-                    return false
-                }
+            let result = await httpRequest(options);
+            if (result.code == 200) {
+                //DoubleLog(`账号[${this.index}]  任务开始${result.msg}${result.data.isOk}`);
+                return true
+            } else {
+                //DoubleLog(`账号[${this.index}]  任务开始失败:原因未知`);
+                //console.log(options);
+                console.log(result);
+                return false
             }
-
         } catch (error) {
             console.log(error);
         }
@@ -396,10 +450,8 @@ class UserInfo {
                 return true
             } else {
                 //DoubleLog(`账号[${this.index}]  任务结束[${result.msg}]:原因未知`);
-                console.log(options);
-
+                //console.log(options);
                 console.log(result);
-
                 return false
             }
 
@@ -466,7 +518,11 @@ class UserInfo {
             let result = await httpRequest(options);
             //console.log(result);
             if (result.code == 200) {
-                DoubleLog(`账号[${this.index}]  浇水[${result.msg}][${result.data.wateringReward.rewardNum}g]`);
+                if('rewardNum' in result.data.wateringReward){
+                    DoubleLog(`账号[${this.index}]  浇水[${result.msg}][${result.data.wateringReward.rewardNum}g]`);
+                }else{
+                    DoubleLog(`账号[${this.index}]  浇水[${result.msg}]`);
+                }
             } else if (result.code == 711110001) {
                 DoubleLog(`账号[${this.index}]  浇水[${result.msg}]`);
                 console.log(result);
@@ -493,7 +549,7 @@ class UserInfo {
                 DoubleLog(`账号[${this.index}]  领取累计浇水奖励[${result.msg}][${result.data.rewardNum}g]`);
             } else if (result.code == 711070005) {
                 DoubleLog(`账号[${this.index}]  领取累计浇水奖励[${result.msg}]`);
-                console.log(result);
+                //console.log(result);
             } else {
                 DoubleLog(`账号[${this.index}]  领取累计浇水奖励失败:原因未知`);
                 console.log(result);
@@ -659,6 +715,27 @@ class UserInfo {
                 shareCodeArr.push(result.data.keyword)
             } else {
                 DoubleLog(`账号[${this.index}]  获取助力码失败:原因未知`);
+                console.log(result);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+    async get_tree() { // 农场水滴剩余 和信息
+        try {
+            let options = {
+                method: 'GET',
+                url: 'https://app.dewu.com/hacking-tree/v1/tree/get_tree_info?sign=fe26befc49444d362c8f17463630bdba',
+                headers: this.headersGet,
+            };
+            //console.log(options);
+            let result = await httpRequest(options);
+            //console.log(result);
+            if (result.code == 200) {
+                this.ckStatus = true
+                DoubleLog(`账号[${this.index}]  [${result.data.treeId}] 成熟进度[${result.data.userWateringDroplet}/${result.data.currentLeveNeedWateringDroplet}g]`);
+            } else {
+                DoubleLog(`账号[${this.index}]  农场信息查询失败:原因未知`);
                 console.log(result);
             }
         } catch (error) {
