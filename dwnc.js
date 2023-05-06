@@ -1,6 +1,6 @@
 /**
  * 得物农场
- * cron 35 8,12,18,22 * * *  dewu_farm.js
+ * cron 55 10 * * *  dewu_farm.js
  *
  * 22/11/29   浇水 签到 领取水滴 气泡水滴
  * rewrite 23/5/4 author:XL
@@ -46,10 +46,11 @@ async function start() {
         //await wait(1); //延迟
     }
     await Promise.all(taskall);
-    //console.log('\n================== 查询未完成任务 ==================\n');
     taskall = [];
     for (let user of userList) {
         taskall.push(await user.task_list());
+        taskall.push(await user.task_signIn());
+
         //await wait(1); //延迟
     }
     await Promise.all(taskall);
@@ -166,13 +167,14 @@ class UserInfo {
             console.log(error);
         }
     }
+
     async user_info() { // 农场水滴剩余 和信息
         try {
             let options = {
                 method: 'POST',
                 url: 'https://app.dewu.com/hacking-tree/v1/user/init?sign=c921f91a4c0b7ca7f1640adcb16eb239',
                 headers: this.headersPost,
-                body: JSON.stringify({ keyword: '🌱😻🙉👶🌷💥' }),
+                body: JSON.stringify({ keyword: '🌹💦🙀👶🍀👽👻' }),
             };
             //console.log(options);
             let result = await httpRequest(options);
@@ -356,7 +358,7 @@ class UserInfo {
                 console.log("领取累计任务奖励");
                 await this.task_extra(this.extraAwardList[i].condition)
             } else {
-                
+
             }
         }
         await this.task_watering_reward()//
@@ -448,24 +450,34 @@ class UserInfo {
     }
     async task_signIn() { // 签到 领取水滴
         try {
-            let options = {
-                method: 'POST',
-                url: 'https://app.dewu.com/hacking-tree/v1/sign/sign_in?sign=fe26befc49444d362c8f17463630bdba',
-                headers: this.headersPost,
-                body: JSON.stringify({}),
-            };
-            //console.log(options);
-            let result = await httpRequest(options);
-            //console.log(result);
-            if (result.code == 200) {
-                DoubleLog(`账号[${this.index}]  签到领取水滴[${result.msg}][${result.data.Num}]`);
-            } else if (result.code == 711110001) {
-                DoubleLog(`账号[${this.index}]  签到领取水滴[${result.msg}]`);
-                console.log(result);
-            } else {
-                DoubleLog(`账号[${this.index}]  签到领取水滴失败:原因未知`);
-                console.log(result);
+            let signIn_info = await httpRequest({
+                method: 'GET',
+                url: 'https://app.dewu.com/hacking-tree/v1/sign/list?sign=fe26befc49444d362c8f17463630bdba',
+                headers: this.headersGet,
+            })
+            if (signIn_info.data.list[Number(signIn_info.data.currentDay) - 1].IsSignIn == false) { 
+                let options = {
+                    method: 'POST',
+                    url: 'https://app.dewu.com/hacking-tree/v1/sign/sign_in?sign=fe26befc49444d362c8f17463630bdba',
+                    headers: this.headersPost,
+                    body: JSON.stringify({}),
+                };
+                //console.log(options);
+                let result = await httpRequest(options);
+                //console.log(result);
+                if (result.code == 200) {
+                    DoubleLog(`账号[${this.index}]  签到领取水滴[${result.msg}][${result.data.Num}]`);
+                } else if (result.code == 711110001) {
+                    DoubleLog(`账号[${this.index}]  签到领取水滴[${result.msg}]`);
+                    console.log(result);
+                } else {
+                    DoubleLog(`账号[${this.index}]  签到领取水滴失败:原因未知`);
+                    console.log(result);
+                }
+            }else{
+                console.log(`今日已签到获得水滴`);
             }
+            
         } catch (error) {
             console.log(error);
         }
