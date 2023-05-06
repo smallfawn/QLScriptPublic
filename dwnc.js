@@ -54,7 +54,7 @@ async function start() {
         //await wait(1); //延迟
     }
     await Promise.all(taskall);
-    console.log('\n================== 执行未完成的任务 ==================\n');
+    console.log('\n------------------ 执行任务 ------------------\n');
     taskall = [];
     for (let user of userList) {
         await $.wait(3000)
@@ -62,14 +62,14 @@ async function start() {
         //await wait(1); //延迟
     }
     await Promise.all(taskall);
-    console.log('\n================== 浇水 ==================\n');
+    console.log('\n------------------ 浇水 ------------------\n');
     taskall = [];
     for (let user of userList) {
         await $.wait(3000)
         taskall.push(await user.user_info());
         //await wait(1); //延迟
     }
-    console.log('\n================== 领取完成任务奖励 ==================\n');
+    console.log('\n------------------ 领取完成任务奖励 ------------------\n');
     taskall = [];
     for (let user of userList) {
         await $.wait(3000)
