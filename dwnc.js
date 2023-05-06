@@ -6,14 +6,12 @@
  * rewrite 23/5/4 author:XL
  * ========= 青龙--配置文件 ===========
  * # 得物农场
- * export dwnc_data='token @ token'
- *          一定要改下自己脚本内的自定义参数  自定义变量 在35-42行
- *          一定要改下自己脚本内的自定义参数  自定义变量 在35-42行
- *          一定要改下自己脚本内的自定义参数  自定义变量 在35-42行
- *          不改黑号不负责
+ * export dwnc_data='x-auth-token   &    SK   &   shumeiId   &   uuid '
+ * 
+ * 四个参数缺一不可
  * 得物APP => 购物 => 上方推荐 - 免费领好礼
  * 找不到的话去 我 => 星愿森林 进入活动
- * 抓app.dewu.com域名下headers参数x-auth-token 多账号 @ 分割
+ * 抓app.dewu.com域名下headers参数x-auth-token   &    SK   &   shumeiId   &   uuid 多账号 @ 分割
  * ====================================
  *  
  */
@@ -32,79 +30,67 @@ let userIdx = 0;
 let userCount = 0;
 let shareCodeArr = []
 //---------------------- 自定义变量区域 -----------------------------------
-let ua = ''
-let deviceTrait = ''
-let channel = ''
-let SK = ''
-let shumeiId = ''
-let uuid = ''
-let deviceId = uuid
-let UserAgent = ''
+let ua = 'duapp/5.4.5(android;10)'
+let deviceTrait = 'MI+8+Lite'
+let channel = 'xiaomi'
+let UserAgent = 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36/duapp/5.4.5(android;10)'
 //---------------------------------------------------------
 
 async function start() {
 
-    console.log('!!!一定要改下自己脚本内的自定义参数 自定义变量 在35-42行,不改黑号不负责!!!');
-    console.log(`拉完库记得改脚本文件名字 不要把脚本放到[smallfawn_QLScriptPublic]目录下  换其他目录 然后更换命令  因为脚本自动判断是否改了默认参数 每次拉库自动更新`);
-    if (ua && deviceTrait && channel && SK && shumeiId && uuid && deviceId && UserAgent) {
-        console.log('\n================== 奖励 ==================\n');
-        taskall = [];
-        for (let user of userList) {
-            await $.wait(2000)
-            taskall.push(await user.tree_info());
-            //await wait(1); //延迟
-        }
-        await Promise.all(taskall);
-
-        //console.log('\n================== 查询未完成任务 ==================\n');
-        taskall = [];
-        for (let user of userList) {
-            taskall.push(await user.task_list());
-            //await wait(1); //延迟
-        }
-        await Promise.all(taskall);
-        console.log('\n================== 执行未完成的任务 ==================\n');
-        taskall = [];
-        for (let user of userList) {
-            await $.wait(3000)
-            taskall.push(await user.task_false());
-            //await wait(1); //延迟
-        }
-        await Promise.all(taskall);
-        console.log('\n================== 浇水 ==================\n');
-        taskall = [];
-        for (let user of userList) {
-            await $.wait(3000)
-            taskall.push(await user.user_info());
-            //await wait(1); //延迟
-        }
-        console.log('\n================== 领取完成任务奖励 ==================\n');
-        taskall = [];
-        for (let user of userList) {
-            await $.wait(3000)
-            taskall.push(await user.task_true());
-            //await wait(1); //延迟
-        }
-        await Promise.all(taskall);
-        taskall = [];
-        for (let user of userList) {
-            await $.wait(3000)
-            taskall.push(await user.share_code());
-            //await wait(1); //延迟
-        }
-        await Promise.all(taskall);
-        console.log('\n------------------- [进度] -------------------\n');
-        taskall = [];
-        for (let user of userList) {
-            await $.wait(3000)
-            taskall.push(await user.get_tree());
-            //await wait(1); //延迟
-        }
-        await Promise.all(taskall);
-    } else {
-        console.log(`未修改脚本默认参数停止执行`)
-        return
+    console.log('\n================== 奖励 ==================\n');
+    taskall = [];
+    for (let user of userList) {
+        await $.wait(2000)
+        taskall.push(await user.tree_info());
+        //await wait(1); //延迟
     }
+    await Promise.all(taskall);
+    //console.log('\n================== 查询未完成任务 ==================\n');
+    taskall = [];
+    for (let user of userList) {
+        taskall.push(await user.task_list());
+        //await wait(1); //延迟
+    }
+    await Promise.all(taskall);
+    console.log('\n================== 执行未完成的任务 ==================\n');
+    taskall = [];
+    for (let user of userList) {
+        await $.wait(3000)
+        taskall.push(await user.task_false());
+        //await wait(1); //延迟
+    }
+    await Promise.all(taskall);
+    console.log('\n================== 浇水 ==================\n');
+    taskall = [];
+    for (let user of userList) {
+        await $.wait(3000)
+        taskall.push(await user.user_info());
+        //await wait(1); //延迟
+    }
+    console.log('\n================== 领取完成任务奖励 ==================\n');
+    taskall = [];
+    for (let user of userList) {
+        await $.wait(3000)
+        taskall.push(await user.task_true());
+        //await wait(1); //延迟
+    }
+    await Promise.all(taskall);
+    taskall = [];
+    for (let user of userList) {
+        await $.wait(3000)
+        taskall.push(await user.share_code());
+        //await wait(1); //延迟
+    }
+    await Promise.all(taskall);
+    console.log('\n------------------- [进度] -------------------\n');
+    taskall = [];
+    for (let user of userList) {
+        await $.wait(3000)
+        taskall.push(await user.get_tree());
+        //await wait(1); //延迟
+    }
+    await Promise.all(taskall);
 
 
 
@@ -116,6 +102,9 @@ class UserInfo {
     constructor(str) {
         this.index = ++userIdx;
         this.XAToken = str.split('&')[0];
+        this.SK = str.split('&')[1];
+        this.shumeiId = str.split('&')[2];
+        this.uuid = str.split('&')[3];
         this.shareCode = null
         this.hours = local_hours();
         this.ckStatus = null
