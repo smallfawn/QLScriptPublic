@@ -104,6 +104,11 @@ class UserInfo {
         this.index = ++userIdx;
         this.XAToken = str.split('&')[0];
         this.SK = str.split('&')[1];
+        if (this.XAToken.indexOf('Bearer') !== -1) {
+            this.XAToken = this.XAToken.replace('Bearer', '')
+        } else {
+            this.XAToken = str.split('&')[0];
+        }
         this.shumeiId = str.split('&')[2];
         this.uuid = str.split('&')[3];
         this.deviceId = str.split('&')[3];
