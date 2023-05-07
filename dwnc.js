@@ -37,6 +37,7 @@ let UserAgent = 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002
 //---------------------------------------------------------
 
 async function start() {
+    console.log(`获取首账号助力码`);
     taskall = [];
     for (let user of userList) {
         if (user.index == 1) {
@@ -45,6 +46,8 @@ async function start() {
         }
     }
     await Promise.all(taskall);
+    console.log(shareCodeArr[0]);
+    shareCodeArr[0] = getMiddleValue('œ', 'œ', shareCodeArr[0])
     console.log('\n================== 奖励 ==================\n');
     taskall = [];
     for (let user of userList) {
