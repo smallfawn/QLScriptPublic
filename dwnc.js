@@ -37,21 +37,25 @@ let UserAgent = 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002
 //---------------------------------------------------------
 
 async function start() {
-
+    taskall = [];
+    for (let user of userList) {
+        if (user.index == 1) {
+            //await $.wait(3000)
+            taskall.push(await user.share_code());
+        }
+    }
+    await Promise.all(taskall);
     console.log('\n================== 奖励 ==================\n');
     taskall = [];
     for (let user of userList) {
         await $.wait(2000)
         taskall.push(await user.tree_info());
-        //await wait(1); //延迟
     }
     await Promise.all(taskall);
     taskall = [];
     for (let user of userList) {
         taskall.push(await user.task_list());
         taskall.push(await user.task_signIn());
-
-        //await wait(1); //延迟
     }
     await Promise.all(taskall);
     console.log('\n------------------ 执行任务 ------------------\n');
@@ -59,7 +63,6 @@ async function start() {
     for (let user of userList) {
         await $.wait(3000)
         taskall.push(await user.task_false());
-        //await wait(1); //延迟
     }
     await Promise.all(taskall);
     console.log('\n------------------ 浇水 ------------------\n');
@@ -67,29 +70,19 @@ async function start() {
     for (let user of userList) {
         await $.wait(3000)
         taskall.push(await user.user_info());
-        //await wait(1); //延迟
     }
     console.log('\n------------------ 领取完成任务奖励 ------------------\n');
     taskall = [];
     for (let user of userList) {
         await $.wait(3000)
         taskall.push(await user.task_true());
-        //await wait(1); //延迟
     }
-    await Promise.all(taskall);
-    taskall = [];
-    /*for (let user of userList) {
-        await $.wait(3000)
-        taskall.push(await user.share_code());
-        //await wait(1); //延迟
-    }*/
     await Promise.all(taskall);
     console.log('\n------------------- [进度] -------------------\n');
     taskall = [];
     for (let user of userList) {
         await $.wait(3000)
         taskall.push(await user.get_tree());
-        //await wait(1); //延迟
     }
     await Promise.all(taskall);
 
@@ -181,8 +174,12 @@ class UserInfo {
                 method: 'POST',
                 url: 'https://app.dewu.com/hacking-tree/v1/user/init?sign=c921f91a4c0b7ca7f1640adcb16eb239',
                 headers: this.headersPost,
-                body: JSON.stringify({ keyword: '🌹💦🙀👶🍀👽👻' }),
             };
+            if (this.index == 1) {
+                options.body = JSON.stringify({ keyword: '🌹💦🙀👶🍀👽👻' })
+            } else {
+                options.body = JSON.stringify({ keyword: shareCodeArr[0] })
+            }
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
@@ -708,7 +705,7 @@ class UserInfo {
             let result = await httpRequest(options);
             //console.log(result);
             if (result.code == 200) {
-                DoubleLog(`账号[${this.index}]  获取助力码[${result.msg}][${result.data.keyword}][${result.data.keywordDesc}]`);
+                //DoubleLog(`账号[${this.index}]  获取助力码[${result.msg}][${result.data.keyword}][${result.data.keywordDesc}]`);
                 shareCodeArr.push(result.data.keyword)
             } else {
                 DoubleLog(`账号[${this.index}]  获取助力码失败:原因未知`);
