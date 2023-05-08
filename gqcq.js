@@ -142,7 +142,7 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if ('errorCode' in result) {
+            if (typeof result !== 'undefined'&&'errorCode' in result) {
                 if (result.errorCode == 200) {
                     //DoubleLog(`账号[${this.index}]  ck验证成功: G金[${result.integralResponse.currentFund}] `);
                     let username = result.data.nickname
@@ -170,7 +170,7 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if ('errorCode' in result) {
+            if (typeof result !== 'undefined'&&'errorCode' in result) {
                 if (result.errorCode == 200) {
                     DoubleLog(`账号[${this.index}]  CK验证成功: [${username}] 积分[${result.data.pointCount}] `);
                 } else {
@@ -194,7 +194,7 @@ class UserInfo {
         // console.log(options)
         let result = await httpRequest(options)
         // console.log(result)
-        if ('errorCode' in result) {
+        if (typeof result !== 'undefined'&&'errorCode' in result) {
             if (result.errorCode == 20000) {
                 this.box = result.data
                 DoubleLog(`账号[${this.index}] 共有宝箱:${this.box.length}个!`)
@@ -224,7 +224,7 @@ class UserInfo {
         // console.log(options)
         let result = await httpRequest(options)
         // console.(result)
-        if ('errorCode' in result) {
+        if (typeof result !== 'undefined'&&'errorCode' in result) {
             if (result.errorCode == 20000) {
                 DoubleLog(`账号[${this.index}] 开宝箱:${result.errorMessage} ,恭喜你获得 ${result.data.medalName} 奖品为 ${result.data.medalDescription}`)
             } else {
@@ -246,7 +246,7 @@ class UserInfo {
             //console.log(options);
 
             let result = await httpRequest(options)
-            if ('errorCode' in result) {
+            if (typeof result !== 'undefined'&&'errorCode' in result) {
                 if (result.errorCode == 20000) {
                     if (result.data[0].finishedNum == 0) {
                         DoubleLog(`账号[${this.index}] 签到状态： 未签到，去执行签到 ,顺便抽个奖`);
@@ -306,7 +306,7 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if ('errorCode' in result) {
+            if (typeof result !== 'undefined'&&'errorCode' in result) {
 
                 if (result.errorCode == 200) {
                     DoubleLog(`账号[${this.index}]  签到:${result.errorMessage} ,你已经连续签到 [${result.data.dayCount}] 天 ,签到获得G豆 [${result.data.operationValue}]个 `);
@@ -331,7 +331,7 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if ('errorCode' in result) {
+            if (typeof result !== 'undefined'&&'errorCode' in result) {
 
                 if (result.errorCode == 20000) {
                     DoubleLog(`账号[${this.index}]  抽奖:${result.errorMessage} ,恭喜你获得 [${result.data.medalName}] 奖品为 [${result.data.medalDescription}]`);
@@ -356,7 +356,7 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if ('errorCode' in result) {
+            if (typeof result !== 'undefined'&&'errorCode' in result) {
 
                 if (result.errorCode == 20000) {
                     DoubleLog(`账号[${this.index}]  发布帖子:${result.errorMessage} ,帖子ID: ${result.data.postId}`);
@@ -386,7 +386,7 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if ('errorCode' in result) {
+            if (typeof result !== 'undefined'&&'errorCode' in result) {
 
                 if (result.errorCode == 20000) {
                     DoubleLog(`账号[${this.index}]  评论帖子: 评论 ${topic_id} 帖子 ${result.errorMessage}`);
@@ -414,7 +414,7 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if ('errorCode' in result) {
+            if (typeof result !== 'undefined'&&'errorCode' in result) {
 
                 if (result.errorCode == 20000) {
                     DoubleLog(`账号[${this.index}]  删除帖子: 帖子ID: ${topic_id} , 执行删除 ${result.errorMessage}`);
@@ -441,7 +441,7 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if ('errorCode' in result) {
+            if (typeof result !== 'undefined'&&'errorCode' in result) {
 
                 if (result.errorCode == '20000') {
                     DoubleLog(`账号[${this.index}]  分享帖子: 帖子ID: ${postId},分享文章:${result.errorMessage}`);
@@ -465,7 +465,7 @@ class UserInfo {
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
-            if ('errorCode' in result) {
+            if (typeof result !== 'undefined'&&'errorCode' in result) {
 
                 if (result.errorCode == '20000') {
                     let num = randomInt(1, 19);
