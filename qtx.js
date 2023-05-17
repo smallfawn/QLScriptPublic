@@ -4,7 +4,7 @@
  * 2023/04/12
  * ========= 青龙--配置文件 ===========
  * # 项目名称
- * export qtxtk='token'
+ * export qtxtk='token&deviceCoding'
  * 
  * 多账号用 换行 或 @ 分割
  * 抓包 carbon.lcago.cn 这个域名 请求体 的body部分的 token 和 deviceCoding
