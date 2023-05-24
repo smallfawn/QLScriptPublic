@@ -137,7 +137,7 @@ class UserInfo {
         //this.createTxt = this.createTxtArr[this.randomInt]
         this.imgurl = "https://geely-app-prod.oss-cn-hangzhou.aliyuncs.com/app/life/IMAGE/20221124/4109897683160859157/07779ca2e7694e3fbde886aa33fa4825.jpeg"
     }
-    
+
     getRandomTime() {
         return randomInt(3000, 9000)
     }
@@ -186,12 +186,12 @@ class UserInfo {
     }
 
     async task_sign() { // 执行签到
-        var date = new Date(+new Date()+8*3600*1000).toISOString().replace(/T/g,' ').replace(/\.[\d]{3}Z/,'')
+        var date = new Date(+new Date() + 8 * 3600 * 1000).toISOString().replace(/T/g, ' ').replace(/\.[\d]{3}Z/, '')
         try {
             const options = {
                 url: 'https://app.geely.com/api/v1/userSign/sign/',
                 headers: this.headersPostv1,
-                body: JSON.stringify({"signDate": date}),
+                body: JSON.stringify({ "signDate": date, "ts": Date.now(), "cId": "BLqo2nmmoPgGuJtFDWlUjRI2b1b" }),
             };
             //console.log(options);
             let result = await httpRequest(options);
