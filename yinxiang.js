@@ -7,7 +7,7 @@
  * 22/11/27 执行签到,阅读,点赞,分享,本地服务 增加评论 延迟
  * ========= 青龙--配置文件 ===========
  * # 鄞响
- * export jrnx_data='xxxxx @ xxxxx'
+ * export yx_data='xxxxx @ xxxxx'
  * 
  * 多账号用 换行 或 @ 分割
  * 抓包 vapp.tmuyun.com , 找到 header中的X-SESSION-ID 即可
