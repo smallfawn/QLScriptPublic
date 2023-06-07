@@ -41,7 +41,7 @@ let appKey_android = '29012175-8d3c-b89b-a61d-4ecf65ff2e3c'//appSigSecret
 //---------------------------------------------------------
 
 async function start() {
-    await getVersion('smallfawn/Note/main/JavaScript/test.js')
+    await getVersion('smallfawn/QLScriptPublic/main/gqft.js')
     log(`\n============ 当前版本：${scriptVersionNow} 📌 最新版本：${scriptVersionLatest} ============`)
     await getNotice()
     log('\n================== 用户信息 ==================\n');
@@ -323,13 +323,13 @@ class UserInfo {
                 for (let i = 0; i < 10; i++) {
                     DoubleLog(`账号[${this.index}]  文章 [${result.body.list[i].id}]`);
                     let artId = result.body.list[i].id
-                    DoubleLog('开始浏览')
+                    //DoubleLog('开始浏览')
                     await $.wait(5000)
                     await this.task_read(artId)
-                    DoubleLog('开始点赞')
+                    //DoubleLog('开始点赞')
                     await $.wait(5000)
                     await this.task_like(artId)
-                    DoubleLog('开始分享')
+                    //DoubleLog('开始分享')
                     await $.wait(5000)
                     await this.task_share(artId)
                 }
