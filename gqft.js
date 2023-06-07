@@ -42,7 +42,7 @@ let appKey_android = '29012175-8d3c-b89b-a61d-4ecf65ff2e3c'//appSigSecret
 
 async function start() {
     await getVersion('smallfawn/QLScriptPublic/main/gqft.js')
-    log(`\n============ 当前版本：${scriptVersionNow} 📌 最新版本：${scriptVersionLatest} ============`)
+    log(`\n====== 当前版本：${scriptVersionNow} 📌 最新版本：${scriptVersionLatest} ======`)
     await getNotice()
     log('\n================== 用户信息 ==================\n');
     taskall = [];
