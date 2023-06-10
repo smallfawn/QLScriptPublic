@@ -380,7 +380,7 @@ class UserInfo {
             Referer: referer,
             "Accept-Encoding": "gzip, deflate",
             "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
-            Cookie: `account_id=${this.uid}; cookie_token=${this.cookie_token};`,
+            Cookie: `account_id=${this.uid}; cookie_token=${this.cookie_token}; aliyungf_tc=;`,
           },
           body: $.toStr({
             act_id: act_id,
