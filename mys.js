@@ -51,7 +51,7 @@ const device_id = `1ece0c2f-67ba-39fb-b1d1-8aaaaaaaaaaa`;
 async function start() {
   await getVersion("smallfawn/QLScriptPublic/main/mys.js");
   log(
-    `\n============ 当前版本：${scriptVersionNow} 📌 最新版本：${scriptVersionLatest} ============`
+    `\n======== 当前版本：${scriptVersionNow} 📌 最新版本：${scriptVersionLatest} ========`
   );
   await getNotice();
   let taskall;
