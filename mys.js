@@ -120,7 +120,7 @@ class UserInfo {
             "x-rpc-device_model": device_model,
             "x-rpc-sys_version": 10,
             "x-rpc-game_biz": "bbs_cn",
-            "x-rpc-app_version": "2.49.1",
+            "x-rpc-app_version": app_version,
             "x-rpc-sdk_version": "1.6.1.1",
             "User-Agent": "okhttp/4.9.3",
             "Content-Type": "application/json;",
@@ -145,6 +145,7 @@ class UserInfo {
         DoubleLog(
           `账号[${this.index}]  吊毛,cookie中stoken貌似过期或者不正确,请你再抓一次吧`
         );
+        log(result)
         this.ckStatus = false
       }
     } catch (e) {
