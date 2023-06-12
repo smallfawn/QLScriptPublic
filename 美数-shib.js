@@ -5,11 +5,11 @@
  * ========= 青龙--配置文件 ===========
  * # 项目名称
  * export meishu_account_and_pwd='账号@密码'
-
  * 多账号换行或&隔开
 
- * 奖励：每天自动收币，这个币可提现到钱包，shib，交易所 有数据,可交易；注册链接：https://mlc.yishanhonghai.com/reg.php?referrer_id=104297
- * 
+ * 奖励：每天自动收币、播放广告，这个币可提现到钱包，shib，交易所 有数据,可交易；注册链接：https://mlc.yishanhonghai.com/reg.php?referrer_id=104297
+ * 1积分 = 1shib，提现目前没增加手动提现，后期我准备考虑加个自动提现。（提示：提到钱包请看清楚它软件上写的地址，按app提示来，地址不对提不到）
+ * 我用的虚拟币钱包：https://share.keepshare.info/inviteLink?code=RhsmcV&shareLang=zh&source=copy
  * ====================================
  *   
  */
