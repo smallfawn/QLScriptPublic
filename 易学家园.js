@@ -11,6 +11,7 @@
  * 奖励：签到得积分可兑换红包或者实物
  * changed：修复打卡课程的逻辑问题 - By Huansheng：2023 / 06 / 11
  * 如何绑定微信：【任务中心】 - 【免费打卡任务】 - 点击 【打卡】
+ * 下载地址：https://yixuejiayuan7.taishangyixue899.com/h5/index.html?code=rx3d1
  * ====================================
  *   
  */
