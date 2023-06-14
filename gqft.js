@@ -1,5 +1,5 @@
 /**
- * 广汽丰田
+ * 广汽丰田bz
  * scriptVersionNow = "0.0.2"
  * cron 17 18 * * *  gqft.js
  * 23/01/23 积分任务：
