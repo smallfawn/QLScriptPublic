@@ -7,6 +7,7 @@
  * 23/06/14 修复CK时效短 and CK失效快 的问题
  * ===== 青龙--配置文件 =====
  * # 项目名称  脚本所需JS依赖 crypto-js jsencrypt 缺一不可
+ * ios暂时未适配。请用安卓抓包。适配等以后再说，也可以提供抓包给我适配
  * export gqft_data='result' 配置文件可能需要json转义 https://www.sojson.com/yasuo.html 转义
  * 环境变量 gqft_data = 'result' 无需转义
  * 如果已登录请退出后，开始抓包 短信或者密码登录 登录完成后 
