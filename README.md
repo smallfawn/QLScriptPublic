@@ -2,7 +2,8 @@
 青龙面板脚本公共仓库
 # 组织基地：https://jq.qq.com/?k=iC3qGTPD
 这里的脚本只是自己学习 js 的一个实践
-
+# 青龙面板拉库命令
+# ql repo https://ghproxy.com/https://github.com/smallfawn/QLScriptPublic.git
 仅用于测试和学习研究，禁止用于商业用途，不能保证其合法性，准确性，完整性和有效性，请根据情况自行判断.
 
 仓库内所有资源文件，禁止任何公众号、自媒体进行任何形式的转载、发布。
