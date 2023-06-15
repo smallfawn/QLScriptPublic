@@ -36,4 +36,5 @@ smallfawn 对任何脚本问题概不负责，包括但不限于由任何脚本�
 
 您必须在下载后的24小时内从计算机或手机中完全删除以上内容.严禁产生利益链
 
+<img src="https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/WeChatPay.png" width="500" height="300">
 
