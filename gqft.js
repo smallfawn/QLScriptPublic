@@ -1,6 +1,6 @@
 /**
  * 广汽丰田bz
- * scriptVersionNow = "0.0.2"
+ * scriptVersionNow = "0.0.3"
  * cron 17 18 * * *  gqft.js
  * 23/01/23 积分任务：
  * 23/06/07 修复加密
