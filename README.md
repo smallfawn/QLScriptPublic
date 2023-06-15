@@ -4,6 +4,23 @@
 这里的脚本只是自己学习 js 的一个实践
 # 青龙面板拉库命令
 # ql repo https://ghproxy.com/https://github.com/smallfawn/QLScriptPublic.git
+自用青龙docker搭建命令
+``````
+docker run -dit \
+   -v $PWD/ql/config:/ql/config \
+   -v $PWD/ql/log:/ql/log \
+   -v $PWD/ql/db:/ql/db \
+   -v $PWD/ql/repo:/ql/repo \
+   -v $PWD/ql/raw:/ql/raw \
+   -v $PWD/ql/scripts:/ql/scripts \
+   -v $PWD/ql/deps:/ql/deps \
+   -v $PWD/ql/.pnpm-store:/ql/.pnpm-store \
+   -p 5700:5700 \
+   --name qinglong \
+   --hostname qinglong \
+   --restart unless-stopped \
+   whyour/qinglong:2.11
+``````
 仅用于测试和学习研究，禁止用于商业用途，不能保证其合法性，准确性，完整性和有效性，请根据情况自行判断.
 
 仓库内所有资源文件，禁止任何公众号、自媒体进行任何形式的转载、发布。
