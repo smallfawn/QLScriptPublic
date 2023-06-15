@@ -23,7 +23,9 @@ docker run -dit \
    --restart unless-stopped \
    whyour/qinglong:2.11
 ``````
-
+# 如果您对我仓库感兴趣可以支付任意金额支持一下！
+<img src="https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/WeChatPay.png" width="800" height="800">
+<img src="https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/ALiPay.png" width="800" height="800">
 仓库内所有资源文件，禁止任何公众号、自媒体进行任何形式的转载、发布。
 
 smallfawn 对任何脚本问题概不负责，包括但不限于由任何脚本错误导致的任何损失或损害.
@@ -35,6 +37,4 @@ smallfawn 对任何脚本问题概不负责，包括但不限于由任何脚本�
 任何以任何方式查看此项目的人或直接或间接使用该Script项目的任何脚本的使用者都应仔细阅读此声明。 smallfawn 保留随时更改或补充此免责声明的权利。一旦使用并复制了任何相关脚本或Script项目的规则，则视为您已接受此免责声明.
 
 您必须在下载后的24小时内从计算机或手机中完全删除以上内容.严禁产生利益链
-
-<img src="https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/WeChatPay.png" width="500" height="500">
 
