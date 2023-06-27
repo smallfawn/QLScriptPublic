@@ -165,7 +165,7 @@ class UserInfo {
 
             if (result.code == 200) {
                 this.ckStatus = true
-                console.log(`账号[${this.index}]  [${result.msg}]  奖品[${result.data.name}]`);
+                console.log(`账号[${this.index}]  查询奖励[${result.msg}] [${result.data.name}] 当前等级[${result.data.level}]`);
             } else {
                 this.ckStatus = false
                 console.log(`账号[${this.index}]  查询奖励失败了呢`);
