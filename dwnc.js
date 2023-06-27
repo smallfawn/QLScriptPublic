@@ -51,8 +51,8 @@ async function start() {
         }
     }
     await Promise.all(taskall);
-    console.log(shareCodeArr[0]);
     shareCodeArr[0] = getMiddleValue('œ', 'œ', shareCodeArr[0])
+    console.log(shareCodeArr[0]);
     console.log('\n================== 奖励 ==================\n');
     taskall = [];
     for (let user of userList) {
