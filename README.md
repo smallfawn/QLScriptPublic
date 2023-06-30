@@ -6,11 +6,11 @@
 ``````
 ql repo https://ghproxy.com/https://github.com/smallfawn/QLScriptPublic.git
 ``````
-# 如果您对我仓库感兴趣可以支付任意金额支持一下！
-<img src="https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/WeChatPay.png" width="800" height="800">
-<img src="https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/ALiPay.jpg" width="800" height="800">
-
 自用青龙docker搭建命令
+# 如果您对我仓库感兴趣可以支付任意金额支持一下！
+<img src="https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clzfb.png">
+<img src="https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clwx.png">
+
 ``````
 docker run -dit \
    -v $PWD/ql/config:/ql/config \
