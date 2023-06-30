@@ -26,8 +26,8 @@ async function main(userInfo) {
 
 
     await userInfo.sign()
-await userInfo.grxx()
-  //  await userInfo.Sendtg_bot()
+    await userInfo.grxx()
+    //  await userInfo.Sendtg_bot()
 
 
 
@@ -42,10 +42,10 @@ class UserInfo {
         if (tgLogFlag) {
             try {
                 this.mopenid = str.split("##")[0]
-                this.chatId  = str.split("##")[1]
+                this.chatId = str.split("##")[1]
 
                 this.ck = str
-                
+
                 //this.ts = ts13()
             } catch (error) {
                 console.log(error)
@@ -56,50 +56,50 @@ class UserInfo {
     }
 
 
-    
-    
-    
- async sign() {
+
+
+
+    async sign() {
         let name = "签到";
         let options = {
             method: "post",
             url: `https://superapp.jmc.com.cn/jmc-zx-app-owner/v1/signIn/add`,
             headers: {
-    "Host": "superapp.jmc.com.cn",
-    "Content-Length": "33",
-    "Access-Token": `${this.ck}`,
-    "Content-Type": "application/json"
-  },
+                "Host": "superapp.jmc.com.cn",
+                "Content-Length": "33",
+                "Access-Token": `${this.ck}`,
+                "Content-Type": "application/json"
+            },
             body: `{"activityCode":"HD202302090003"}`
         };
-      //  console.log(options);
+        //  console.log(options);
         let res = await httpRequest(options);
         //console.log(res);
         if (res.resultCode == 0) {
-        this.token = res.token
-         this.cusLog(`账号 ${this.index}  ${name}: 签到成功 ${res.resultMsg}  `)
+            this.token = res.token
+            this.cusLog(`账号 ${this.index}  ${name}: 签到成功 ${res.resultMsg}  `)
         } else if (res.resultCode == 100000) {
             this.cusLog(`账号 ${this.index}  ${name}:   ${res.resultMsg}`)
         } else this.cusLog(`账号[${this.index}]  ${name} 失败 ❌ 了呢`), console.log(res);
     }
-async grxx() {
+    async grxx() {
         let name = "个人信息";
         let options = {
             method: "get",
             url: `https://superapp.jmc.com.cn/jmc-zx-app-owner/v1/member/getMemberInfo`,
             headers: {
-    "Host": "superapp.jmc.com.cn",
-    "Content-Length": "33",
-    "Access-Token": `${this.ck}`,
-    "Content-Type": "application/json"
-  }      
+                "Host": "superapp.jmc.com.cn",
+                "Content-Length": "33",
+                "Access-Token": `${this.ck}`,
+                "Content-Type": "application/json"
+            }
         };
-      //  console.log(options);
+        //  console.log(options);
         let res = await httpRequest(options);
         //console.log(res);
         if (res.resultCode == 0) {
-        this.token = res.token
-         this.cusLog(`账号 ${this.index}  ${name}: 总积分 ${res.data.integralQuantity}  `)
+            this.token = res.token
+            this.cusLog(`账号 ${this.index}  ${name}: 总积分 ${res.data.integralQuantity}  `)
         } else if (res.resultCode == 100000) {
             this.cusLog(`账号 ${this.index}  ${name}:   ${res.resultMsg}`)
         } else this.cusLog(`账号[${this.index}]  ${name} 失败 ❌ 了呢`), console.log(res);
