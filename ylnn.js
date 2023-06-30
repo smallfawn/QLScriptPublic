@@ -22,7 +22,7 @@ const $ = new Env("伊利牛奶")
 const CK_NAME = "ylnn"
 const Notify = 1         // 通知控制
 const tgLogFlag = 1      // 是否tg发送通知, 偷撸车使用, 默认0--不发送
-let msg = '' 
+let msg = ''
 //===========================================================================
 
 //===========================================================================
@@ -30,7 +30,7 @@ let msg = ''
 async function main(userInfo) {
 
     await userInfo.sign()
-   await userInfo.point()
+    await userInfo.point()
 
 
 
@@ -55,48 +55,48 @@ class UserInfo {
 
 
 
-async sign() {
+    async sign() {
         let name = "签到";
         let options = {
             method: "post",
             url: `https://msmarket.msx.digitalyili.com/gateway/api/member/daily/sign`,
-            headers:  {
-    "Host": "msmarket.msx.digitalyili.com",
-    "charset": "utf-8",
-    "content-type": "application/json",
-    "access-token": `${this.ck}`
-  },
+            headers: {
+                "Host": "msmarket.msx.digitalyili.com",
+                "charset": "utf-8",
+                "content-type": "application/json",
+                "access-token": `${this.ck}`
+            },
             body: `{}`
         };
-       // console.log(options);
+        // console.log(options);
 
         let res = await httpRequest(options);
         // console.log(res);
         if (res.status == true) {
-         this.cusLog(`账号 ${this.index}  : 签到成功`)
+            this.cusLog(`账号 ${this.index}  : 签到成功`)
         } else if (res.status == false) {
             this.cusLog(`账号 ${this.index}  :  ck过期 请重新抓取 access-token`)
         } else this.cusLog(`账号[${this.index}]  ${name} 失败 ❌ 了呢`), console.log(res);
     }
-async point() {
+    async point() {
         let name = "个人信息";
         let options = {
             method: "get",
             url: `https://msmarket.msx.digitalyili.com/gateway/api/member/point`,
-            headers:  {
-    "Host": "msmarket.msx.digitalyili.com",
-    "charset": "utf-8",
-    "content-type": "application/json",
-    "access-token": `${this.ck}`
-  }
-          
+            headers: {
+                "Host": "msmarket.msx.digitalyili.com",
+                "charset": "utf-8",
+                "content-type": "application/json",
+                "access-token": `${this.ck}`
+            }
+
         };
-       // console.log(options);
+        // console.log(options);
 
         let res = await httpRequest(options);
         // console.log(res);
         if (res.status == true) {
-         this.cusLog(`账号 ${this.index} 总积分 : ${res.data} `)
+            this.cusLog(`账号 ${this.index} 总积分 : ${res.data} `)
         } else if (res.status == false) {
             this.cusLog(`账号 ${this.index}  :  ck过期 请重新抓取 access-token`)
         } else this.cusLog(`账号[${this.index}]  ${name} 失败 ❌ 了呢`), console.log(res);

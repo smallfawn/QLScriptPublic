@@ -37,33 +37,33 @@ class UserInfo {
         if (tgLogFlag) {
             try {
                 this.mopenid = str.split("##")[0]
-                this.chatId  = str.split("##")[1]
-                this.ck = str               
+                this.chatId = str.split("##")[1]
+                this.ck = str
             } catch (error) {
                 console.log(error)
             }
         }
-    }    
- async refresh() {
+    }
+    async refresh() {
         let name = "更新token";
         let options = {
             method: "post",
             url: `https://auth.aliyundrive.com/v2/account/token`,
             headers: {
-    "Host": "auth.aliyundrive.com",
-    "accept": "application/json",
-    "content-type": "application/json; charset\u003dUTF-8",
-  },
+                "Host": "auth.aliyundrive.com",
+                "accept": "application/json",
+                "content-type": "application/json; charset\u003dUTF-8",
+            },
             body: `{"grant_type":"refresh_token","refresh_token":"${this.ck}"}`
         };
-      //  console.log(options);
+        //  console.log(options);
         let res = await httpRequest(options);
-      //  console.log(res);
+        //  console.log(res);
         if (res.status == 'enabled') {
-        this.token = res.access_token
-        this.nick_name= res.nick_name
-      //   this.cusLog(`账号 ${this.index}  ${name}: 更新token   `)
-         await this.sign()
+            this.token = res.access_token
+            this.nick_name = res.nick_name
+            //   this.cusLog(`账号 ${this.index}  ${name}: 更新token   `)
+            await this.sign()
         } else this.cusLog(`账号[${this.nick_name}]  ${name} 失败 ❌ 了呢`), console.log(res);
     }
     async sign() {
@@ -72,48 +72,48 @@ class UserInfo {
             method: "post",
             url: `https://member.aliyundrive.com/v1/activity/sign_in_list`,
             headers: {
-    "Host": "member.aliyundrive.com",
-    "authorization": `Bearer ${this.token}`,
-    "accept": "application/json",
-    "Content-Type": "application/json; charset\u003dUTF-8",
-  },
+                "Host": "member.aliyundrive.com",
+                "authorization": `Bearer ${this.token}`,
+                "accept": "application/json",
+                "Content-Type": "application/json; charset\u003dUTF-8",
+            },
             body: `{"isReward":false}`
         };
-      //  console.log(options);
+        //  console.log(options);
         let res = await httpRequest(options);
-     //   console.log(res);
+        //   console.log(res);
         if (res.success == true) {
-        this.id = res.result.signInCount
-        var o = this.id - 1
-         this.cusLog(`账号 [${this.nick_name} ] \n ${name}: 成功 \n ${res.result.signInLogs[o].calendarChinese} \n ${res.result.signInLogs[o].reward.notice}  `)
-         await this.reward()
+            this.id = res.result.signInCount
+            var o = this.id - 1
+            this.cusLog(`账号 [${this.nick_name} ] \n ${name}: 成功 \n ${res.result.signInLogs[o].calendarChinese} \n ${res.result.signInLogs[o].reward.notice}  `)
+            await this.reward()
         } else this.cusLog(`账号[${this.index}]  ${name} 失败 ❌ 了呢`), console.log(res);
-    } 
-     async reward() {
+    }
+    async reward() {
         let name = "领取";
         let options = {
             method: "post",
             url: `https://member.aliyundrive.com/v1/activity/sign_in_reward`,
             headers: {
-    "Host": "member.aliyundrive.com",
-    "authorization": `Bearer ${this.token}`,
-    "accept": "application/json",
-    "Content-Type": "application/json; charset\u003dUTF-8",
-  },
+                "Host": "member.aliyundrive.com",
+                "authorization": `Bearer ${this.token}`,
+                "accept": "application/json",
+                "Content-Type": "application/json; charset\u003dUTF-8",
+            },
             body: `{"signInDay":${this.id}}`
         };
-      //  console.log(options);
+        //  console.log(options);
         let res = await httpRequest(options);
-    //    console.log(res);
+        //    console.log(res);
         if (res.success == true) {
-        
-        this.cusLog(` ${res.result.description}  `)
-         
+
+            this.cusLog(` ${res.result.description}  `)
+
         } else this.cusLog(`账号[${this.index}]  ${name} 失败 ❌ 了呢`), console.log(res);
     }
-    
-    
-    
+
+
+
 
 
 
@@ -157,7 +157,7 @@ class UserInfo {
 // 入口
 !(async () => {
     const notify = require("./sendNotify");
-   // $.doubleLog(await $.yiyan());
+    // $.doubleLog(await $.yiyan());
     let users = await getUsers(CK_NAME, async (index, element) => {
         let userInfo = new UserInfo(index, element);
         return userInfo;
