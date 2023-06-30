@@ -8,7 +8,10 @@ ql repo https://ghproxy.com/https://github.com/smallfawn/QLScriptPublic.git
 ``````
 自用青龙docker搭建命令
 # 如果您对我仓库感兴趣可以支付任意金额支持一下！
+# 支付宝
 <img src="https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clzfb.png">
+
+# 微信
 <img src="https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clwx.png">
 
 ``````
