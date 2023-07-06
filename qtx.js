@@ -320,7 +320,7 @@ async function getNotice() {
                 break;
             }
         }
-        if (notice) { $.DoubleLog(notice); }
+        if (notice) { DoubleLog(notice); }
     } catch (e) {
         console.log(e);
     }
