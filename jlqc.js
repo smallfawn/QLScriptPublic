@@ -35,7 +35,7 @@ let userCount = 0;
 //---------------------- 自定义变量区域 -----------------------------------
 
 async function start() {
-    await notice()
+    await getNotice()
     console.log('\n================== 积分查询 ==================\n');
     taskall = [];
     for (let user of userList) {
@@ -433,29 +433,27 @@ async function checkEnv() {
     return console.log(`共找到${userCount}个账号`), true;//true == !0
 }
 // =========================================== 不懂不要动 =========================================================
-async function notice() {
+/**
+ * 获取远程通知
+ */
+async function getNotice() {
     try {
-        let options = {
-            url: `https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/api/main/notice.json`,
-            headers: {
-                'User-Agent': ''
-            },
-        }
-        //console.log(options);
-        let result = await httpRequest(options);
-        //console.log(result);
-        if (result) {
-            if ('notice' in result) {
-                DoubleLog(`${result.notice}`);
-            } else {
-                options.url = `https://gitee.com/smallfawn/api/raw/master/notice.json`
-                result = await httpRequest(options);
-                if ('notice' in result) {
-                    DoubleLog(`${result.notice}`);
-                }
+        const urls = [
+            "https://cdn.jsdelivr.net/gh/smallfawn/Note@main/Notice.json",
+            "https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Notice.json",
+            "https://fastly.jsdelivr.net/gh/smallfawn/Note@main/Notice.json",
+            "https://gitee.com/smallfawn/Note/raw/master/Notice.json",
+        ];
+        let notice = null;
+        for (const url of urls) {
+            const options = { url, headers: { "User-Agent": "" }, };
+            const result = await httpRequest(options);
+            if (result && "notice" in result) {
+                notice = result.notice.replace(/\\n/g, "\n");
+                break;
             }
-        } else {
         }
+        if (notice) { $.DoubleLog(notice); }
     } catch (e) {
         console.log(e);
     }
