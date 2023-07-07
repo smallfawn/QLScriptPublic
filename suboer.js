@@ -7,11 +7,11 @@
  * 抓域名https://growrice.supor.com中请求体header中cookie中PHPSESSID 的值 
  * 多账号使用 @ 分割 拼接字符串为&
  * cron 5 15 * * *
- * const $ = new Env("苏泊尔");
+ * const $ = new Env("苏泊尔-微信小程序");
  * scriptVersionNow = "0.0.1";
  */
 
-const ckName = "suboer";
+const ckName = "suboer_wx";
 const Notify = 1; //0为关闭通知,1为打开通知,默认为1
 let envSplitor = ["@", "\n"]; //多账号分隔符
 let strSplitor = '&'; //多变量分隔符
