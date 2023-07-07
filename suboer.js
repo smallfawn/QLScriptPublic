@@ -8,7 +8,7 @@
  * 多账号使用 @ 分割 拼接字符串为&
  * cron 5 15 * * *
  * const $ = new Env("苏泊尔-微信小程序");
- * scriptVersionNow = "0.0.2";
+ * scriptVersionNow = "0.0.3";
  */
 
 const ckName = "suboer_wx";
