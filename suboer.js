@@ -1,7 +1,7 @@
 /**
  * 苏泊尔会员中心 (微信小程序)
  * Show: 吃大米
- * 变量名:suboer
+ * 变量名:suboer_wx
  * 变量值:token&PHPSESSID@token1&PHPSESSID1
  * 抓域名https://growrice.supor.com/rice/backend/public/index.php/api/login/auto-login?token= 后面的值
  * 抓域名https://growrice.supor.com中请求体header中cookie中PHPSESSID 的值 
