@@ -1,6 +1,6 @@
 /**
  * 苏泊尔会员中心-微信小程序
- * cron 5 15 * * *  suboer.js
+ * cron 5 15 * * *  
  * Show: 吃大米
  * 变量名:suboer_wx
  * 变量值:token&PHPSESSID@token1&PHPSESSID1
