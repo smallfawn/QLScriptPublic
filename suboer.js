@@ -6,7 +6,7 @@
  * 抓域名https://growrice.supor.com/rice/backend/public/index.php/api/login/auto-login?token= 后面的值
  * 抓域名https://growrice.supor.com中请求体header中cookie中PHPSESSID 的值 
  * 多账号使用 @ 分割 拼接字符串为&
- * cron 5 15 * * *
+ * cron 5 15 * * * suboer.js
  * const $ = new Env("苏泊尔-微信小程序");
  * scriptVersionNow = "0.0.3";
  */
