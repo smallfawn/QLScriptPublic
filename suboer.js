@@ -1,12 +1,12 @@
 /**
- * 苏泊尔会员中心 (微信小程序)
+ * 苏泊尔会员中心-微信小程序
+ * cron 5 15 * * *  suboer.js
  * Show: 吃大米
  * 变量名:suboer_wx
  * 变量值:token&PHPSESSID@token1&PHPSESSID1
  * 抓域名https://growrice.supor.com/rice/backend/public/index.php/api/login/auto-login?token= 后面的值
  * 抓域名https://growrice.supor.com中请求体header中cookie中PHPSESSID 的值 
  * 多账号使用 @ 分割 拼接字符串为&
- * cron 5 15 * * * suboer.js
  * const $ = new Env("苏泊尔-微信小程序");
  * scriptVersionNow = "0.0.3";
  */
