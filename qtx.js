@@ -29,7 +29,7 @@ let userCount = 0;
 //---------------------------------------------------------
 
 async function start() {
-    await notice()
+    await getNotice()
     console.log('\n============= 用户CK有效性验证 =============\n');
     taskall = [];
     for (let user of userList) {
@@ -301,14 +301,34 @@ function httpRequest(options, method) {
     })
 }
 /**
+ * 获取远程版本
+ */
+function getVersion(scriptUrl, timeout = 3 * 1000) {
+    return new Promise((resolve) => {
+        const options = { url: `https://fastly.jsdelivr.net/gh/${scriptUrl}` };
+        $.get(options, (err, resp, data) => {
+            try {
+                const regex = /scriptVersionNow\s*=\s*(["'`])([\d.]+)\1/;
+                const match = data.match(regex);
+                const scriptVersionLatest = match ? match[2] : "";
+                console.log(`\n====== 当前版本：${scriptVersionNow} 📌 最新版本：${scriptVersionLatest} ======`);
+            } catch (e) {
+                $.logErr(e, resp);
+            }
+            resolve();
+        }, timeout);
+    });
+}
+/**
  * 获取远程通知
  */
 async function getNotice() {
     try {
         const urls = [
+            "https://fastly.jsdelivr.net/gh/smallfawn/Note@main/Notice.json",
+            "https://gcore.jsdelivr.net/gh/smallfawn/Note@main/Notice.json",
             "https://cdn.jsdelivr.net/gh/smallfawn/Note@main/Notice.json",
             "https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Notice.json",
-            "https://fastly.jsdelivr.net/gh/smallfawn/Note@main/Notice.json",
             "https://gitee.com/smallfawn/Note/raw/master/Notice.json",
         ];
         let notice = null;
@@ -320,7 +340,7 @@ async function getNotice() {
                 break;
             }
         }
-        if (notice) { DoubleLog(notice); }
+        if (notice) { $.DoubleLog(notice); }
     } catch (e) {
         console.log(e);
     }
