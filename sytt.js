@@ -79,7 +79,7 @@ async function sign() {
         let result = await httpRequest(options, `签到`);
 
         //console.log(result);
-        if (result?.code == 200) {
+        if (result.code == 200) {
             console.log(`账号[` + Number(i + 1) + `]` + `签到成功:${result.retinfo} 🎉`);
         } else if (result.code = 400) {
             console.log(`账号[` + Number(i + 1) + `]` + `签到失败:${result.retinfo} ！`);
