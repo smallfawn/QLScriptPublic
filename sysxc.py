@@ -1,4 +1,5 @@
 """
+new Env("书亦烧仙草python版")
 1. 书亦烧仙草签到 抓包scrm-prod.shuyi.org.cn域名请求头里的auth
    脚本仅供学习交流使用, 请在下载后24h内删除
 2. cron 以防ocr识别出错每天运行两次左右
