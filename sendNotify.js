@@ -274,6 +274,7 @@ async function sendNotify(
         }
     } else {
         console.log(`无黑白名单变量 默认形式发送 [${text}]`);
+        console.log(`如需配置通知黑白名单请在env或配置文件 添加白名单${pushType[0]} 或 黑名单${pushType[1]} 二选一`);
         await push()
     }
 
