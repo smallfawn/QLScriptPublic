@@ -9,6 +9,7 @@
  * @param params 某些推送通知方式点击弹窗可跳转, 例：{ url: 'https://abc.com' }
  * @param author 作者仓库等信息  例：`本通知 By：https://github.com/whyour/qinglong`
  * @魔改：smallfawn https://github.com/smallfawn/QLScriptPublic 参考：ccwav https://github.com/ccwav/QLScript2
+ * @魔改位置 sendNotify函数 黑白名单模式
  */
 
 const querystring = require('querystring');
