@@ -1,4 +1,9 @@
 # QLScriptpublic
+本仓库魔改通知  smallfawnPushWhite白名单 smallfawnPushBlack黑名单 二选一
+``````
+export smallfawnPushWhite="脚本名字@脚本名字2"
+``````
+脚本会自行判断是否是在黑白名单内的 如果存在则判断通知或不通知 
 青龙面板脚本公共仓库
 # 组织基地：https://jq.qq.com/?k=iC3qGTPD
 这里的脚本只是自己学习 js 的一个实践 仅用于测试和学习研究，禁止用于商业用途，不能保证其合法性，准确性，完整性和有效性，请根据情况自行判断.
