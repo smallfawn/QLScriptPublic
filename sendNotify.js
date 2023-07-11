@@ -213,6 +213,7 @@ async function sendNotify(
 ) {
 
     let pushType = ["smallfawnPushWhite", "smallfawnPushBlack", 'default']
+    /* 判断 黑白名单 或默认模式 */
     function checkSmallfawnPushType() {
         if (process.env.hasOwnProperty(pushType[0]) !== false) {
             return pushType[0];
@@ -222,6 +223,11 @@ async function sendNotify(
             return pushType[2];
         }
     }
+    /**
+     * 检测 smallfawnPushWhite 或 smallfawnPushBlack 的变量
+     * @param {*} variable  smallfawnPushWhite 或 smallfawnPushBlack
+     * @returns 数组
+     */
     function checkSmallfawnPush(variable) {
         if (typeof variable === 'string') {
             if (variable.includes('&') || variable.includes('#') || variable.includes('@')) {
@@ -235,24 +241,23 @@ async function sendNotify(
             return [];
         }
     }
+
     let type = checkSmallfawnPushType()
+
+    console.log(`\n\n=============================================    \nsmallfawn脚本通知 - 北京时间(UTC+8)：${new Date(
+        new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 +
+        8 * 60 * 60 * 1000).toLocaleString()}`)
+    // 主要 //
+    //判断是否是默认通知方式
     if (type !== pushType[2]) {
+        //判断数组长度
         if (checkSmallfawnPush(process.env[type]).length == 0) {
             console.log(`[${type}]长度为0 默认形式发送`);
             await push()
-            return
         } else {
+            //判断黑白名单模式
             if (type == pushType[0]) {
                 console.log(`通知变量为白名单模式`);
-                /*for (let sm of checkSmallfawnPush(process.env[pushType[0]])) {
-                    if (text == sm) {
-                        console.log(`根据[${type}]变量来选择通知`);
-                        await push()
-                        return
-                    } else {
-                        //console.log(`[${type}]未含有该脚本的env名字，不通知`)
-                    }
-                }*/
                 if (checkSmallfawnPush(process.env[pushType[0]]).includes(text)) {
                     console.log(`根据[${type}]变量来选择通知`);
                     await push();
@@ -261,15 +266,6 @@ async function sendNotify(
                 }
             } else if (type == pushType[1]) {
                 console.log(`通知变量为黑名单模式`);
-                /*for (let sm of checkSmallfawnPush(process.env[pushType[1]])) {
-                    if (text == sm) {
-                        console.log(`根据[${type}]变量来选择不通知`);
-                    } else {
-                        console.log(`[${type}]未含有该脚本的env名字，通知`);
-                        await push()
-                        return
-                    }
-                }*/
                 if (checkSmallfawnPush(process.env[pushType[1]]).includes(text)) {
                     console.log(`根据[${type}]变量来选择不通知`);
                     await push();
@@ -281,9 +277,7 @@ async function sendNotify(
     } else {
         console.log(`不启动黑白名单模式 启动默认形式发送`);
         await push()
-        return
     }
-
 
     async function push() {
         //提供6种通知
