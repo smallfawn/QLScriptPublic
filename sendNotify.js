@@ -8,6 +8,7 @@
  * @param desp 通知体
  * @param params 某些推送通知方式点击弹窗可跳转, 例：{ url: 'https://abc.com' }
  * @param author 作者仓库等信息  例：`本通知 By：https://github.com/whyour/qinglong`
+ * @魔改：smallfawn https://github.com/smallfawn/QLScriptPublic 参考：ccwav https://github.com/ccwav/QLScript2
  */
 
 const querystring = require('querystring');
@@ -212,9 +213,9 @@ async function sendNotify(
 
     let pushType = ["smallfawnPushWhite", "smallfawnPushBlack", 'default']
     function checkSmallfawnPushType() {
-        if (process.env.hasOwnProperty(pushType[0]) !== undefined) {
+        if (process.env.hasOwnProperty(pushType[0]) !== false) {
             return pushType[0];
-        } else if (process.env.hasOwnProperty(pushType[1]) !== undefined) {
+        } else if (process.env.hasOwnProperty(pushType[1]) !== false) {
             return pushType[1];
         } else {
             return pushType[2];
@@ -266,7 +267,6 @@ async function sendNotify(
             }
         }
     } else {
-        //不启动黑白名单模式 启动默认形式发送
         console.log(`不启动黑白名单模式 启动默认形式发送`);
         await push()
         return
