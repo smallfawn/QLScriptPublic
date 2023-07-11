@@ -265,10 +265,10 @@ async function sendNotify(
             } else if (type == pushType[1]) {
                 console.log(`通知变量为黑名单模式`);
                 if (checkSmallfawnPush(process.env[pushType[1]]).includes(text)) {
-                    console.log(`[${text}] 在 [${type}] 变量中 => 通知`);
-                    await push();
+                    console.log(`[${text}] 在 [${type}] 变量中 => 不通知`);
                 } else {
-                    console.log(`[${text}] 不在 [${type}] 变量中 => 不通知`)
+                    console.log(`[${text}] 不在 [${type}] 变量中 => 通知`)
+                    await push();
                 }
             }
         }
