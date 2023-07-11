@@ -244,18 +244,24 @@ async function sendNotify(
         } else {
             if (type == pushType[0]) {
                 console.log(`通知变量为白名单模式`);
-                for (let sm of checkSmallfawnPush(process.env[pushType[0]])) {
+                /*for (let sm of checkSmallfawnPush(process.env[pushType[0]])) {
                     if (text == sm) {
                         console.log(`根据[${type}]变量来选择通知`);
                         await push()
                         return
                     } else {
-                        console.log(`[${type}]未含有该脚本的env名字，不通知`)
+                        //console.log(`[${type}]未含有该脚本的env名字，不通知`)
                     }
+                }*/
+                if (checkSmallfawnPush(process.env[pushType[0]]).includes(text)) {
+                    console.log(`根据[${type}]变量来选择通知`);
+                    await push();
+                } else {
+                    console.log(`[${type}]未含有该脚本的env名字，不通知`)
                 }
             } else if (type == pushType[1]) {
                 console.log(`通知变量为黑名单模式`);
-                for (let sm of checkSmallfawnPush(process.env[pushType[1]])) {
+                /*for (let sm of checkSmallfawnPush(process.env[pushType[1]])) {
                     if (text == sm) {
                         console.log(`根据[${type}]变量来选择不通知`);
                     } else {
@@ -263,6 +269,12 @@ async function sendNotify(
                         await push()
                         return
                     }
+                }*/
+                if (checkSmallfawnPush(process.env[pushType[1]]).includes(text)) {
+                    console.log(`根据[${type}]变量来选择不通知`);
+                    await push();
+                } else {
+                    console.log(`[${type}]未含有该脚本的env名字，通知`)
                 }
             }
         }
