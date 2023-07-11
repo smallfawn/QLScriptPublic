@@ -225,7 +225,6 @@ async function sendNotify(
     function checkSmallfawnPush(variable) {
         if (typeof variable === 'string') {
             if (variable.includes('&') || variable.includes('#') || variable.includes('@')) {
-                console.log(variable.split(/[&#@]/))
                 return variable.split(/[&#@]/);
             } else {
                 return [variable];
