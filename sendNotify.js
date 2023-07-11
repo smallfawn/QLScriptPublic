@@ -250,30 +250,30 @@ async function sendNotify(
     if (type !== pushType[2]) {
         //判断数组长度
         if (checkSmallfawnPush(process.env[type]).length == 0) {
-            console.log(`[${type}]长度为0 默认形式发送 [${text}]`);
+            console.log(`[${type}] 无变量值 默认形式发送 [${text}]`);
             await push()
         } else {
             //判断黑白名单模式
             if (type == pushType[0]) {
                 console.log(`通知变量为白名单模式`);
                 if (checkSmallfawnPush(process.env[pushType[0]]).includes(text)) {
-                    console.log(`根据[${type}]变量来选择通知 [${text}]`);
+                    console.log(`[${text}] 在 [${type}] 变量中 => 通知`);
                     await push();
                 } else {
-                    console.log(`[${type}]未含有该脚本的env名字 [${text}]，不通知`)
+                    console.log(`[${text}] 不在 [${type}] 变量中 => 不通知`)
                 }
             } else if (type == pushType[1]) {
                 console.log(`通知变量为黑名单模式`);
                 if (checkSmallfawnPush(process.env[pushType[1]]).includes(text)) {
-                    console.log(`根据[${type}]变量来选择不通知 [${text}]`);
+                    console.log(`[${text}] 在 [${type}] 变量中 => 通知`);
                     await push();
                 } else {
-                    console.log(`[${type}]未含有该脚本的env名字 [${text}]，通知`)
+                    console.log(`[${text}] 不在 [${type}] 变量中 => 不通知`)
                 }
             }
         }
     } else {
-        console.log(`不启动黑白名单模式 启动默认形式发送 [${text}]`);
+        console.log(`无黑白名单变量 默认形式发送 [${text}]`);
         await push()
     }
 
