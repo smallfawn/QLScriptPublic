@@ -244,9 +244,7 @@ async function sendNotify(
 
     let type = checkSmallfawnPushType()
 
-    console.log(`\n\n=============================================    \nsmallfawn脚本通知 - 北京时间(UTC+8)：${new Date(
-        new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 +
-        8 * 60 * 60 * 1000).toLocaleString()}`)
+    console.log(`\n\n=============================================`)
     // 主要 //
     //判断是否是默认通知方式
     if (type !== pushType[2]) {
