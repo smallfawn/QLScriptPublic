@@ -250,7 +250,7 @@ async function sendNotify(
     if (type !== pushType[2]) {
         //判断数组长度
         if (checkSmallfawnPush(process.env[type]).length == 0) {
-            console.log(`通知变量[${type}] 无变量值 默认形式发送 脚本名字[${text}]`);
+            console.log(`通知变量[${type}] 无变量值 默认形式发送 脚本名字[${text}] 如果需要请填写脚本名字到通知变量  @或&或#为 分隔符`);
             await push()
         } else {
             //判断黑白名单模式
@@ -274,7 +274,7 @@ async function sendNotify(
         }
     } else {
         console.log(`无黑白名单变量 默认形式发送 脚本名字[${text}]`);
-        console.log(`如需配置通知黑白名单请在env或配置文件 添加白名单 ${pushType[0]} 或 黑名单 ${pushType[1]} 二选一 @或&或#分隔符 填写脚本名字`);
+        console.log(`如需配置通知黑白名单请在env或配置文件 添加白名单 ${pushType[0]} 或 黑名单 ${pushType[1]} 二选一 @或&或#为 分隔符 填写脚本名字`);
         await push()
     }
 
