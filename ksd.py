@@ -8,6 +8,8 @@ new Env("卡萨帝")
 不要频繁运行，否则黑号
 找https://yx.jsh.com/customer开头的域名
 变量名：ksdck,数据Authorization，多号换行隔开
+羊毛圈 862839604 
+仓库 https://github.com/smallfawn/QLScriptPublic
 '''''
 
 
