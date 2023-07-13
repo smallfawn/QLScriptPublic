@@ -244,7 +244,7 @@ async function sendNotify(
 
     let type = checkSmallfawnPushType()
 
-    console.log(`\n\n=============================================`)
+    console.log(`\n\n============================================`)
     // 主要 //
     //判断是否是默认通知方式
     if (type !== pushType[2]) {
