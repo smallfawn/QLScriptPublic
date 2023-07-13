@@ -4,6 +4,7 @@
  * Show:
  * 变量名:jlyh
  * 变量值:抓域名https://galaxy-user-api.geely.com/api/v1/login/refresh?refreshToken=后面的值&请求头headers中deviceSN的值
+ * 抓不到这个域名抓短信登录包 https://galaxy-user-api.geely.com/api/v1/login/mobileCodeLogin 返回体中的refreshToken的值
  * 注意我说的是值 并不是全部 填错的自己看着点
  * 并且变量是两个值 两个值 两个值 一个refreshToke的值一个header请求头中的deviceSN的值
  * scriptVersionNow = "0.0.1";
