@@ -4,7 +4,7 @@
  * 黑号似乎有点严重自己看着玩吧
  * 群 862839604 
  * 仓库 https://github.com/smallfawn/QLScriptPublic
- * new Env("今日头条")
+ * new Env("今日头条普通")
  * cron 45 10 * * * jrtt.js
  */
 
