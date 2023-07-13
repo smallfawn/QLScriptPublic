@@ -18,10 +18,10 @@ id获取，登录app，把用户名的数字复制复制前6位，例：export s
 
 deviceid = "dd97d90b-a519-4c45-9c72-28753734c1c"#建议抓包改成自己的
 
-version = sys.version.split(" ")
+version = sys.版本.split(" ")
 ver = version[0].split(".")
-if int(ver[1]) != 10:
-    print(f"你的python版本为{sys.version},请使用py3.10运行此脚本")
+if int(版本[1]) != 10:
+    print(f"你的python版本为{sys.版本},请使用py3.10运行此脚本")
 # Make Sure You're Running The Program With python3.10 Otherwise It May Crash
 
 try:
