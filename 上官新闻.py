@@ -1,4 +1,4 @@
-import json,sendNotify
+import json
 import requests,time
 from urllib.parse import unquote,quote
 import base64
@@ -6,7 +6,8 @@ import hashlib,sys,os
 from notify import send
 ''''
 new Env("上官新闻")
-v1.3 更新：限制5号，增加登录任务（20积分）
+
+v1.4 更新：限制5号，增加登录任务（20积分）
 APP上观新闻，积分卡券或者实物，下载链接https://a.app.qq.com/o/simple.jsp?pkgname=com.shwatch.news
 变量名：sgxwck,多号换行分开，一天200多积分
 变量格式：手机号#密码#id，  如果不做登录任务，只填id即可
@@ -18,10 +19,10 @@ id获取，登录app，把用户名的数字复制复制前6位，例：export s
 
 deviceid = "dd97d90b-a519-4c45-9c72-28753734c1c"#建议抓包改成自己的
 
-version = sys.版本.split(" ")
+version = sys.version.split(" ")
 ver = version[0].split(".")
-if int(版本[1]) != 10:
-    print(f"你的python版本为{sys.版本},请使用py3.10运行此脚本")
+if int(ver[1]) != 10:
+    print(f"你的python版本为{sys.version},请使用py3.10运行此脚本")
 # Make Sure You're Running The Program With python3.10 Otherwise It May Crash
 
 try:
