@@ -8,6 +8,8 @@
  * @param desp 通知体
  * @param params 某些推送通知方式点击弹窗可跳转, 例：{ url: 'https://abc.com' }
  * @param author 作者仓库等信息  例：`本通知 By：https://github.com/whyour/qinglong`
+ * @魔改：smallfawn https://github.com/smallfawn/QLScriptPublic 参考：ccwav https://github.com/ccwav/QLScript2
+ * @魔改位置 sendNotify函数 黑白名单模式
  */
 
 const querystring = require('querystring');
@@ -292,6 +294,8 @@ if (process.env.SMTP_NAME) {
 
 /**
  * sendNotify 推送通知功能
+ * 魔改：smallfawn https://github.com/smallfawn 增加黑白名单模式
+ * 变量值 smallfawnPushWhite白名单 smallfawnPushBlack黑名单 不写默认通知 黑白名单二选一
  * @param text 通知头
  * @param desp 通知体
  * @param params 某些推送通知方式点击弹窗可跳转, 例：{ url: 'https://abc.com' }
