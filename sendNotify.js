@@ -8,8 +8,6 @@
  * @param desp 通知体
  * @param params 某些推送通知方式点击弹窗可跳转, 例：{ url: 'https://abc.com' }
  * @param author 作者仓库等信息  例：`本通知 By：https://github.com/whyour/qinglong`
- * @魔改：smallfawn https://github.com/smallfawn/QLScriptPublic 参考：ccwav https://github.com/ccwav/QLScript2
- * @魔改位置 sendNotify函数 黑白名单模式
  */
 
 const querystring = require('querystring');
@@ -142,6 +140,11 @@ let SMTP_SSL = 'false';
 let SMTP_EMAIL = '';
 let SMTP_PASSWORD = '';
 let SMTP_NAME = '';
+
+// =======================================PushMe通知设置区域===========================================
+//官方文档：https://push.i-i.me/
+//此处填你的PushMe KEY.
+let PUSHME_KEY = '';
 
 //==========================云端环境变量的判断与接收=========================
 if (process.env.GOTIFY_URL) {
@@ -290,12 +293,13 @@ if (process.env.SMTP_PASSWORD) {
 if (process.env.SMTP_NAME) {
     SMTP_NAME = process.env.SMTP_NAME;
 }
+if (process.env.PUSHME_KEY) {
+    PUSHME_KEY = process.env.PUSHME_KEY;
+}
 //==========================云端环境变量的判断与接收=========================
 
 /**
  * sendNotify 推送通知功能
- * 魔改：smallfawn https://github.com/smallfawn 增加黑白名单模式
- * 变量值 smallfawnPushWhite白名单 smallfawnPushBlack黑名单 不写默认通知 黑白名单二选一
  * @param text 通知头
  * @param desp 通知体
  * @param params 某些推送通知方式点击弹窗可跳转, 例：{ url: 'https://abc.com' }
@@ -308,7 +312,6 @@ async function sendNotify(
     params = {},
     author = '\n\n本通知 By：https://github.com/whyour/qinglong',
 ) {
-
     let pushType = ["smallfawnPushWhite", "smallfawnPushBlack", 'default']
     /* 判断 黑白名单 或默认模式 */
     function checkSmallfawnPushType() {
@@ -410,7 +413,6 @@ async function sendNotify(
             smtpNotify(text, desp), //SMTP 邮件
         ]);
     }
-
 }
 
 function gotifyNotify(text, desp) {
@@ -1182,6 +1184,41 @@ function smtpNotify(text, desp) {
     return new Promise((resolve) => {
         if (SMTP_SERVER && SMTP_SSL && SMTP_EMAIL && SMTP_PASSWORD && SMTP_NAME) {
             // todo: Node.js并没有内置的 smtp 实现，需要调用外部库，因为不清楚这个文件的模块依赖情况，所以留给有缘人实现
+        } else {
+            resolve();
+        }
+    });
+}
+
+function PushMeNotify(text, desp) {
+    return new Promise((resolve) => {
+        if (PUSHME_KEY) {
+            const options = {
+                url: `https://push.i-i.me?push_key=${PUSHME_KEY}`,
+                json: { title: text, content: desp },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                timeout,
+            };
+            $.post(options, (err, resp, data) => {
+                try {
+                    if (err) {
+                        console.log('PushMeNotify发送通知调用API失败！！\n');
+                        console.log(err);
+                    } else {
+                        if (data === 'success') {
+                            console.log('PushMe发送通知消息成功🎉\n');
+                        } else {
+                            console.log(`${data}\n`);
+                        }
+                    }
+                } catch (e) {
+                    $.logErr(e, resp);
+                } finally {
+                    resolve(data);
+                }
+            });
         } else {
             resolve();
         }
