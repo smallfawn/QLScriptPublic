@@ -4,10 +4,9 @@
  * cron 12 10 * * *  望潮抽奖.js
  * ========= 青龙--配置文件 ===========
  * # 项目名称
- * export wangchao_data='token @ token'
+ * export wangchao_data='账号&密码'
  * 首次需要去首页 -> (中间)阅读有礼 绑定支付宝
  * 多账号用 换行 或 @ 分割
- * 抓包 vapp.taizhou.com.cn , 找到 headers里面X-ACCOUNT-ID 和X-SESSIONID  &拼接
  * ====================================
  * 注册地址：https://tzapp.taizhou.com.cn/webChannels/invite?inviteCode=BY5N29&tenantId=64&accountId=64914db1bf15a44961ed092f
  * 更新日志：修复登录失败的问题
