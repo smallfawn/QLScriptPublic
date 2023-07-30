@@ -69,6 +69,7 @@ class UserInfo {
             await this.postArticle()
             if (this.articleStatus == true) {
                 await $.wait(8000)
+                await this.user_info()
                 if (this.postId !== "") {
                     //await this.comment()
                     await this.forward()
