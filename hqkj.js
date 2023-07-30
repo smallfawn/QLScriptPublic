@@ -4,8 +4,9 @@
  * Show:
  * 变量名:hqkj
  * 变量值:https://hqpp-gw.faw.cn/gimc-hongqi-webapp headers中cookie中JSESSIONID=后面的值
- * scriptVersionNow = "0.0.1";
+ * scriptVersionNow = "0.0.2";
  * 每天积分
+ * 修复删除文章
  */
 
 const $ = new Env("红旗空间-红旗智联小程序");
@@ -14,7 +15,7 @@ const Notify = 1; //0为关闭通知,1为打开通知,默认为1
 let envSplitor = ["@", "\n"]; //多账号分隔符
 let strSplitor = '&'; //多变量分隔符
 
-let scriptVersionNow = "0.0.1";
+let scriptVersionNow = "0.0.2";
 
 
 async function start() {
@@ -73,13 +74,25 @@ class UserInfo {
             }
         } else {
             await this.postArticle()
-            await $.wait(8000)
-            await this.user_info()
-            if (this.postId !== "") {
-                //await this.comment()
-                await this.forward()
-                await this.deleteArticle()
+            if (this.articleStatus == true) {
+                await $.wait(8000)
+                await this.user_info()
+                if (this.postId !== "") {
+                    //await this.comment()
+                    await this.forward()
+                    await this.deleteArticle()
+                }
+            } else {
+                await this.postArticle()
+                await $.wait(8000)
+                await this.user_info()
+                if (this.postId !== "") {
+                    //await this.comment()
+                    await this.forward()
+                    await this.deleteArticle()
+                }
             }
+
         }
 
 
@@ -183,7 +196,7 @@ class UserInfo {
     async deleteArticle() {
         try {
             let options = {
-                url: `https://hqpp-gw.faw.cn/gimc-hongqi-webapp/f/square/post/3492996?_method=DELETE&_timestamp=${Date.now()}`,
+                url: `https://hqpp-gw.faw.cn/gimc-hongqi-webapp/f/square/post/${this.postId}?_method=DELETE&_timestamp=${Date.now()}`,
                 headers: this.postHeaders,
                 body: JSON.stringify({})
             },
