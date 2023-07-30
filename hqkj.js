@@ -27,7 +27,7 @@ async function start() {
     for (let user of $.userList) {
         if (user.ckStatus) {
             taskall.push(await user.task());
-            await $.wait(1000);
+            await $.wait(5000);
         }
     }
     await Promise.all(taskall);
@@ -40,6 +40,7 @@ class UserInfo {
         this.ckStatus = true;
         this.postId = ""
         this.articleStatus = false
+        this.userId = ""
         this.postHeaders = {
             "Host": "hqpp-gw.faw.cn",
             "Connection": "keep-alive",
@@ -63,20 +64,11 @@ class UserInfo {
     }
     async task() {
         $.DoubleLog(`------第[${this.index}]个账号------`);
-        await this.postArticle()
-        if (this.articleStatus == true) {
-            await $.wait(8000)
-            await this.user_info()
-            if (this.postId !== "") {
-                //await this.comment()
-                await this.forward()
-                await this.deleteArticle()
-            }
-        } else {
+        await this.user_point()
+        if (this.ckStatus == true) {
             await this.postArticle()
             if (this.articleStatus == true) {
                 await $.wait(8000)
-                await this.user_info()
                 if (this.postId !== "") {
                     //await this.comment()
                     await this.forward()
@@ -84,16 +76,28 @@ class UserInfo {
                 }
             } else {
                 await this.postArticle()
-                await $.wait(8000)
-                await this.user_info()
-                if (this.postId !== "") {
-                    //await this.comment()
-                    await this.forward()
-                    await this.deleteArticle()
+                if (this.articleStatus == true) {
+                    await $.wait(8000)
+                    await this.user_info()
+                    if (this.postId !== "") {
+                        //await this.comment()
+                        await this.forward()
+                        await this.deleteArticle()
+                    }
+                } else {
+                    await this.postArticle()
+                    await $.wait(8000)
+                    await this.user_info()
+                    if (this.postId !== "") {
+                        //await this.comment()
+                        await this.forward()
+                        await this.deleteArticle()
+                    }
                 }
-            }
 
+            }
         }
+
 
 
     }
@@ -198,7 +202,7 @@ class UserInfo {
             let options = {
                 url: `https://hqpp-gw.faw.cn/gimc-hongqi-webapp/f/square/post/${this.postId}?_method=DELETE&_timestamp=${Date.now()}`,
                 headers: this.postHeaders,
-                body: JSON.stringify({})
+                body: " "
             },
                 result = await httpRequest(options);
             //console.log(options);
@@ -215,12 +219,34 @@ class UserInfo {
             console.log(e);
         }
     }
-
+    //个人主页
+    async user_point() {
+        try {
+            let options = {
+                url: `https://hqpp-gw.faw.cn/gimc-hongqi-webapp/f/credits/userCredits/?_timestamp=${Date.now()}`,
+                headers: this.getHeaders,
+            },
+                result = await httpRequest(options);
+            //console.log(options);
+            //console.log(result);
+            if (result.code == 200) {
+                this.ckStatus = true
+                this.userId = result.data.userId
+                $.DoubleLog(`✅账号[${this.index}]  [${result.data.nickname}][${result.data.amount}]分🎉`);
+            } else {
+                this.ckStatus = false
+                $.DoubleLog(`❌账号[${this.index}]  获取个人发表文章失败`);
+                //console.log(result);
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
     //个人主页
     async user_info() {
         try {
             let options = {
-                url: `https://hqpp-gw.faw.cn/gimc-hongqi-webapp/f/square/post/user?_timestamp=${Date.now()}&pageNo=1&pageSize=20&userId=5956965`,
+                url: `https://hqpp-gw.faw.cn/gimc-hongqi-webapp/f/square/post/user?_timestamp=${Date.now()}&pageNo=1&pageSize=20&userId=${this.userId}`,
                 headers: this.getHeaders,
             },
                 result = await httpRequest(options);
