@@ -12,7 +12,7 @@ const notify = $.isNode() ? require("./sendNotify") : "";
 const Notify = 1
 const debug = 0
 let ckStr = ($.isNode() ? process.env.xbox_data : $.getdata('xbox_data')) || '';  //检测CK  外部
-let msg, ck;
+let msg = '', ck;
 let host = 'h5.youzan.com';
 let hostname = 'https://' + host;
 //---------------------------------------------------//
@@ -36,7 +36,7 @@ async function tips(ckArr) {
 //---------------------------------------------------------------------------------封装循环测试
 async function newstart(name, taskname, time) {  //任务名 函数名 等待时间
     let ckArr = await checkEnv(ckStr, "xbox_data");  //检查CK
-    console.log("\n📌📌📌📌📌📌📌📌" + name + "📌📌📌📌📌📌📌📌");
+    DoubleLog("\n📌📌📌📌📌📌📌📌" + name + "📌📌📌📌📌📌📌📌");
     for (i = 0; i < ckArr.length; i++) {
         ck = ckArr[i].split("&");                 //单账号多变量分割符,如果一个账号需要user和token两个变量,那么则输入user1&token1@user2&token2...   
         //let CK = ckArr[i]
@@ -78,7 +78,7 @@ async function userinfo() {
             await getpoints(nickName);
             //console.log(`账号[` + Number(i + 1) + `]` + `用户[` + result.data.user.nickName + `]积分:` + points +`🎉`);
         } else {
-            //console.log(`账号[` + Number(i + 1) + `]查询失败！`);
+            DoubleLog(`账号[` + Number(i + 1) + `]查询失败！`);
             //console.log(result);
         }
     } catch (error) {
@@ -106,13 +106,13 @@ async function getpoints(nickName) {
 
         //console.log(result);
         if (result?.code == 0) {
-            console.log(`账号[` + Number(i + 1) + `]` + `用户[` + nickName + `]积分:${result.data.stats.points} 🎉`);
+            DoubleLog(`账号[` + Number(i + 1) + `]` + `用户[` + nickName + `]积分:${result.data.stats.points} 🎉`);
         } else {
-            console.log(`账号[` + Number(i + 1) + `]查询失败！`);
+            DoubleLog(`账号[` + Number(i + 1) + `]查询失败！`);
             //console.log(result);
         }
     } catch (error) {
-        console.log(error);
+        DoubleLog(error);
     }
 
 }
@@ -134,16 +134,16 @@ async function checkin() {
 
         //console.log(result);
         if (result?.code == 0) {
-            console.log(`账号[` + Number(i + 1) + `]` + `签到:${result.msg} 获得:${result.data.list[0].infos.title}🎉`);
+            DoubleLog(`账号[` + Number(i + 1) + `]` + `签到:${result.msg} 获得:${result.data.list[0].infos.title}🎉`);
             await wait(2);
         } else if (result?.code == 1000030071) {
-            console.log(`账号[` + Number(i + 1) + `]` + `签到失败！原因${result.msg}`);
+            DoubleLog(`账号[` + Number(i + 1) + `]` + `签到失败！原因${result.msg}`);
             //console.log(result);
         } else {
-            console.log(`账号[` + Number(i + 1) + `]` + `签到失败！原因${result.msg}`)
+            DoubleLog(`账号[` + Number(i + 1) + `]` + `签到失败！原因${result.msg}`)
         }
     } catch (error) {
-        console.log(error);
+        DoubleLog(error);
     }
 
 }
