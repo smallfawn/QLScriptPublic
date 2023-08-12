@@ -71,7 +71,7 @@ async function start() {
     }
     await Promise.all(taskall);
 
-    console.log('\n================== 评论 ==================\n');
+    /*console.log('\n================== 评论 ==================\n');
     taskall = [];
     for (let user of userList) {
         if (user.ckStatus) {
@@ -82,7 +82,7 @@ async function start() {
             }
         }
     }
-    await Promise.all(taskall);
+    await Promise.all(taskall);*/
     console.log('\n================== 分享 ==================\n');
     taskall = [];
     for (let user of userList) {
