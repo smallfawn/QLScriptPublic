@@ -244,7 +244,7 @@ class UserInfo {
             await $.wait(10000)
             if (this.articleId !== '') {
                 await this.like()
-                await this.createComment()
+                //await this.createComment()
                 await this.share()
                 await this.delete()
             } else {
