@@ -3,7 +3,7 @@
  * cron 2 17 * * *  yingsheng.js
  * Show:
  * 变量名:yingsheng_data
- * 变量值:
+ * 变量值:抓yingsheng.elecfans.com 请求头Headers中Authorization或者token 
  * scriptVersionNow = "0.0.1";
  */
 
@@ -17,7 +17,7 @@ let scriptVersionNow = "0.0.1";
 
 
 async function start() {
-    await getVersion("smallfawn/Note@main/JavaScript/test_v2.js");
+    await getVersion("smallfawn/QLScriptPublic@main/yingsheng.js");
     await getNotice();
 
     console.log("\n================== 用户信息 ==================\n");
