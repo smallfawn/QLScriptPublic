@@ -81,7 +81,7 @@ class UserInfo {
 
         var f = convertObjectToString(l)
 
-        if(type == "android") {
+        if (type == "android") {
             f += "cnry8k3o4WdCGU1Tq09cRVOPCnfJzt7p"
         }
         var h = crypto.createHash("sha1"),
@@ -217,7 +217,7 @@ class UserInfo {
             let options = {
                 url: `https://ysapi.elecfans.com/api/video/publish/thumbsup`,
                 headers: this.getHeaders_ANDROID(data),
-                body: JSON.stringify(data)
+                body: `type=1&video_id=27679`
             },
                 result = await httpRequest(options);
             //console.log(options);
