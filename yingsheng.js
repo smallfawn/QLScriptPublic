@@ -2,10 +2,10 @@
  * new Env("硬声")
  * cron 2 17 * * *  yingsheng.js
  * Show:
- * 23/08/29 更新点赞任务
+ * 23/08/29 更新点赞任务 更新评论 自动领取
  * 变量名:yingsheng_data
  * 变量值:抓yingsheng.elecfans.com 请求头Headers中Authorization或者token 
- * scriptVersionNow = "0.0.2";
+ * scriptVersionNow = "0.0.3";
  */
 
 const $ = new Env("硬声");
@@ -14,7 +14,7 @@ const Notify = 1; //0为关闭通知,1为打开通知,默认为1
 let envSplitor = ["@", "\n"]; //多账号分隔符
 let strSplitor = '&'; //多变量分隔符
 
-let scriptVersionNow = "0.0.2";
+let scriptVersionNow = "0.0.3";
 
 
 async function start() {
@@ -37,6 +37,7 @@ class UserInfo {
         this.index = ++$.userIdx;
         this.ck = str.split(strSplitor)[0]; //单账号多变量分隔符
         this.ckStatus = true;
+        this.videoList = [];
     }
     /**
      * //该加密实现 https://yingshengstatic.elecfans.com/80f05da.js 关键词 (t.headers.sign = v)
@@ -84,6 +85,7 @@ class UserInfo {
         if (type == "android") {
             f += "cnry8k3o4WdCGU1Tq09cRVOPCnfJzt7p"
         }
+        console.log(f)
         var h = crypto.createHash("sha1"),
             d = crypto.createHash("sha1");
         h.update(f);
@@ -120,10 +122,9 @@ class UserInfo {
         const timestamp = Math.round(new Date().getTime() / 1e3)
         return {
             "Host": "ysapi.elecfans.com",
-
             "Connection": "keep-alive",
             "Authorization": this.ck,
-            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Type": "application/json;charset=UTF-8",
             "model": "MI 8 Lite",
             "timestamp": timestamp,
             "User-Agent": "okhttp/3.12.6",
@@ -136,7 +137,8 @@ class UserInfo {
     }
     async task() {
         await this.sign_in_info()
-        await this.video_list()
+        await this.task_list()
+        await this.task_list()
     }
     async sign_in_info() {
         try {
@@ -200,10 +202,11 @@ class UserInfo {
             if (result.message == "success！") {
                 $.DoubleLog(`✅账号[${this.index}]  刷新视频列表成功🎉`);
 
-                for (let index = 0; index < 5; index++) {
+                /*for (let index = 0; index < 5; index++) {
                     console.log()
                     await this.video_like(result.data.data[index].detail.id)
-                }
+                }*/
+                this.videoList = result.data.data
             } else {
                 $.DoubleLog(`❌账号[${this.index}]  刷新视频列表失败`);
                 //console.log(result);
@@ -212,22 +215,119 @@ class UserInfo {
             console.log(e);
         }
     }
-    async video_like(id) {
+    async video_like() {
         try {
-            const data = { "type": 1, "video_id": id }
+            let video_id = ""
+            for (let index = 0; index < 5; index++) {
+                video_id = this.videoList[index].detail.id
+                const data = { "type": 1, "video_id": id }
+                let options = {
+                    url: `https://ysapi.elecfans.com/api/video/publish/thumbsup`,
+                    headers: this.getHeaders_ANDROID(data),
+                    body: `type=1&video_id=${video_id}`
+                },
+                    result = await httpRequest(options);
+                //console.log(options);
+                //console.log(result);
+                if (result.message == "success！") {
+                    $.DoubleLog(`✅账号[${this.index}]  点赞视频成功🎉`);
+
+                } else {
+                    $.DoubleLog(`❌账号[${this.index}]  点赞视频失败`);
+                    //console.log(result);
+                }
+            }
+
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async task_list() {
+        try {
+            const data = {}
             let options = {
-                url: `https://ysapi.elecfans.com/api/video/publish/thumbsup`,
-                headers: this.getHeaders_ANDROID(data),
-                body: `type=1&video_id=${id}`
+                url: `https://yingsheng.elecfans.com/ysapi/wapi/activity/task/dailyList`,
+                headers: this.getHeaders_H5(data),
             },
                 result = await httpRequest(options);
             //console.log(options);
             //console.log(result);
             if (result.message == "success！") {
-                $.DoubleLog(`✅账号[${this.index}]  点赞视频成功🎉`);
+                await this.video_list()
+                if (result.data["4"].step["1"].finish_progress < result.data["4"].step["1"].condition) {
+                    $.DoubleLog(`✅账号[${this.index}]  执行点赞视频任务🎉`)
+                    await this.video_like()
+                } else if (result.data["4"].com_status == 12) {
+                    await this.receive_coin(4)
+                } else if (result.data["5"].step["1"].finish_progress < result.data["5"].step["1"].condition) {
+                    /*$.DoubleLog(`✅账号[${this.index}]  执行评论视频任务🎉`)
+                    await this.video_add()
+                    console.log(result.data["4"].finish_step)*/
+                } else if (result.data["4"].com_status == 12) {
+                    //await this.receive_coin(5)
+                }
+                //5评论
+                //6发布
+                //3关注
+            } else {
+                //console.log(result);
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async video_add() {
+        try {
+            let to_user_id = ""
+            let to_nick_name = ""
+            let target_id = ""
+            for (let index = 0; index < 5; index++) {
+                to_user_id = this.videoList[index].detail.user_info.user_id
+                to_nick_name = this.videoList[index].detail.user_info.nick_name
+                target_id = this.videoList[index].id
+                /*let to_nick_nameStr = encodeURIComponent(to_nick_name)
+                let contentStr = encodeURIComponent("太棒啦")*/
+                const data = { "to_user_id": to_user_id, "parent_id": 0, "at_user_ids": "", "to_nick_name": to_nick_name, "target_id": target_id, "type": 1, "content": "太棒啦" }
+                let newHeaders = this.getHeaders_ANDROID(data)
+                newHeaders["Content-Type"] = "application/x-www-form-urlencoded"
+                let options = {
+                    url: `https://ysapi.elecfans.com/api/comment/add`,
+                    headers: newHeaders,
+                    body: `to_user_id=${to_user_id}&parent_id=0&at_user_ids=&to_nick_name=${to_nick_name}&target_id=${target_id}&type=1&content=太棒啦`
+                },
+                    result = await httpRequest(options);
+                //console.log(options);
+                //console.log(result);
+                if (result.message == "success！") {
+                    $.DoubleLog(`✅账号[${this.index}]  评论视频成功🎉`);
+
+                } else {
+                    $.DoubleLog(`❌账号[${this.index}]  评论视频失败`);
+                    //console.log(result);
+                }
+            }
+
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async receive_coin(id) {
+        try {
+            const data = { "type": id }
+            let options = {
+                url: `https://yingsheng.elecfans.com/ysapi/wapi/activity/task/receiveCoin`,
+                headers: this.getHeaders_H5(data),
+                body: JSON.stringify(data)
+            },
+                result = await httpRequest(options);
+            //console.log(options);
+            //console.log(result);
+            if (result.message == "success！") {
+                $.DoubleLog(`✅账号[${this.index}]  领取任务奖励成功🎉`);
 
             } else {
-                $.DoubleLog(`❌账号[${this.index}]  点赞视频失败`);
+                $.DoubleLog(`❌账号[${this.index}]  领取任务奖励失败`);
                 //console.log(result);
             }
         } catch (e) {
