@@ -1,20 +1,19 @@
 /**
  * 广汽丰田
- * scriptVersionNow = "0.0.5"
+ * scriptVersionNow = "0.0.6"
  * cron 17 18 * * *  gqft.js
  * 23/01/23 积分任务：
  * 23/06/07 修复加密
  * 23/06/14 修复CK时效短 and CK失效快 的问题
  * 23/06/15 修复各种问题 适配IOS 修复青龙版本变量自动转换问题
+ * 23/08/29 修改变量为请求头的Authorization
  * ===== 青龙--配置文件 =====
  * # 项目名称  脚本所需JS依赖 crypto-js jsencrypt 缺一不可
- * export gqft_data='result' 配置文件可能需要json转义 https://www.sojson.com/yasuo.html 转义
- * 环境变量配置文件二选一 不用都写..
- * 环境变量 gqft_data = 'result' 无需转义
- * 如果已登录请退出后，开始抓包 短信或者密码登录 登录完成后 
- * 抓包https://gw.nevapp.gtmc.com.cn/ha/iam/api/sec/oauth/token  , 
- * 找到返回体(响应体) 小黄鸟 => 响应->预览 含有encryptData 和 encryptKey 把整个json复制粘贴到变量里 多账号@ 连接 觉得乱可以去掉换行空格之类的..
- * 一天运行一次即可 尽量下午运行
+ * 
+ * 
+ * 修改变量为请求头的Authorization
+ * 修改变量为请求头的Authorization
+ * 修改变量为请求头的Authorization
  */
 
 const $ = new Env("广汽丰田");
@@ -47,7 +46,7 @@ if (isRun) {
     let userIdx = 0;
     let userCount = 0;
     let scriptVersionLatest; //最新版本
-    let scriptVersionNow = "0.0.5"; //现在版本
+    let scriptVersionNow = "0.0.6"; //现在版本
     window = {};
     //---------------------- 自定义变量区域 -----------------------------------
     const CryptoJS = require("crypto-js");
@@ -65,11 +64,11 @@ if (isRun) {
         log(`\n====== 当前版本：${scriptVersionNow} 📌 最新版本：${scriptVersionLatest} ======`);
         await getNotice();
         taskall = [];
-        for (let user of userList) {
-            taskall.push(await user.getToken());
+        /*for (let user of userList) {
+            //taskall.push(await user.getToken());
             await $.wait(1000);
         }
-        await Promise.all(taskall);
+        await Promise.all(taskall);*/
         log("\n================== 用户信息 ==================\n");
         taskall = [];
         for (let user of userList) {
@@ -102,7 +101,7 @@ if (isRun) {
     class UserInfo {
         constructor(str) {
             this.index = ++userIdx;
-            this.ck = str.split("&")[0];
+            //this.ck = str.split("&")[0];
             //log(this.ck)
             this.ckStatus = true;
             this.nickname = null;
@@ -112,7 +111,7 @@ if (isRun) {
             this.deEnDataKey = ""
             this.deEnDataIv = ""
             this.User_Data = ""
-            this.User_AccessToken = ""
+            this.User_AccessToken = str.split("&")[0];
             this.User_RefreshToken = ""
             this.isChange = false
             this.headerGet_h5 = {};
