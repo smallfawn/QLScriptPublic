@@ -217,7 +217,7 @@ class UserInfo {
             let options = {
                 url: `https://ysapi.elecfans.com/api/video/publish/thumbsup`,
                 headers: this.getHeaders_ANDROID(data),
-                body: `type=1&video_id=27679`
+                body: `type=1&video_id=${id}`
             },
                 result = await httpRequest(options);
             //console.log(options);
