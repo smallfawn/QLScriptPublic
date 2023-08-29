@@ -120,9 +120,10 @@ class UserInfo {
         const timestamp = Math.round(new Date().getTime() / 1e3)
         return {
             "Host": "ysapi.elecfans.com",
+
             "Connection": "keep-alive",
             "Authorization": this.ck,
-            "Content-Type": "application/json;charset=UTF-8",
+            "Content-Type": "application/x-www-form-urlencoded",
             "model": "MI 8 Lite",
             "timestamp": timestamp,
             "User-Agent": "okhttp/3.12.6",
