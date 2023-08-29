@@ -85,7 +85,7 @@ class UserInfo {
         if (type == "android") {
             f += "cnry8k3o4WdCGU1Tq09cRVOPCnfJzt7p"
         }
-        console.log(f)
+        //console.log(f)
         var h = crypto.createHash("sha1"),
             d = crypto.createHash("sha1");
         h.update(f);
@@ -255,16 +255,17 @@ class UserInfo {
             //console.log(result);
             if (result.message == "success！") {
                 await this.video_list()
+                console.log(result.data["4"].step["1"].com_status)
                 if (result.data["4"].step["1"].finish_progress < result.data["4"].step["1"].condition) {
                     $.DoubleLog(`✅账号[${this.index}]  执行点赞视频任务🎉`)
                     await this.video_like()
-                } else if (result.data["4"].com_status == 12) {
+                } else if (result.data["4"].step["1"].com_status == 12) {
                     await this.receive_coin(4)
                 } else if (result.data["5"].step["1"].finish_progress < result.data["5"].step["1"].condition) {
                     /*$.DoubleLog(`✅账号[${this.index}]  执行评论视频任务🎉`)
                     await this.video_add()
                     console.log(result.data["4"].finish_step)*/
-                } else if (result.data["4"].com_status == 12) {
+                } else if (result.data["5"].step["1"].com_status == 12) {
                     //await this.receive_coin(5)
                 }
                 //5评论
