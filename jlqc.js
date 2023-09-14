@@ -65,7 +65,7 @@ async function start() {
         }
     }
     await Promise.all(taskall);*/
-    console.log('\n================== 发布文章 ==================\n');
+    /*console.log('\n================== 发布文章 ==================\n');
     taskall = [];
     for (let user of userList) {
         if (user.ckstatus) {
@@ -74,7 +74,7 @@ async function start() {
             await $.wait(user.getRandomTime());
         }
     }
-    await Promise.all(taskall);
+    await Promise.all(taskall);*/
     /*console.log('\n================== 发布图文 ==================\n');
     taskall = [];
     for (let user of userList) {
