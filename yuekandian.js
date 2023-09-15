@@ -52,7 +52,7 @@ class UserInfo {
             "platform": 1,
             "Authorization": `Bearer ${this.ck}`,
             "User-Agent": `Dalvik/2.1.0 ${this.ua}`,
-            "Host": "ydz.yichengwangluo.net",
+            "Host": "ykd.yichengwangluo.net",
             "Connection": "Keep-Alive",
             "Accept-Encoding": "gzip",
         }
@@ -66,7 +66,7 @@ class UserInfo {
             "Authorization": `Bearer ${this.ck}`,
             "Content-Type": "application/x-www-form-urlencoded",
             "User-Agent": `Dalvik/2.1.0 ${this.ua}`,
-            "Host": "ydz.yichengwangluo.net",
+            "Host": "ykd.yichengwangluo.net",
             "Connection": "Keep-Alive",
             "Accept-Encoding": "gzip",
         }
