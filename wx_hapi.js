@@ -3,7 +3,7 @@
  * cron 20 17 * * *  wx_hapi.js
  * Show:
  * 变量名:wx_hapi_cookie
- * 变量值:bg-hardcore.ab-inbev.cn,Headers openid
+ * 变量值:bg-hardcore.ab-inbev.cn, Headers 中的 openid的值
  * scriptVersionNow = "0.0.2";
  */
 
