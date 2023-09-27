@@ -4,7 +4,7 @@
  * Show:
  * 变量名:wx_hapi_cookie
  * 变量值:bg-hardcore.ab-inbev.cn,Headers openid
- * scriptVersionNow = "0.0.1";
+ * scriptVersionNow = "0.0.2";
  */
 
 const $ = new Env("HAPI哈啤硬核街");
@@ -12,8 +12,8 @@ const ckName = "wx_hapi_cookie";
 const Notify = 1; //0为关闭通知,1为打开通知,默认为1
 let envSplitor = ["@", "\n"]; //多账号分隔符
 let strSplitor = '&'; //多变量分隔符
-let scriptVersionNow = "0.0.1";
-let jsUrl = "https://originfastly.jsdelivr.net/gh/smallfawn/QLScriptPublic@main/wx_hapi.js.js"
+let scriptVersionNow = "0.0.2";
+let jsUrl = "https://originfastly.jsdelivr.net/gh/smallfawn/Note@main/JavaScript/test_v2.js"
 let noticeUrl = `https://originfastly.jsdelivr.net/gh/smallfawn/Note@main/Notice.json`
 
 class UserInfo {
@@ -42,7 +42,7 @@ class UserInfo {
         
 
     }
-    async user_info() {
+    async sign_in() {
         try {
             let options = {
                 url: `https://bg-hardcore.ab-inbev.cn/api/checkin/dailyCheckIn`,
@@ -54,21 +54,63 @@ class UserInfo {
             console.log(JSON.stringify(result));
             if (result.code == 0) {
                 $.DoubleLog(`✅账号[${this.index}]  签到成功[${result.data.point}]分🎉`);
-                this.ckStatus = true;
             } else {
                 $.DoubleLog(`❌账号[${this.index}]  签到失败`);
-                this.ckStatus = false;
                 //console.log(result);
             }
         } catch (e) {
             console.log(e);
         }
     }
+    //https://bg-hardcore.ab-inbev.cn/api/checkin/userIsCheckin
+    async check_signin() {
+        try {
+            let options = {
+                url: `https://bg-hardcore.ab-inbev.cn/api/checkin/userIsCheckin`,
+                headers: this.creat_headers(),
+                body:`openId=${this.ck}`
+            },
+                result = await httpRequest(options);
+            //console.log(options);
+            console.log(JSON.stringify(result));
+            if (result.code == !-1) {
+                await this.sign_in()
+                console.log(`签到 do`)
+            } else {
+                //console.log(result);
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    //https://bg-hardcore.ab-inbev.cn/api/userCenter/getUserCenterInfo
+    async user_info() {
+        try {
+            let options = {
+                url: `https://bg-hardcore.ab-inbev.cn/api/userCenter/getUserCenterInfo`,
+                headers: this.creat_headers(),
+                body:`openId=${this.ck}`
+            },
+                result = await httpRequest(options);
+            //console.log(options);
+            console.log(JSON.stringify(result));
+            if (result.code == 0) {
+                $.DoubleLog(`✅账号[${this.index}]  欢迎[${result.data.username}]当前[${result.data.userPoints}]分 累计签到${result.data.joinDays}天🎉`);
+                await this.check_signin()
+            } else {
+                console.log(JSON.stringify(result));
+
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
 }
 
 async function start() {
-    await _getVersion(jsUrl);
-    await _getNotice(noticeUrl);
+    //await _getVersion(jsUrl);
+    //await _getNotice(noticeUrl);
     let taskall = [];
     for (let user of $.userList) {
         if (user.ckStatus) {
