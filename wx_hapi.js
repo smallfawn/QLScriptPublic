@@ -3,7 +3,7 @@
  * cron 20 17 * * *  wx_hapi.js
  * Show:
  * 变量名:wx_hapi_cookie
- * 变量值:bg-hardcore.ab-inbev.cn, Headers 中的 openid的值
+ * 变量值:bg-hardcore.ab-inbev.cn, Headers 中的 openid的值&sign的值&timestamp的值  3个值缺一不可
  * scriptVersionNow = "0.0.2";
  */
 
@@ -20,6 +20,8 @@ class UserInfo {
     constructor(str) {
         this.index = ++$.userIdx;
         this.ck = str.split(strSplitor)[0]; //单账号多变量分隔符
+        this.sign = str.split(strSplitor)[1]
+        this.timestamp = str.split(strSplitor)[2]
         this.ckStatus = true;
     }
     async main() {
@@ -32,11 +34,11 @@ class UserInfo {
             "Content-Length": "35",
             "charset": "utf-8",
             "openid": this.ck,
-            "sign": "4e32617a3321d037ac79ba7ea0e07d7d",
+            "sign": this.sign,
             "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/111.0.5563.116 Mobile Safari/537.36 XWEB/5261 MMWEBSDK/20230405 MMWEBID/2585 MicroMessenger/8.0.35.2360(0x2800235D) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 MiniProgramEnv/android",
             "content-type": "application/x-www-form-urlencoded",
             "Accept-Encoding": "gzip,compress,br,deflate",
-            "timestamp": "1695806229",
+            "timestamp": this.timestamp,
             "Referer": "https://servicewechat.com/wx3235eff0af1e42d8/199/page-frame.html",
         }
         
