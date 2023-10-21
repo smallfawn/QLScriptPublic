@@ -8,7 +8,7 @@
  */
 
 const $ = new Env("奇瑞汽车");
-const ckName = "chert_data";
+const ckName = "chery_data";
 const Notify = 1; //0为关闭通知,1为打开通知,默认为1
 let envSplitor = ["@", "\n"]; //多账号分隔符
 let strSplitor = '&'; //多变量分隔符
