@@ -83,8 +83,25 @@ class UserInfo {
     async task_signIn() {
         try {
             let options = {
-                url: `https://mobile-consumer-sapp.chery.cn/web/task/record/sign-in/daily?taskCode=SignUp01&access_token=${this.ck}`,
-                headers: this.headers_get,
+                url: `https://mobile-consumer-sapp.chery.cn/web/event/trigger?access_token=${this.ck}`,
+                headers: {
+                    "Host": "mobile-consumer-sapp.chery.cn",
+                    "Connection": "keep-alive",
+                    "Content-Length": "23",
+                    "Authorization": "Bearer " + this.ck,
+                    "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36 android/1.0.0",
+                    "content-type": "application/json",
+                    "Accept": "/",
+                    "Origin": "https://hybrid-sapp.chery.cn",
+                    "X-Requested-With": "com.digitalmall.chery",
+                    "Sec-Fetch-Site": "same-site",
+                    "Sec-Fetch-Mode": "cors",
+                    "Sec-Fetch-Dest": "empty",
+                    "Referer": "https://hybrid-sapp.chery.cn/package-mine/pages/sign-in/sign-in",
+                    "Accept-Encoding": "gzip, deflate"
+                },
+                body: JSON.stringify({ "eventCode": "SJ10002" })
+
             },
                 result = await httpRequest(options);
             //console.log(options);
