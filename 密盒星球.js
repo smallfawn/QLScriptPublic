@@ -38,7 +38,7 @@ const oncePlayVideoNumber = 3;
 // 是否禁用自动播放广告的功能
 const disabledAutoPlayVideo = false;
 // 默认自动提现金额：0.3（只能提一次）、1（新版本已下架，但是软件还能提，秒到）、5、20、50、200
-const defaultTxAmount = 1;
+const defaultTxAmount = 50;
 // 默认提现方式，1 为 支付宝，2 为 微信；目前app只支持 微信提现
 const defaultTxMethod = 2;
 // 绑定提现的微信，请打开：https://h5.mihexingqiu.com/wxscope
