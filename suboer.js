@@ -22,8 +22,8 @@ let msg = "";
 
 
 async function start() {
-    await getVersion("smallfawn/QLScriptPublic/main/suboer.js");
-    await getNotice();
+    //await getVersion("smallfawn/QLScriptPublic/main/suboer.js");
+    //await getNotice();
 
     let taskall = [];
     for (let user of $.userList) {
