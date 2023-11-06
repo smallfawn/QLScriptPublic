@@ -9,14 +9,14 @@ export smallfawnPushWhite="脚本名字@脚本名字2"
 这里的脚本只是自己学习 js 的一个实践 仅用于测试和学习研究，禁止用于商业用途，不能保证其合法性，准确性，完整性和有效性，请根据情况自行判断.
 # 青龙面板拉库命令
 ``````
-ql repo https://ghproxy.com/https://github.com/smallfawn/QLScriptPublic.git
+ql repo https://ghproxy.smallfawn.top/https://github.com/smallfawn/QLScriptPublic.git
 ``````
 # 如果您对我仓库感兴趣可以支付任意金额支持一下！
 # 支付宝
-<img src="https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clzfb.png">
+<img src="https://ghproxy.smallfawn.top/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clzfb.png">
 
 # 微信
-<img src="https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clwx.png">
+<img src="https://ghproxy.smallfawn.top/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clwx.png">
 
 自用青龙docker搭建命令
 ``````
