@@ -1,5 +1,4 @@
 /**
- * new Env("V3")
  * cron 5 15 * * *  V3.js
  * Show:
  * 变量名:cheryev
