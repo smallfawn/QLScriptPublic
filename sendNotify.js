@@ -11,6 +11,7 @@
  */
 
 const querystring = require('querystring');
+const got = require('got');
 const $ = new Env();
 const timeout = 15000; //超时时间(单位毫秒)
 // =======================================gotify通知设置区域==============================================
@@ -55,6 +56,10 @@ let BARK_ICON = 'https://qn.whyour.cn/logo.png';
 let BARK_SOUND = '';
 //BARK app推送消息的分组, 默认为"QingLong"
 let BARK_GROUP = 'QingLong';
+//BARK app推送消息的时效性, 默认为"active"
+let BARK_LEVEL = 'active';
+//BARK app推送消息的跳转URL
+let BARK_URL = '';
 
 // =======================================telegram机器人通知设置区域===========================================
 //此处填你telegram bot 的Token，telegram机器人通知推送必填项.例如：1077xxx4424:AAFjv0FcqxxxxxxgEMGfi22B4yh15R5uw
@@ -146,6 +151,23 @@ let SMTP_NAME = '';
 //此处填你的PushMe KEY.
 let PUSHME_KEY = '';
 
+// =======================================CHRONOCAT通知设置区域===========================================
+// CHRONOCAT_URL Red协议连接地址 例： http://127.0.0.1:16530
+// CHRONOCAT_TOKEN 填写在CHRONOCAT文件生成的访问密钥
+// CHRONOCAT_QQ 个人:user_id=个人QQ 群则填入group_id=QQ群 多个用英文;隔开同时支持个人和群
+// CHRONOCAT相关API https://chronocat.vercel.app/install/docker/official/
+let CHRONOCAT_URL = ''; // CHRONOCAT Red协议连接地址
+let CHRONOCAT_TOKEN = ''; //CHRONOCAT 生成的访问密钥
+let CHRONOCAT_QQ = ''; // 个人:user_id=个人QQ 群则填入group_id=QQ群 多个用英文;隔开同时支持个人和群 如：user_id=xxx;group_id=xxxx;group_id=xxxxx
+
+// =======================================自定义通知设置区域=======================================
+// 自定义通知 接收回调的URL
+let WEBHOOK_URL = '';
+let WEBHOOK_BODY = '';
+let WEBHOOK_HEADERS = '';
+let WEBHOOK_METHOD = '';
+let WEBHOOK_CONTENT_TYPE = '';
+
 //==========================云端环境变量的判断与接收=========================
 if (process.env.GOTIFY_URL) {
     GOTIFY_URL = process.env.GOTIFY_URL;
@@ -210,6 +232,12 @@ if (process.env.BARK_PUSH) {
     }
     if (process.env.BARK_GROUP) {
         BARK_GROUP = process.env.BARK_GROUP;
+    }
+    if (process.env.BARK_LEVEL) {
+        BARK_LEVEL = process.env.BARK_LEVEL;
+    }
+    if (process.env.BARK_URL) {
+        BARK_URL = process.env.BARK_URL;
     }
 } else {
     if (
@@ -296,6 +324,32 @@ if (process.env.SMTP_NAME) {
 if (process.env.PUSHME_KEY) {
     PUSHME_KEY = process.env.PUSHME_KEY;
 }
+
+if (process.env.CHRONOCAT_URL) {
+    CHRONOCAT_URL = process.env.CHRONOCAT_URL;
+}
+if (process.env.CHRONOCAT_QQ) {
+    CHRONOCAT_QQ = process.env.CHRONOCAT_QQ;
+}
+if (process.env.CHRONOCAT_TOKEN) {
+    CHRONOCAT_TOKEN = process.env.CHRONOCAT_TOKEN;
+}
+
+if (process.env.WEBHOOK_URL) {
+    WEBHOOK_URL = process.env.WEBHOOK_URL;
+}
+if (process.env.WEBHOOK_BODY) {
+    WEBHOOK_BODY = process.env.WEBHOOK_BODY;
+}
+if (process.env.WEBHOOK_HEADERS) {
+    WEBHOOK_HEADERS = process.env.WEBHOOK_HEADERS;
+}
+if (process.env.WEBHOOK_METHOD) {
+    WEBHOOK_METHOD = process.env.WEBHOOK_METHOD;
+}
+if (process.env.WEBHOOK_CONTENT_TYPE) {
+    WEBHOOK_CONTENT_TYPE = process.env.WEBHOOK_CONTENT_TYPE;
+}
 //==========================云端环境变量的判断与接收=========================
 
 /**
@@ -351,14 +405,14 @@ async function sendNotify(
         //判断数组长度
         if (checkSmallfawnPush(process.env[type]).length == 0) {
             console.log(`通知变量[${type}] 无变量值 默认形式发送 脚本名字[${text}]\n如果需要请填写脚本名字到通知变量  @或&或#为 分隔符`);
-            await push()
+            await send()
         } else {
             //判断黑白名单模式
             if (type == pushType[0]) {
                 console.log(`通知变量为白名单模式`);
                 if (checkSmallfawnPush(process.env[pushType[0]]).includes(text)) {
                     console.log(`脚本名字[${text}] 在 通知变量白名单[${type}] 变量中 => 通知`);
-                    await push();
+                    await send();
                 } else {
                     console.log(`脚本名字[${text}] 不在 通知变量白名单[${type}] 变量中 => 不通知`)
                 }
@@ -368,17 +422,16 @@ async function sendNotify(
                     console.log(`脚本名字[${text}] 在 通知变量黑名单[${type}] 变量中 => 不通知`);
                 } else {
                     console.log(`脚本名字[${text}] 不在 通知变量黑名单[${type}] 变量中 => 通知`)
-                    await push();
+                    await send();
                 }
             }
         }
     } else {
         console.log(`无黑白名单变量 默认形式发送 脚本名字[${text}]`);
         console.log(`如需配置通知黑白名单请在环境变量或配置文件 添加变量白名单 ${pushType[0]} 或 黑名单 ${pushType[1]}二选一 @或&或#为 分隔符 填写脚本名字`);
-        await push()
+        await send()
     }
-
-    async function push() {
+    async function send() {
         //提供6种通知
         desp += author; //增加作者信息，防止被贩卖等
 
@@ -411,8 +464,12 @@ async function sendNotify(
             aibotkNotify(text, desp), //智能微秘书
             fsBotNotify(text, desp), //飞书机器人
             smtpNotify(text, desp), //SMTP 邮件
+            PushMeNotify(text, desp, params), //PushMe
+            ChronocatNotify(text, desp), // Chronocat
+            webhookNotify(text, desp), //自定义通知
         ]);
     }
+
 }
 
 function gotifyNotify(text, desp) {
@@ -619,7 +676,7 @@ function BarkNotify(text, desp, params = {}) {
             const options = {
                 url: `${BARK_PUSH}/${encodeURIComponent(text)}/${encodeURIComponent(
                     desp,
-                )}?icon=${BARK_ICON}&sound=${BARK_SOUND}&group=${BARK_GROUP}&${querystring.stringify(
+                )}?icon=${BARK_ICON}&sound=${BARK_SOUND}&group=${BARK_GROUP}&level=${BARK_LEVEL}&url=${BARK_URL}&${querystring.stringify(
                     params,
                 )}`,
                 headers: {
@@ -1190,12 +1247,12 @@ function smtpNotify(text, desp) {
     });
 }
 
-function PushMeNotify(text, desp) {
+function PushMeNotify(text, desp, params = {}) {
     return new Promise((resolve) => {
         if (PUSHME_KEY) {
             const options = {
                 url: `https://push.i-i.me?push_key=${PUSHME_KEY}`,
-                json: { title: text, content: desp },
+                json: { title: text, content: desp, ...params },
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -1223,6 +1280,221 @@ function PushMeNotify(text, desp) {
             resolve();
         }
     });
+}
+
+function ChronocatNotify(title, desp) {
+    return new Promise((resolve) => {
+        if (!CHRONOCAT_TOKEN || !CHRONOCAT_QQ || !CHRONOCAT_URL) {
+            console.log(
+                'CHRONOCAT 服务的 CHRONOCAT_URL 或 CHRONOCAT_QQ 未设置!!\n取消推送',
+            );
+            resolve();
+            return;
+        }
+
+        console.log('CHRONOCAT 服务启动');
+        const user_ids = CHRONOCAT_QQ.match(/user_id=(\d+)/g)?.map(
+            (match) => match.split('=')[1],
+        );
+        const group_ids = CHRONOCAT_QQ.match(/group_id=(\d+)/g)?.map(
+            (match) => match.split('=')[1],
+        );
+
+        const url = `${CHRONOCAT_URL}/api/message/send`;
+        const headers = {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${CHRONOCAT_TOKEN}`,
+        };
+
+        for (const [chat_type, ids] of [
+            [1, user_ids],
+            [2, group_ids],
+        ]) {
+            if (!ids) {
+                continue;
+            }
+            for (const chat_id of ids) {
+                const data = {
+                    peer: {
+                        chatType: chat_type,
+                        peerUin: chat_id,
+                    },
+                    elements: [
+                        {
+                            elementType: 1,
+                            textElement: {
+                                content: `${title}\n\n${desp}`,
+                            },
+                        },
+                    ],
+                };
+                const options = {
+                    url: url,
+                    json: data,
+                    headers,
+                    timeout,
+                };
+                $.post(options, (err, resp, data) => {
+                    try {
+                        if (err) {
+                            console.log('Chronocat发送QQ通知消息失败！！\n');
+                            console.log(err);
+                        } else {
+                            data = JSON.parse(data);
+                            if (chat_type === 1) {
+                                console.log(`QQ个人消息:${ids}推送成功！`);
+                            } else {
+                                console.log(`QQ群消息:${ids}推送成功！`);
+                            }
+                        }
+                    } catch (e) {
+                        $.logErr(e, resp);
+                    } finally {
+                        resolve(data);
+                    }
+                });
+            }
+        }
+    });
+}
+
+function webhookNotify(text, desp) {
+    return new Promise((resolve) => {
+        const { formatBody, formatUrl } = formatNotifyContentFun(
+            WEBHOOK_URL,
+            WEBHOOK_BODY,
+            text,
+            desp,
+        );
+        if (!formatUrl && !formatBody) {
+            resolve();
+            return;
+        }
+        const headers = parseHeaders(WEBHOOK_HEADERS);
+        const body = parseBody(formatBody, WEBHOOK_CONTENT_TYPE);
+        const bodyParam = formatBodyFun(WEBHOOK_CONTENT_TYPE, body);
+        const options = {
+            method: WEBHOOK_METHOD,
+            headers,
+            allowGetBody: true,
+            ...bodyParam,
+            timeout,
+            retry: 1,
+        };
+
+        if (WEBHOOK_METHOD) {
+            got(formatUrl, options).then((resp) => {
+                try {
+                    if (resp.statusCode !== 200) {
+                        console.log('自定义发送通知消息失败！！\n');
+                        console.log(resp.body);
+                    } else {
+                        console.log('自定义发送通知消息成功🎉。\n');
+                        console.log(resp.body);
+                    }
+                } catch (e) {
+                    $.logErr(e, resp);
+                } finally {
+                    resolve(resp.body);
+                }
+            });
+        } else {
+            resolve();
+        }
+    });
+}
+
+function parseHeaders(headers) {
+    if (!headers) return {};
+
+    const parsed = {};
+    let key;
+    let val;
+    let i;
+
+    headers &&
+        headers.split('\n').forEach(function parser(line) {
+            i = line.indexOf(':');
+            key = line.substring(0, i).trim().toLowerCase();
+            val = line.substring(i + 1).trim();
+
+            if (!key) {
+                return;
+            }
+
+            parsed[key] = parsed[key] ? parsed[key] + ', ' + val : val;
+        });
+
+    return parsed;
+}
+
+function parseBody(body, contentType) {
+    if (!body) return '';
+
+    const parsed = {};
+    let key;
+    let val;
+    let i;
+
+    body &&
+        body.split('\n').forEach(function parser(line) {
+            i = line.indexOf(':');
+            key = line.substring(0, i).trim().toLowerCase();
+            val = line.substring(i + 1).trim();
+
+            if (!key || parsed[key]) {
+                return;
+            }
+
+            try {
+                const jsonValue = JSON.parse(val);
+                parsed[key] = jsonValue;
+            } catch (error) {
+                parsed[key] = val;
+            }
+        });
+
+    switch (contentType) {
+        case 'multipart/form-data':
+            return Object.keys(parsed).reduce((p, c) => {
+                p.append(c, parsed[c]);
+                return p;
+            }, new FormData());
+        case 'application/x-www-form-urlencoded':
+            return Object.keys(parsed).reduce((p, c) => {
+                return p ? `${p}&${c}=${parsed[c]}` : `${c}=${parsed[c]}`;
+            });
+    }
+
+    return parsed;
+}
+
+function formatBodyFun(contentType, body) {
+    if (!body) return {};
+    switch (contentType) {
+        case 'application/json':
+            return { json: body };
+        case 'multipart/form-data':
+            return { form: body };
+        case 'application/x-www-form-urlencoded':
+            return { body };
+    }
+    return {};
+}
+
+function formatNotifyContentFun(url, body, title, content) {
+    if (!url.includes('$title') && !body.includes('$title')) {
+        return {};
+    }
+
+    return {
+        formatUrl: url
+            .replaceAll('$title', encodeURIComponent(title))
+            .replaceAll('$content', encodeURIComponent(content)),
+        formatBody: body
+            .replaceAll('$title', title)
+            .replaceAll('$content', content),
+    };
 }
 
 module.exports = {
