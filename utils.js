@@ -4,12 +4,8 @@
 *   22/11/23 随机生成MAC网络地址
 *   22/11/28 随机一言 自建和其他 gitee版和github版 优先gitee 速度快
 */
-let utilsVersion = "0.0.5"
 module.exports = {
-    version: version,//版本
     txt_api: txt_api,//获取随机文案 一言api // "a"动画, "b"漫画, "c"游戏, "d"文学, "e"原创, "f"来自网络, "g"其他, "h"影视, "i"诗词, "j"网易云, "k"哲学 ,"l"抖机灵
-    txt_api_self_gitee: txt_api_self_gitee,//获取随机文案 gitee版本 自建 // 古诗, 动画, 心情 ······
-    txt_api_self_github: txt_api_self_github,//获取随机文案 github版本 自建 // 古诗, 动画, 心情 ······
     randomMac: randomMac,//随机MAC网络地址
     guid: guid,//根据时间戳生成GUID 8-4-4-4-12
     phone_num: phone_num,//手机号中间遮挡
@@ -35,13 +31,6 @@ module.exports = {
 };
 
 /**
- * 版本号
- */
-function version() {
-    return utilsVersion;
-}
-
-/**
  * 获取随机文案 一言api
  */
 function txt_api(i) {
@@ -59,81 +48,6 @@ function txt_api(i) {
                 let result = JSON.parse(body);
                 let txt = result.hitokoto
                 //console.log(result.id);
-                resolve(txt)
-                return txt
-            });
-        } catch (error) {
-            console.log(error);
-        }
-    })
-}
-
-/**
- * 获取随机文案 自建 gitee仓库
- */
-function txt_api_self_gitee(type) {
-    return new Promise((resolve) => {
-        try {
-            var request = require('request');
-            let options = {
-                method: 'GET',
-                url: 'https://gitee.com/smallfawn/api/raw/master/txt.txt',
-            };
-            request(options, function (error, response, body) {
-                if (error) throw new Error(error);
-                let txtbody = body
-                //console.log(body);
-                let txtv = txtbody.match(type)
-                //console.log(txtv.input.slice(3, 14));
-                let lineArr = txtv.input.slice(3, 14)//截取行段文本
-                let lineStar = lineArr.slice(1, 5)//首行
-                let lineEnd = lineArr.slice(6, 10)//尾行
-                let randomline = randomInt(Number(lineStar) - 1, Number(lineEnd) - 1)//随机行 因为JS的索引号是0,和行号不一致所以就-1 检测行数比实际行数大1
-                let txt = txtbody.split("\n")[randomline]
-                //console.log(lineArr);
-                //console.log(lineStar, lineEnd);
-                //console.log(Number(lineStar) -1, Number(lineEnd) -1);
-                //console.log(randomline);
-                //console.log(txt);
-                resolve(txt)
-                return txt
-            });
-        } catch (error) {
-            console.log(error);
-        }
-    })
-}
-
-/**
- * 获取随机文案 自建 github仓库
- */
-function txt_api_self_github(type) {
-    return new Promise((resolve) => {
-        function txtline(type) {
-            switch (type) {
-                case "古诗": //古诗
-                    return [2, 5]
-                case "动画": //动画
-                    return [3, 8]
-                case "心情": //心情
-                    return [3, 8]
-            }
-        }
-        try {
-            var request = require('request');
-            let options = {
-                method: 'GET',
-                url: 'https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/api/main/txt.txt',//https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/api/main/txt.txt
-            };
-            request(options, function (error, response, body) {
-                if (error) throw new Error(error);
-                let txtbody = body
-                //console.log(body);
-                let line = txtline(type)
-                let randomline = randomInt(line[0] - 1, line[1] - 1)//随机行 因为JS的索引号是0,和行号不一致所以就-1 检测行数比实际行数大1
-                //console.log(txt.split("\n")[randomline])
-                let txt = txtbody.split("\n")[randomline]
-                //console.log(txt);
                 resolve(txt)
                 return txt
             });
