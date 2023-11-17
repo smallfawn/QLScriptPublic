@@ -1,6 +1,6 @@
 /**
  * cron 27 19 * * *  ddsy_songyao.js
- * Show:叮当快药APP
+ * Show:叮当快药APP  积分抵钱  我的=>签到有礼
  * 变量名:ddsy_songyao
  * 变量值:https://hapi.ddky.com/mcp/weixin/rest.htm?后面的loginToken&userId&uDate  多账户@
  * scriptVersionNow = "0.0.1";
