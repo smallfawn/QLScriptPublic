@@ -148,7 +148,7 @@ class UserInfo {
                 console.log(`等待30s`)
                 await $.wait(30000)
                 await this._postlist()
-                for (let postId of this.postlist) {
+                for (let postId of this.postList) {
                     await this._delete(postId)
                 }
             }
