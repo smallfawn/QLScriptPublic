@@ -2,6 +2,7 @@
  * cron 56 13 * * *  gacmotor.js
  * Show:广汽传祺 评论 分享(转发) 签到 发表文章
  * @author https://github.com/smallfawn/QLScriptPublic
+ * @tips 本脚本适用于广汽传祺5.0.0以上的版本
  * 变量名: gacmotorToken  https://next.gacmotor.com/app 域名下 headers 中 appToken & deviceCode & registrationID 多账@
  *        gacmotorPost=false 默认关闭发表文章功能 true为开启(此功能存在风控检测,谨慎开启)
  */
@@ -319,7 +320,7 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
-                console.log(`${result}🎉`);
+                console.log(`✅${options.fn}状态[${result.resultMsg}]🎉`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 console.log(JSON.stringify(result));
@@ -343,7 +344,7 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
-                console.log(`${result}🎉`);
+                console.log(`✅${options.fn}状态[${result.resultMsg}]🎉`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 console.log(JSON.stringify(result));
@@ -366,7 +367,7 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
-                console.log(`${result}🎉`);
+                console.log(`✅${options.fn}状态[${result.resultMsg}]🎉`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 console.log(JSON.stringify(result));
@@ -390,7 +391,7 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
-                console.log(`${result}🎉`);
+                console.log(`✅${options.fn}状态[${result.resultMsg}]🎉`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 console.log(JSON.stringify(result));
@@ -414,7 +415,7 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
-                console.log(`${result}🎉`);
+                console.log(`✅${options.fn}状态[${result.resultMsg}]🎉`);
                 //文章ID result.data.list[0].postId
                 this.postList = [result.data.list[0].postId];
             } else {
