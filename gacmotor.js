@@ -5,7 +5,7 @@
  * @tips 本脚本适用于广汽传祺5.0.0以上的版本
  * 变量名: gacmotorToken  https://next.gacmotor.com/app 域名下 headers 中 appToken & deviceCode & registrationID 多账@
  *        gacmotorPost=false 默认关闭发表文章功能 true为开启(此功能存在风控检测,谨慎开启)
- *        gacmotorLuckyDram=1  抽奖次数  不写默认抽奖一次(首次免费)  以后每次花费2G豆抽奖
+ *        gacmotorLuckyDram=1  抽奖次数[1-10]  不写默认抽奖一次(首次免费)  以后每次花费2G豆抽奖 每天上限10次
  */
 
 const $ = new Env("广汽传祺");
@@ -105,16 +105,32 @@ class UserInfo {
         console.log(`---------- 第[${this.index}]个账号执行开始 ----------`);
         await this._userInfo();
         if (this.ckStatus == true) {
+
             if (process.env["gacmotorLuckyDram"] == undefined) {
                 console.log(`默认抽奖次数1`);
                 await this._luckyDraw()
             } else if (process.env["gacmotorLuckyDram"] && Number(process.env["gacmotorLuckyDram"]) !== NaN) {
-                console.log(`已设置抽奖次数 执行${process.env["gacmotorLuckyDram"]}次抽奖`);
-                for (let index = 0; index < Number(process.env["gacmotorLuckyDram"]); index++) {
-                    $.wait(1000)
-                    await this._luckyDraw()
-                    $.wait(2000)
+                if (process.env["gacmotorLuckyDram"] == 0) {
+                    console.log(`抽奖次数为0 不执行抽奖`);
+                } else {
+                    if (Number(process.env["gacmotorLuckyDram"]) > 10) {
+                        console.log(`每天最高抽10次哦`);
+                        for (let index = 0; index < 10; index++) {
+                            $.wait(1000)
+                            await this._luckyDraw()
+                            $.wait(2000)
+                        }
+                    } else {
+                        console.log(`已设置抽奖次数 执行${process.env["gacmotorLuckyDram"]}次抽奖`);
+                        for (let index = 0; index < Number(process.env["gacmotorLuckyDram"]); index++) {
+                            $.wait(1000)
+                            await this._luckyDraw()
+                            $.wait(2000)
+                        }
+                    }
+
                 }
+
 
             }
             await this._getGDou()
