@@ -5,6 +5,7 @@
  * @tips 本脚本适用于广汽传祺5.0.0以上的版本
  * 变量名: gacmotorToken  https://next.gacmotor.com/app 域名下 headers 中 appToken & deviceCode & registrationID 多账@
  *        gacmotorPost=false 默认关闭发表文章功能 true为开启(此功能存在风控检测,谨慎开启)
+ *        gacmotorLuckyDram=1  抽奖次数  不写默认抽奖一次(首次免费)  以后每次花费2G豆抽奖
  */
 
 const $ = new Env("广汽传祺");
@@ -101,9 +102,21 @@ class UserInfo {
     }
 
     async main() {
-        console.log(`第[${this.index}]个账号执行开始`);
+        console.log(`---------- 第[${this.index}]个账号执行开始 ----------`);
         await this._userInfo();
         if (this.ckStatus == true) {
+            if (process.env["gacmotorLuckyDram"] == undefined) {
+                console.log(`默认抽奖次数1`);
+                await this._luckyDraw()
+            } else if (process.env["gacmotorLuckyDram"] && Number(process.env["gacmotorLuckyDram"]) !== NaN) {
+                console.log(`已设置抽奖次数 执行${process.env["gacmotorLuckyDram"]}次抽奖`);
+                for (let index = 0; index < Number(process.env["gacmotorLuckyDram"]); index++) {
+                    $.wait(1000)
+                    await this._luckyDraw()
+                    $.wait(2000)
+                }
+
+            }
             await this._getGDou()
             await this._signInStatus()
             await this._signInCounts()
@@ -119,7 +132,7 @@ class UserInfo {
                 console.log(`等待30s`)
                 await $.wait(30000)
                 await this._postlist()
-                for (let postId of this.postList) {
+                for (let postId of this.postlist) {
                     await this._delete(postId)
                 }
             }
@@ -128,9 +141,8 @@ class UserInfo {
                 await this._forward(postId)
                 await this._add(postId, this.titleList[0])
             }
-        } else {
         }
-        $.msg($.name, "", `第[${this.index}]个账号执行完毕`)
+        $.msg($.name, "", `---------- 第[${this.index}]个账号执行完毕 ----------`)
     }
     async _getText() {
         try {
@@ -170,10 +182,33 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
-                console.log(`✅${options.fn}状态[${result.resultMsg}]🎉`);
                 console.log(`[${result.data.mobile}][${result.data.nickname}][${result.data.userIdStr}]`);
                 this.userIdStr = result.data.userIdStr;
                 this.ckStatus = true
+            } else {
+                console.log(`❌${options.fn}状态[${result.resultMsg}]`);
+                this.ckStatus = false
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async _luckyDraw() {
+        try {
+            let options = {
+                fn: "抽奖",
+                method: "post",
+                url: `https://next.gacmotor.com/app/activity/shopDraw/luckyDraw`,
+                headers: this._getHeaders("post"),
+                body: JSON.stringify({ "activityCode": "shop-draw", "repeatcheck": true })
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.resultCode == "0") {
+                console.log(`抽奖成功获得[${result.data.medalName}]`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 this.ckStatus = false
@@ -196,7 +231,6 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
-                console.log(`✅${options.fn}状态[${result.resultMsg}]🎉`);
                 console.log(`当前G豆数量[${result.data}]`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
@@ -242,7 +276,6 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
-                console.log(`✅${options.fn}状态[${result.resultMsg}]🎉`);
                 if (result.data == true) {
                     //已签
                     this.signInStatus = true;
@@ -272,7 +305,6 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
-                console.log(`✅${options.fn}状态[${result.resultMsg}]🎉`);
                 console.log(`已经连续签到${result.data}天`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
@@ -296,7 +328,7 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
-                console.log(`✅${options.fn}状态[${result.resultMsg}]🎉`);
+                console.log(`签到[${result.resultMsg}]`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 console.log(JSON.stringify(result));
@@ -320,7 +352,7 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
-                console.log(`✅${options.fn}状态[${result.resultMsg}]🎉`);
+                console.log(`转发[${result.resultMsg}]`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 console.log(JSON.stringify(result));
@@ -344,7 +376,7 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
-                console.log(`✅${options.fn}状态[${result.resultMsg}]🎉`);
+                console.log(`评论[${result.resultMsg}]`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 console.log(JSON.stringify(result));
@@ -367,7 +399,7 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
-                console.log(`✅${options.fn}状态[${result.resultMsg}]🎉`);
+                console.log(`发表文章[${result.resultMsg}]`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 console.log(JSON.stringify(result));
@@ -391,7 +423,7 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
-                console.log(`✅${options.fn}状态[${result.resultMsg}]🎉`);
+                console.log(`删除文章[${result.resultMsg}]`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 console.log(JSON.stringify(result));
