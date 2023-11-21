@@ -5,6 +5,7 @@
  * @tips 本脚本适用于广汽传祺5.0.0以上的版本
  * 变量名: gacmotorToken  https://next.gacmotor.com/app 域名下 headers 中 appToken & deviceCode & registrationID 多账@
  *        gacmotorPost=false 默认关闭发表文章功能 true为开启(此功能存在风控检测,谨慎开启)
+ *        gacmotorComment=false 默认关闭评论功能 true为开启(此功能存在风控检测,谨慎开启)
  *        gacmotorLuckyDram=1  抽奖次数[1-10]  不写默认抽奖一次(首次免费)  以后每次花费2G豆抽奖 每天上限10次
  */
 
@@ -29,6 +30,7 @@ class UserInfo {
         this.applatestlist = []//最新帖子列表
         this.titleList = []//
         this.contentList = []//
+        this.commentList = []
     }
     _MD5(str) {
         const crypto = require("crypto");
@@ -141,9 +143,8 @@ class UserInfo {
             }
             console.log(`正在远程获取15条随机评论~请等待15-20秒`)
             await this._getText()
-            if (process.env["gacmotorPost"] == undefined || process.env["gacmotorPost"] == "false") {
-            }
             if (process.env["gacmotorPost"] == "true") {
+                console.log(`已设置发帖功能`);
                 await this._post(this.titleList[0], this.contentList[0])//可能需要图片
                 console.log(`等待30s`)
                 await $.wait(30000)
@@ -155,7 +156,24 @@ class UserInfo {
             await this._applatestlist()
             for (let postId of this.applatestlist) {
                 await this._forward(postId)
-                await this._add(postId, this.titleList[0])
+            }
+            if (process.env["gacmotorComment"] == "true") {
+                console.log(`已设置评论功能`);
+                for (let postId of this.applatestlist) {
+                    await this._add(postId, this.titleList[0])
+                }
+            }
+
+            if (process.env["gacmotorComment"] == "true") {
+                console.log(`等待15s`)
+                await $.wait(15000)
+                console.log(`检测评论列表`);
+                await this._commentlist()
+                if (this.commentList.length > 0) {
+                    for (let commentId of this.commentList) {
+                        await this._commentdelete(commentId)
+                    }
+                }
             }
         }
         $.msg($.name, "", `---------- 第[${this.index}]个账号执行完毕 ----------`)
@@ -393,6 +411,55 @@ class UserInfo {
             //console.log(result);
             if (result.resultCode == "0") {
                 console.log(`评论[${result.resultMsg}]`);
+            } else {
+                console.log(`❌${options.fn}状态[${result.resultMsg}]`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async _commentlist() {
+        try {
+            let options = {
+                fn: "获取评论列表",
+                method: "post",
+                url: `https://next.gacmotor.com/app/community-api/community/api/comment/post`,
+                headers: this._getHeaders("post"),
+                body: JSON.stringify({ "pageNum": 1, "pageSize": 10, "userIdStr": this.userIdStr })
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.resultCode == "0") {
+                if (result["data"].length > 0) {
+                    this.commentList = [result.data[0].commentId]
+                }
+            } else {
+                console.log(`❌${options.fn}状态[${result.resultMsg}]`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async _commentdelete(commentId) {
+        try {
+            let options = {
+                fn: "删除评论",
+                method: "post",
+                url: `https://next.gacmotor.com/app/community-api/community/api/comment/delete`,
+                headers: this._getHeaders("post"),
+                body: JSON.stringify({ "commentId": `${commentId}` })
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.resultCode == "0") {
+                console.log(`删除评论[${result.resultMsg}]`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 console.log(JSON.stringify(result));
