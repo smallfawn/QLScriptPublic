@@ -127,10 +127,13 @@ class UserInfo {
                 await this._signIn()
             }
             await this._taskList()
-            if (process.env["gacmotorPost"] == "true" || process.env["gacmotorComment"] == "true") {
-                console.log(`正在远程获取15条随机评论~请等待15-20秒`)
-                await this._getText()
+            if (this.postNotFinishedNum !== 0 && this.postNotFinishedNum > 1 || this.sharenNotFinishedNum !== 0 && this.sharenNotFinishedNum > 1) {
+                if (process.env["gacmotorPost"] == "true" || process.env["gacmotorComment"] == "true") {
+                    console.log(`正在远程获取15条随机评论~请等待15-20秒`)
+                    await this._getText()
+                }
             }
+
             if (process.env["gacmotorPost"] == "true") {
                 console.log(`已设置发帖功能`);
                 if (this.postNotFinishedNum !== 0 && this.postNotFinishedNum > 1) {
