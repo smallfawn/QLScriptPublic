@@ -4,9 +4,13 @@
  * @author https://github.com/smallfawn/QLScriptPublic
  * @tips 本脚本适用于广汽传祺5.0.0以上的版本
  * 变量名: gacmotorToken  https://next.gacmotor.com/app 域名下 headers 中 appToken & deviceCode & registrationID 多账@
- *        gacmotorPost=false 默认关闭发表文章功能 true为开启(此功能存在风控检测,谨慎开启)
- *        gacmotorComment=false 默认关闭评论功能 true为开启(此功能存在风控检测,谨慎开启)
- *        gacmotorLuckyDram=1  抽奖次数[1-10]  不写默认抽奖一次(首次免费)  以后每次花费2G豆抽奖 每天上限10次
+ * 开启发贴       gacmotorPost=false 默认关闭发表文章功能 true为开启(此功能存在风控检测,谨慎开启)
+ * 开启评论       gacmotorComment=false 默认关闭评论功能 true为开启(此功能存在风控检测,谨慎开启)
+ * 每日抽奖       gacmotorLuckyDram=1  抽奖次数[1-10]  不写默认抽奖一次(首次免费)  以后每次花费2G豆抽奖 每天上限10次
+ * 每天助力       gacmotorPower=""  微信抓gmp.spgacmotorsc.com/partner/api-content/base/content/trafficStatistics?  
+ *                          后面的openId的值例如:oQzIW0jx-DbassAsaQgpGsasqXqCWI
+ *                          (抓这个需要手动做一次任务,我的-超级合伙人-每日任务-分享,微信自己点击一次)
+ * 
  */
 
 const $ = new Env("广汽传祺");
@@ -32,6 +36,12 @@ class UserInfo {
         this.titleList = []//
         this.contentList = []//
         this.commentList = []
+        this.BeiJingTime = ""
+        this.powerList = []
+        this.mobile = []
+        this.accessToken = []
+        this.powerId = ""//助力ID
+
     }
     _MD5(str) {
         const crypto = require("crypto");
@@ -46,7 +56,6 @@ class UserInfo {
         let sig = this._MD5(`${timestamp1}${nonce}${appid}${key}`)
         let apiSignKey = `a361588rt20dpol`
         let apiSign = (this._MD5(`${timestamp2}${apiSignKey}`)).toUpperCase()
-
         if (method == "get") {
             return {
                 "Accept": "application/json",
@@ -103,7 +112,54 @@ class UserInfo {
             }
         }
     }
-
+    _getHeaders_gmp(method) {
+        let timestamp2 = new Date().getTime();
+        let apiSignKey = `a361588rt20dpol`
+        let apiSign = (this._MD5(`${timestamp2}${apiSignKey}`)).toUpperCase()
+        if (method == "get") {
+            return {
+                "Host": "gmp.spgacmotorsc.com",
+                "Connection": "keep-alive",
+                "accessToken": this.accessToken,
+                "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36 WindVane/8.5.0 StatusBarHeight/31 channel/GACClient",
+                "client": "app",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "current-time": timestamp2,
+                "companyCode": "CHUANQI",
+                "api-sign": apiSign,
+                "ver": "20220513",
+                "Accept": `*/*`,
+                "Origin": "https://gmp.spgacmotorsc.com",
+                "X-Requested-With": "com.cloudy.component",
+                "Sec-Fetch-Site": "same-origin",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Dest": "empty",
+                "Accept-Encoding": "gzip, deflate",
+                "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+            }
+        } else {
+            return {
+                "Host": "gmp.spgacmotorsc.com",
+                "Connection": "keep-alive",
+                "accessToken": this.accessToken,
+                "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36 WindVane/8.5.0 StatusBarHeight/31 channel/GACClient",
+                "client": "app",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "current-time": timestamp2,
+                "companyCode": "CHUANQI",
+                "api-sign": apiSign,
+                "ver": "20220513",
+                "Accept": "*/*",
+                "Origin": "https://gmp.spgacmotorsc.com",
+                "X-Requested-With": "com.cloudy.component",
+                "Sec-Fetch-Site": "same-origin",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Dest": "empty",
+                "Accept-Encoding": "gzip, deflate",
+                "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+            }
+        }
+    }
     async main() {
         console.log(`---------- 第[${this.index}]个账号执行开始 ----------`);
         await this._userInfo();
@@ -175,9 +231,84 @@ class UserInfo {
                     }
                 }
             }
+            await this._getChinaTime()
+            if (this.BeiJingTime < 1701014400000) {
+                //11/26截至
+                //做广州车站活动
+                //{"activityId":"467","channel":"carapp_channel"}
+                await this._activity_lotter_common({ "activityId": "467", "channel": "carapp_channel" })
+            }
+            if (process.env["gacmotorPower"]) {
+                console.log(`已设置开启每日助力`);
+                await this._power_auth()//登录活动 获取accessToken
+                await this._power_list()//获取任务列表
+                if (this.powerList.length > 0) {
+                    for (let taskId of this.powerList) {
+                        await this._join_power(taskId)//加入任务  
+                        await this._get_power_id(taskId)//获取助力的utid
+                        await this._share_power(taskId)//分享
+                        if (this.powerId !== "") {
+                            await this._power(this.powerId)
+                        }
+                    }
+                }
+
+            }
         }
 
         $.msg($.name, "", `---------- 第[${this.index}]个账号执行完毕 ----------`)
+    }
+    async _getChinaTime() {
+        try {
+            let options = {
+                fn: "获取北京时间",
+                method: "get",
+                url: `http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp`,
+            }
+            let { body: result } = await httpRequest(options)
+            result = JSON.parse(result)
+            this.BeiJingTime = result.data.t
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async _activity_lotter_common(body) {
+        try {
+            let options = {
+                fn: "活动抽奖",
+                method: "post",
+                url: `https://next.gacmotor.com/mall/activity-app/customer/activityPrize/lotter?notip=true`,
+                headers: {
+                    "Host": "next.gacmotor.com",
+                    "Connection": "keep-alive",
+                    "Accept": "application/json, text/plain, */*",
+                    "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36 WindVane/8.5.0 StatusBarHeight/31 channel/GACClient",
+                    "token": this.ck,
+                    "Content-Type": "application/json;charset=UTF-8",
+                    "Origin": "https://next.gacmotor.com",
+                    "X-Requested-With": "com.cloudy.component",
+                    "Sec-Fetch-Site": "same-origin",
+                    "Sec-Fetch-Mode": "cors",
+                    "Sec-Fetch-Dest": "empty",
+                    "Referer": "https://next.gacmotor.com/mall/act/turntable?id=467",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7"
+                },
+                body: JSON.stringify(body)
+            }
+            //console.log(options)
+            let { body: result } = await httpRequest(options)
+            result = JSON.parse(result)
+            if (result.code == "0000") {
+                console.log(`抽奖成功 获得${result.data.name}`);
+                msg += `抽奖成功 获得${result.data.name}\n`
+            } else {
+                console.log(`抽奖失败`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
     }
     async _getText() {
         try {
@@ -203,6 +334,172 @@ class UserInfo {
             console.log(e);
         }
     }
+
+    async _join_power(taskId) {
+        try {
+            let options = {
+                fn: "加入助力",
+                method: "post",
+                url: `https://gmp.spgacmotorsc.com/partner/api-content/app/tasks/joinTask`,
+                headers: this._getHeaders_gmp("post"),
+                body: `taskId=${taskId}&companyCode=CHUANQI&phone=${this.mobile}`
+            }
+            let { body: result } = await httpRequest(options);
+            console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.errorCode == "0") {
+                console.log(JSON.stringify(result));
+            } else {
+                console.log(`❌${options.fn}状态[${result.resultMsg}]`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async _power_list() {
+        try {
+            let options = {
+                fn: "助力任务列表获取",
+                method: "get",
+                url: `https://gmp.spgacmotorsc.com/partner/api-content/app/tasks/list?page=0&size=10&channelType=WEIXIN&taskType=SHARE&companyCode=CHUANQI&phone=${this.mobile}`,
+                headers: this._getHeaders_gmp("get"),
+            }
+            //console.log(options);
+            let { body: result } = await httpRequest(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.errorCode == "0") {
+                for (let i of result.body.rows) {
+                    if (i.isFinish == 1) {
+                        console.log(i.title)
+                        this.powerList = [i.taskId]
+                    }
+                }
+            } else {
+                console.log(`❌${options.fn}状态[${result.resultMsg}]`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async _power_auth() {
+        try {
+            let headers = this._getHeaders("get")
+            headers["Host"] = `gmp.spgacmotorsc.com`
+            let options = {
+                fn: "助力任务登录",
+                method: "get",
+                url: `https://gmp.spgacmotorsc.com/partner/api-user/app/auth/judge?phone=${this.mobile}&companyCode=CHUANQI`,
+                headers: headers,
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.body.isAuth == true) {
+                this.accessToken = result.body.user.accessToken;
+            } else {
+                console.log(`❌${options.fn}状态[${result.resultMsg}]`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async _get_power_id(taskId) {
+        try {
+            let options = {
+                fn: "助力任务ID获取",
+                method: "get",
+                url: `https://gmp.spgacmotorsc.com/partner/api-content/app/tasks/detail?taskId=${taskId}&companyCode=CHUANQI&phone=${this.mobile}`,
+                headers: this._getHeaders_gmp("get"),
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.errorCode == "0") {
+                let shareUrl = result.body.shareUrl
+                var regex = /utId=([^&]+)/;
+                var match = shareUrl.match(regex);
+                if (match) {
+                    this.powerId = match[1];
+                    console.log(`助力ID获取成功${this.powerId}`);
+                } else {
+                    console.log("未找到utId的值");
+                }
+            } else {
+                console.log(`❌${options.fn}状态[${result.resultMsg}]`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async _share_power(taskId) {
+        try {
+            let options = {
+                fn: "助力任务分享",
+                method: "post",
+                url: `https://gmp.spgacmotorsc.com/partner/api-content/app/tasks/backFillH5`,
+                headers: this._getHeaders_gmp("post"),
+                body: `taskId=${taskId}&companyCode=CHUANQI&phone=${this.mobile}`
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.errorCode == "0") {
+                console.log(result.body);
+            } else {
+                console.log(`❌${options.fn}状态[${result.resultMsg}]`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async _power() {
+        try {
+            let options = {
+                fn: "助力",
+                method: "get",
+                url: `https://gmp.spgacmotorsc.com/partner/api-content/base/content/trafficStatistics?id=11131879&openId=` + process.env["gacmotorPower"],
+                headers: {
+                    "Host": "gmp.spgacmotorsc.com",
+                    "Connection": "keep-alive",
+                    "Accept": "application/json, text/plain, */*",
+                    "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/111.0.5563.116 Mobile Safari/537.36 XWEB/1110017 MMWEBSDK/20230405 MMWEBID/2585 MicroMessenger/8.0.35.2360(0x2800235D) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
+                    "X-Requested-With": "com.tencent.mm",
+                    "Sec-Fetch-Site": "same-origin",
+                    "Sec-Fetch-Mode": "cors",
+                    "Sec-Fetch-Dest": "empty",
+                    "Referer": "https://gmp.spgacmotorsc.com/h5/partner/",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7"
+                },
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.errorCode == "0") {
+                console.log(`助力执行成功 可能助力失败 正常情况`);
+                msg += `助力执行成功 可能助力失败 正常情况\n`
+            } else {
+                console.log(`❌${options.fn}状态[${result.resultMsg}]`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
     async _userInfo() {
         try {
             let options = {
@@ -217,6 +514,8 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.resultCode == "0") {
+                this.mobile = Buffer.from(result.data.ms, 'base64').toString('utf-8');
+                Buffer.from(result.data.ms, 'base64').toString('utf-8');
                 msg += `[${result.data.mobile}][${result.data.nickname}][${result.data.userIdStr}]\n`
                 console.log(`[${result.data.mobile}][${result.data.nickname}][${result.data.userIdStr}]`);
                 this.userIdStr = result.data.userIdStr;
@@ -617,11 +916,11 @@ function httpRequest(options) {
 }
 async function SendMsg(message) {
     if (!message) return;
-        if ($.isNode()) {
-            await notify.sendNotify($.name, message)
-        } else {
-            $.msg($.name, '', message)
-        }
+    if ($.isNode()) {
+        await notify.sendNotify($.name, message)
+    } else {
+        $.msg($.name, '', message)
+    }
 }
 // prettier-ignore
 function Env(t, s) { return new (class { constructor(t, s) { (this.name = t), (this.data = null), (this.dataFile = "box.dat"), (this.logs = []), (this.logSeparator = "\n"), (this.startTime = new Date().getTime()), Object.assign(this, s), this.log("", `\ud83d\udd14${this.name},\u5f00\u59cb!`) } isNode() { return "undefined" != typeof module && !!module.exports } isQuanX() { return "undefined" != typeof $task } isSurge() { return "undefined" != typeof $httpClient && "undefined" == typeof $loon } isLoon() { return "undefined" != typeof $loon } getScript(t) { return new Promise((s) => { this.get({ url: t }, (t, e, i) => s(i)) }) } runScript(t, s) { return new Promise((e) => { let i = this.getdata("@chavy_boxjs_userCfgs.httpapi"); i = i ? i.replace(/\n/g, "").trim() : i; let o = this.getdata("@chavy_boxjs_userCfgs.httpapi_timeout"); (o = o ? 1 * o : 20), (o = s && s.timeout ? s.timeout : o); const [h, a] = i.split("@"), r = { url: `http://${a}/v1/scripting/evaluate`, body: { script_text: t, mock_type: "cron", timeout: o }, headers: { "X-Key": h, Accept: "*/*" }, }; this.post(r, (t, s, i) => e(i)) }).catch((t) => this.logErr(t)) } loaddata() { if (!this.isNode()) return {}; { (this.fs = this.fs ? this.fs : require("fs")), (this.path = this.path ? this.path : require("path")); const t = this.path.resolve(this.dataFile), s = this.path.resolve(process.cwd(), this.dataFile), e = this.fs.existsSync(t), i = !e && this.fs.existsSync(s); if (!e && !i) return {}; { const i = e ? t : s; try { return JSON.parse(this.fs.readFileSync(i)) } catch (t) { return {} } } } } writedata() { if (this.isNode()) { (this.fs = this.fs ? this.fs : require("fs")), (this.path = this.path ? this.path : require("path")); const t = this.path.resolve(this.dataFile), s = this.path.resolve(process.cwd(), this.dataFile), e = this.fs.existsSync(t), i = !e && this.fs.existsSync(s), o = JSON.stringify(this.data); e ? this.fs.writeFileSync(t, o) : i ? this.fs.writeFileSync(s, o) : this.fs.writeFileSync(t, o) } } lodash_get(t, s, e) { const i = s.replace(/\[(\d+)\]/g, ".$1").split("."); let o = t; for (const t of i) if (((o = Object(o)[t]), void 0 === o)) return e; return o } lodash_set(t, s, e) { return Object(t) !== t ? t : (Array.isArray(s) || (s = s.toString().match(/[^.[\]]+/g) || []), (s.slice(0, -1).reduce((t, e, i) => Object(t[e]) === t[e] ? t[e] : (t[e] = Math.abs(s[i + 1]) >> 0 == +s[i + 1] ? [] : {}), t)[s[s.length - 1]] = e), t) } getdata(t) { let s = this.getval(t); if (/^@/.test(t)) { const [, e, i] = /^@(.*?)\.(.*?)$/.exec(t), o = e ? this.getval(e) : ""; if (o) try { const t = JSON.parse(o); s = t ? this.lodash_get(t, i, "") : s } catch (t) { s = "" } } return s } setdata(t, s) { let e = !1; if (/^@/.test(s)) { const [, i, o] = /^@(.*?)\.(.*?)$/.exec(s), h = this.getval(i), a = i ? ("null" === h ? null : h || "{}") : "{}"; try { const s = JSON.parse(a); this.lodash_set(s, o, t), (e = this.setval(JSON.stringify(s), i)) } catch (s) { const h = {}; this.lodash_set(h, o, t), (e = this.setval(JSON.stringify(h), i)) } } else e = this.setval(t, s); return e } getval(t) { return this.isSurge() || this.isLoon() ? $persistentStore.read(t) : this.isQuanX() ? $prefs.valueForKey(t) : this.isNode() ? ((this.data = this.loaddata()), this.data[t]) : (this.data && this.data[t]) || null } setval(t, s) { return this.isSurge() || this.isLoon() ? $persistentStore.write(t, s) : this.isQuanX() ? $prefs.setValueForKey(t, s) : this.isNode() ? ((this.data = this.loaddata()), (this.data[s] = t), this.writedata(), !0) : (this.data && this.data[s]) || null } initGotEnv(t) { (this.got = this.got ? this.got : require("got")), (this.cktough = this.cktough ? this.cktough : require("tough-cookie")), (this.ckjar = this.ckjar ? this.ckjar : new this.cktough.CookieJar()), t && ((t.headers = t.headers ? t.headers : {}), void 0 === t.headers.Cookie && void 0 === t.cookieJar && (t.cookieJar = this.ckjar)) } get(t, s = () => { }) { t.headers && (delete t.headers["Content-Type"], delete t.headers["Content-Length"]), this.isSurge() || this.isLoon() ? $httpClient.get(t, (t, e, i) => { !t && e && ((e.body = i), (e.statusCode = e.status)), s(t, e, i) }) : this.isQuanX() ? $task.fetch(t).then((t) => { const { statusCode: e, statusCode: i, headers: o, body: h } = t; s(null, { status: e, statusCode: i, headers: o, body: h }, h) }, (t) => s(t)) : this.isNode() && (this.initGotEnv(t), this.got(t).on("redirect", (t, s) => { try { const e = t.headers["set-cookie"].map(this.cktough.Cookie.parse).toString(); this.ckjar.setCookieSync(e, null), (s.cookieJar = this.ckjar) } catch (t) { this.logErr(t) } }).then((t) => { const { statusCode: e, statusCode: i, headers: o, body: h, } = t; s(null, { status: e, statusCode: i, headers: o, body: h }, h) }, (t) => s(t))) } post(t, s = () => { }) { if ((t.body && t.headers && !t.headers["Content-Type"] && (t.headers["Content-Type"] = "application/x-www-form-urlencoded"), delete t.headers["Content-Length"], this.isSurge() || this.isLoon())) $httpClient.post(t, (t, e, i) => { !t && e && ((e.body = i), (e.statusCode = e.status)), s(t, e, i) }); else if (this.isQuanX()) (t.method = "POST"), $task.fetch(t).then((t) => { const { statusCode: e, statusCode: i, headers: o, body: h } = t; s(null, { status: e, statusCode: i, headers: o, body: h }, h) }, (t) => s(t)); else if (this.isNode()) { this.initGotEnv(t); const { url: e, ...i } = t; this.got.post(e, i).then((t) => { const { statusCode: e, statusCode: i, headers: o, body: h } = t; s(null, { status: e, statusCode: i, headers: o, body: h }, h) }, (t) => s(t)) } } time(t) { let s = { "M+": new Date().getMonth() + 1, "d+": new Date().getDate(), "H+": new Date().getHours(), "m+": new Date().getMinutes(), "s+": new Date().getSeconds(), "q+": Math.floor((new Date().getMonth() + 3) / 3), S: new Date().getMilliseconds(), }; /(y+)/.test(t) && (t = t.replace(RegExp.$1, (new Date().getFullYear() + "").substr(4 - RegExp.$1.length))); for (let e in s) new RegExp("(" + e + ")").test(t) && (t = t.replace(RegExp.$1, 1 == RegExp.$1.length ? s[e] : ("00" + s[e]).substr(("" + s[e]).length))); return t } msg(s = t, e = "", i = "", o) { const h = (t) => !t || (!this.isLoon() && this.isSurge()) ? t : "string" == typeof t ? this.isLoon() ? t : this.isQuanX() ? { "open-url": t } : void 0 : "object" == typeof t && (t["open-url"] || t["media-url"]) ? this.isLoon() ? t["open-url"] : this.isQuanX() ? t : void 0 : void 0; this.isMute || (this.isSurge() || this.isLoon() ? $notification.post(s, e, i, h(o)) : this.isQuanX() && $notify(s, e, i, h(o))), this.logs.push("", "==============\ud83d\udce3\u7cfb\u7edf\u901a\u77e5\ud83d\udce3=============="), this.logs.push(s), e && this.logs.push(e), i && this.logs.push(i) } log(...t) { t.length > 0 && (this.logs = [...this.logs, ...t]), console.log(t.join(this.logSeparator)) } logErr(t, s) { const e = !this.isSurge() && !this.isQuanX() && !this.isLoon(); e ? this.log("", `\u2757\ufe0f${this.name},\u9519\u8bef!`, t.stack) : this.log("", `\u2757\ufe0f${this.name},\u9519\u8bef!`, t) } wait(t) { return new Promise((s) => setTimeout(s, t)) } done(t = {}) { const s = new Date().getTime(), e = (s - this.startTime) / 1e3; this.log("", `\ud83d\udd14${this.name},\u7ed3\u675f!\ud83d\udd5b ${e}\u79d2`), this.log(), (this.isSurge() || this.isQuanX() || this.isLoon()) && $done(t) } })(t, s) }
