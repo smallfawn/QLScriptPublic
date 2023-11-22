@@ -51,33 +51,69 @@ class UserInfo {
         this.answerIdList = []
         this.userAnswer = ""
         this.questionTaskId = ''
+        this.luckyDrawNum = 0 //抽奖次数
+        this.postNotFinishedNum = 0//发帖未完成次数
+        this.commentNotFinishedNum = 0//评论未完成次数
+        this.sharenNotFinishedNum = 0//转发未完成次数
 
     }
     async main() {
         console.log(`---------- 第[${this.index}]个账号执行开始 ----------`);
         await this._userInfo();
         if (this.ckStatus == true) {
+
             if (process.env["gacmotorLuckyDram"] == undefined) {
                 console.log(`默认抽奖次数1`);
-                await this._luckyDraw()
+                await this._luckyDrawNum()//获取抽奖次数
+                if (this.luckyDrawNum > 1) {
+                    await this._luckyDraw()
+                } else {
+
+                }
             } else if (process.env["gacmotorLuckyDram"] && Number(process.env["gacmotorLuckyDram"]) !== NaN) {
                 if (process.env["gacmotorLuckyDram"] == 0) {
                     console.log(`抽奖次数为0 不执行抽奖`);
                 } else {
                     if (Number(process.env["gacmotorLuckyDram"]) > 10) {
                         console.log(`每天最高抽10次哦`);
-                        for (let index = 0; index < 10; index++) {
-                            $.wait(1000)
-                            await this._luckyDraw()
-                            $.wait(2000)
+                        await this._luckyDrawNum()//获取抽奖次数
+                        if (this.luckyDrawNum < 10) {
+                            for (let i = 0; i < this.luckyDrawNum; i++) {
+                                $.wait(1000)
+                                await this._luckyDraw()
+                                $.wait(2000)
+                            }
+                        } else if (this.luckyDrawNum = 10) {
+                            for (let index = 0; index < 10; index++) {
+                                $.wait(1000)
+                                await this._luckyDraw()
+                                $.wait(2000)
+                            }
                         }
+
                     } else {
                         console.log(`已设置抽奖次数 执行${process.env["gacmotorLuckyDram"]}次抽奖`);
-                        for (let index = 0; index < Number(process.env["gacmotorLuckyDram"]); index++) {
-                            $.wait(1000)
-                            await this._luckyDraw()
-                            $.wait(2000)
+                        await this._luckyDrawNum()//获取抽奖次数
+                        if (this.luckyDrawNum < Number(process.env["gacmotorLuckyDram"])) {
+                            for (let i = 0; i < this.luckyDrawNum; i++) {
+                                $.wait(1000)
+                                await this._luckyDraw()
+                                $.wait(2000)
+                            }
+                        } else if (this.luckyDrawNum > Number(process.env["gacmotorLuckyDram"])) {
+                            for (let index = 0; index < Number(process.env["gacmotorLuckyDram"]); index++) {
+                                $.wait(1000)
+                                await this._luckyDraw()
+                                $.wait(2000)
+                            }
+                        } else if (this.luckyDrawNum == Number(process.env["gacmotorLuckyDram"])) {
+                            for (let index = 0; index < Number(process.env["gacmotorLuckyDram"]); index++) {
+                                $.wait(1000)
+                                await this._luckyDraw()
+                                $.wait(2000)
+                            }
                         }
+
                     }
 
                 }
@@ -90,41 +126,54 @@ class UserInfo {
             if (this.signInStatus == false) {
                 await this._signIn()
             }
+            await this._taskList()
             if (process.env["gacmotorPost"] == "true" || process.env["gacmotorComment"] == "true") {
                 console.log(`正在远程获取15条随机评论~请等待15-20秒`)
                 await this._getText()
             }
             if (process.env["gacmotorPost"] == "true") {
                 console.log(`已设置发帖功能`);
-                await this._post(this.titleList[0], this.contentList[0])//可能需要图片
-                console.log(`等待30s`)
-                await $.wait(30000)
-                await this._postlist()
-                for (let postId of this.postList) {
-                    await this._delete(postId)
+                if (this.postNotFinishedNum !== 0 && this.postNotFinishedNum > 1) {
+                    await this._post(this.titleList[0], this.contentList[0])//可能需要图片
+                    console.log(`等待30s`)
+                    await $.wait(30000)
+                    await this._postlist()
+                    for (let postId of this.postList) {
+                        await this._delete(postId)
+                    }
                 }
+
             }
             await this._applatestlist()
-            for (let postId of this.applatestlist) {
-                await this._forward(postId)
-            }
-            if (process.env["gacmotorComment"] == "true") {
-                console.log(`已设置评论功能`);
+            if (this.sharenNotFinishedNum !== 0 && this.sharenNotFinishedNum > 1) {
                 for (let postId of this.applatestlist) {
-                    await this._add(postId, this.titleList[0])
+                    await this._forward(postId)
                 }
             }
 
             if (process.env["gacmotorComment"] == "true") {
-                console.log(`等待15s`)
-                await $.wait(15000)
-                console.log(`检测评论列表`);
-                await this._commentlist()
-                if (this.commentList.length > 0) {
-                    for (let commentId of this.commentList) {
-                        await this._commentdelete(commentId)
+                console.log(`已设置评论功能`);
+                if (this.commentNotFinishedNum !== 0 && this.commentNotFinished > 1) {
+                    for (let postId of this.applatestlist) {
+                        await this._add(postId, this.titleList[0])
                     }
                 }
+
+            }
+
+            if (process.env["gacmotorComment"] == "true") {
+                if (this.commentNotFinishedNum !== 0 && this.commentNotFinished > 1) {
+                    console.log(`等待15s`)
+                    await $.wait(15000)
+                    console.log(`检测评论列表`);
+                    await this._commentlist()
+                    if (this.commentList.length > 0) {
+                        for (let commentId of this.commentList) {
+                            await this._commentdelete(commentId)
+                        }
+                    }
+                }
+
             }
             await this._getChinaTime()
             console.log(`11/26截止 Do - 广州车展活动 奖品活动结束后14日内发放`);
@@ -706,6 +755,56 @@ class UserInfo {
                 console.log(`[${result.data.mobile}][${result.data.nickname}][${result.data.userIdStr}]`);
                 this.userIdStr = result.data.userIdStr;
                 this.ckStatus = true
+            } else {
+                console.log(`❌${options.fn}状态[${result.resultMsg}]`);
+                this.ckStatus = false
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async _taskList() {
+        try {
+            let options = {
+                fn: "任务情况查询",
+                method: "get",
+                url: `https://next.gacmotor.com/app/community-api/user/mission/getUserMissionList?place=1`,
+                headers: this._getHeaders("get"),
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.resultCode == "0") {
+                //result.data[0].total - result.data[0].finishedNum//签到
+                this.postNotFinishedNum = Number(result.data[1].total) - Number(result.data[1].finishedNum)//发帖
+                this.commentNotFinishedNum = Number(result.data[2].total) - Number(result.data[2].finishedNum)//评论
+                this.sharenNotFinishedNum = Number(result.data[3].total) - Number(result.data[3].finishedNum)//分享
+            } else {
+                console.log(`❌${options.fn}状态[${result.resultMsg}]`);
+                this.ckStatus = false
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async _luckyDrawNum() {
+        try {
+            let options = {
+                fn: "抽奖次数查询",
+                method: "get",
+                url: `https://next.gacmotor.com/app/activity/shopDraw/getchances?activityCode=shop-draw`,
+                headers: this._getHeaders("get"),
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.resultCode == "0") {
+                this.luckyDrawNum = result.data
+                console.log(`抽奖次数剩余${this.luckyDrawNum}次`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 this.ckStatus = false
