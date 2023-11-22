@@ -162,8 +162,9 @@ class UserInfo {
                 await this._submit_answer({ "activityId": 464, "taskId": this.questionTaskId, "userSubmitAnswerVoList": [{ "questionId": this.questionId, "userAnswer": this.userAnswer, "answerIdList": this.answerIdList }] })
                 //抽奖
                 await this._activity_lotter_mall({ "activityId": "465", "channel": "wx_channel" })
-                console.log(`请截图中奖记录找客服领取 微信打开链接截图中奖记录 https://mall.gacmotor.com/act/turntable?id=465&channelCode=`);
-                console.log(`加客服的地址 https://mall.gacmotor.com/act/answer-activity?id=464`);
+                console.log(`目测30天内自动到账`)
+                //console.log(`请微信打开链接截图中奖记录 发给客服登记G豆  https://mall.gacmotor.com/act/turntable?id=465&channelCode=`);
+                //console.log(`加客服的地址 https://mall.gacmotor.com/act/answer-activity?id=464`);
             } else {
                 console.log(`本周答题完成或未到活动时间`);
             }
