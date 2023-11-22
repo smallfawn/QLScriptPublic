@@ -535,7 +535,7 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.errorCode == "0") {
-                console.log(JSON.stringify(result));
+                console.log(`添加助力任务成功`);
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 console.log(JSON.stringify(result));
