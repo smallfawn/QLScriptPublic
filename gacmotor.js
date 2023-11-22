@@ -10,6 +10,10 @@
  * 每天助力       gacmotorPower=""  (抓这个需要手动做一次任务,我的-超级合伙人-每日任务-分享,微信自己点击自己分享的文章一次)
  *               微信抓gmp.spgacmotorsc.com/partner/api-content/base/content/trafficStatistics?  
  *               后面的openId的值例如:oQzIW0jx-DbassAsaQgpGsasqXqCWI
+ * 答题活动(非必填,不填默认不执行)       需要在appToken & deviceCode & registrationID 后加一个 & mallToken
+ *                此 malltoken 需要手动获取(微信打开https://mall.gacmotor.com/act/answer-activity?id=464)
+ *                抓包https://mall.gacmotor.com/e-small-bff/fronted/activityAnswer/queryAnswerActivityInfo Headers中的token
+ *                这个就是mallToken
  * 
  */
 
@@ -29,6 +33,7 @@ class UserInfo {
         this.ckStatus = true;
         this.deviceCode = str.split(strSplitor)[1];
         this.registrationID = str.split(strSplitor)[2];
+        this.mallToken = str.split(strSplitor)[3];
         this.signInStatus = false//默认签到状态false
         this.userIdStr = ""
         this.postList = []//自己
@@ -41,7 +46,143 @@ class UserInfo {
         this.mobile = []
         this.accessToken = []
         this.powerId = ""//助力ID
+        this.questionId = ""
+        this.userAnswerList = []
+        this.answerIdList = []
+        this.userAnswer = ""
+        this.questionTaskId = ''
 
+    }
+    async main() {
+        console.log(`---------- 第[${this.index}]个账号执行开始 ----------`);
+        await this._userInfo();
+        if (this.ckStatus == true) {
+            if (process.env["gacmotorLuckyDram"] == undefined) {
+                console.log(`默认抽奖次数1`);
+                await this._luckyDraw()
+            } else if (process.env["gacmotorLuckyDram"] && Number(process.env["gacmotorLuckyDram"]) !== NaN) {
+                if (process.env["gacmotorLuckyDram"] == 0) {
+                    console.log(`抽奖次数为0 不执行抽奖`);
+                } else {
+                    if (Number(process.env["gacmotorLuckyDram"]) > 10) {
+                        console.log(`每天最高抽10次哦`);
+                        for (let index = 0; index < 10; index++) {
+                            $.wait(1000)
+                            await this._luckyDraw()
+                            $.wait(2000)
+                        }
+                    } else {
+                        console.log(`已设置抽奖次数 执行${process.env["gacmotorLuckyDram"]}次抽奖`);
+                        for (let index = 0; index < Number(process.env["gacmotorLuckyDram"]); index++) {
+                            $.wait(1000)
+                            await this._luckyDraw()
+                            $.wait(2000)
+                        }
+                    }
+
+                }
+
+
+            }
+            await this._getGDou()
+            await this._signInStatus()
+            await this._signInCounts()
+            if (this.signInStatus == false) {
+                await this._signIn()
+            }
+            if (process.env["gacmotorPost"] == "true" || process.env["gacmotorComment"] == "true") {
+                console.log(`正在远程获取15条随机评论~请等待15-20秒`)
+                await this._getText()
+            }
+            if (process.env["gacmotorPost"] == "true") {
+                console.log(`已设置发帖功能`);
+                await this._post(this.titleList[0], this.contentList[0])//可能需要图片
+                console.log(`等待30s`)
+                await $.wait(30000)
+                await this._postlist()
+                for (let postId of this.postList) {
+                    await this._delete(postId)
+                }
+            }
+            await this._applatestlist()
+            for (let postId of this.applatestlist) {
+                await this._forward(postId)
+            }
+            if (process.env["gacmotorComment"] == "true") {
+                console.log(`已设置评论功能`);
+                for (let postId of this.applatestlist) {
+                    await this._add(postId, this.titleList[0])
+                }
+            }
+
+            if (process.env["gacmotorComment"] == "true") {
+                console.log(`等待15s`)
+                await $.wait(15000)
+                console.log(`检测评论列表`);
+                await this._commentlist()
+                if (this.commentList.length > 0) {
+                    for (let commentId of this.commentList) {
+                        await this._commentdelete(commentId)
+                    }
+                }
+            }
+            await this._getChinaTime()
+            console.log(`11/26截止 Do - 广州车展活动 奖品活动结束后14日内发放`);
+            if (this.BeiJingTime < 1701014400000) {
+                //{"activityId":"467","channel":"carapp_channel"}
+                await this._activity_lotter_common({ "activityId": "467", "channel": "carapp_channel" })
+            }
+            if (process.env["gacmotorPower"]) {
+                console.log(`已设置开启每日助力`);
+                await this._power_auth()//登录活动 获取accessToken
+                await this._power_list()//获取任务列表
+                if (this.powerList.length > 0) {
+                    for (let taskId of this.powerList) {
+                        await this._join_power(taskId)//加入任务  
+                        await this._get_power_id(taskId)//获取助力的utid
+                        await $.wait(2000)
+                        await this._share_power(taskId)//分享
+                        await $.wait(2000)
+                        if (this.powerId !== "") {
+                            await this._power(this.powerId)
+                        }
+                    }
+                }
+
+            }
+        }
+        if (this.mallToken !== undefined) {
+            console.log(`已填写微信广汽传祺Token 执行答题&抽奖`);
+            //获取答题活动列表
+            await this._question_list({ "activityId": 464 })
+            if (this.questionTaskId !== "") {
+                //获取题目
+                await this._question_info({ "activityId": 464, "taskId": this.questionTaskId, "userSubmit": false })
+                //答题
+                await this._submit_answer({ "activityId": 464, "taskId": this.questionTaskId, "userSubmitAnswerVoList": [{ "questionId": this.questionId, "userAnswer": this.userAnswer, "answerIdList": this.answerIdList }] })
+                //抽奖
+                await this._activity_lotter_mall({ "activityId": "465", "channel": "wx_channel" })
+                console.log(`请截图中奖记录找客服领取 微信打开https://mall.gacmotor.com/act/turntable?id=465&channelCode=`);
+            } else {
+                console.log(`答题完成或未到活动时间`);
+            }
+            //
+            /*if (1700755199000 > this.BeiJingTime && this.BeiJingTime > 1700150400000) {
+                this.questionTaskId = 7
+            } else if (1701359999000 > this.BeiJingTime && this.BeiJingTime > 1700755200000) {
+                this.questionTaskId = 8
+            } else if (1701964799000 > this.BeiJingTime && this.BeiJingTime > 1701360000000) {
+                this.questionTaskId = 9
+            } else if (1701964800000 > this.BeiJingTime && this.BeiJingTime > 1702569599000) {
+                this.questionTaskId = 10
+            } else if (1702569600000 > this.BeiJingTime && this.BeiJingTime > 1703174399000) {
+                this.questionTaskId = 11
+            } else if (1703174400000 > this.BeiJingTime && this.BeiJingTime > 1703779199000) {
+                this.questionTaskId = 12
+            }*/
+
+        }
+        $.msg($.name, "", `---------- 第[${this.index}]个账号执行完毕 ----------`)
     }
     _MD5(str) {
         const crypto = require("crypto");
@@ -160,107 +301,44 @@ class UserInfo {
             }
         }
     }
-    async main() {
-        console.log(`---------- 第[${this.index}]个账号执行开始 ----------`);
-        await this._userInfo();
-        if (this.ckStatus == true) {
-            if (process.env["gacmotorLuckyDram"] == undefined) {
-                console.log(`默认抽奖次数1`);
-                await this._luckyDraw()
-            } else if (process.env["gacmotorLuckyDram"] && Number(process.env["gacmotorLuckyDram"]) !== NaN) {
-                if (process.env["gacmotorLuckyDram"] == 0) {
-                    console.log(`抽奖次数为0 不执行抽奖`);
-                } else {
-                    if (Number(process.env["gacmotorLuckyDram"]) > 10) {
-                        console.log(`每天最高抽10次哦`);
-                        for (let index = 0; index < 10; index++) {
-                            $.wait(1000)
-                            await this._luckyDraw()
-                            $.wait(2000)
-                        }
-                    } else {
-                        console.log(`已设置抽奖次数 执行${process.env["gacmotorLuckyDram"]}次抽奖`);
-                        for (let index = 0; index < Number(process.env["gacmotorLuckyDram"]); index++) {
-                            $.wait(1000)
-                            await this._luckyDraw()
-                            $.wait(2000)
-                        }
-                    }
-
-                }
-
-
+    _getHeaders_mall(method) {
+        if (method == "get") {
+            return {
+                "Host": "mall.gacmotor.com",
+                "Connection": "keep-alive",
+                "Accept": "application/json, text/plain, */*",
+                "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/111.0.5563.116 Mobile Safari/537.36 XWEB/1110017 MMWEBSDK/20230405 MMWEBID/2585 MicroMessenger/8.0.35.2360(0x2800235D) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
+                "token": this.mallToken,
+                "Content-Type": "application/json;charset=UTF-8",
+                "Origin": "https://mall.gacmotor.com",
+                "X-Requested-With": "com.tencent.mm",
+                "Sec-Fetch-Site": "same-origin",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Dest": "empty",
+                "Referer": "https://mall.gacmotor.com/act/answer-activity-detail?id=464&taskId=7&userSubmit=0",
+                "Accept-Encoding": "gzip, deflate",
+                "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7"
             }
-            await this._getGDou()
-            await this._signInStatus()
-            await this._signInCounts()
-            if (this.signInStatus == false) {
-                await this._signIn()
-            }
-            if (process.env["gacmotorPost"] == "true" || process.env["gacmotorComment"] == "true") {
-                console.log(`正在远程获取15条随机评论~请等待15-20秒`)
-                await this._getText()
-            }
-            if (process.env["gacmotorPost"] == "true") {
-                console.log(`已设置发帖功能`);
-                await this._post(this.titleList[0], this.contentList[0])//可能需要图片
-                console.log(`等待30s`)
-                await $.wait(30000)
-                await this._postlist()
-                for (let postId of this.postList) {
-                    await this._delete(postId)
-                }
-            }
-            await this._applatestlist()
-            for (let postId of this.applatestlist) {
-                await this._forward(postId)
-            }
-            if (process.env["gacmotorComment"] == "true") {
-                console.log(`已设置评论功能`);
-                for (let postId of this.applatestlist) {
-                    await this._add(postId, this.titleList[0])
-                }
-            }
-
-            if (process.env["gacmotorComment"] == "true") {
-                console.log(`等待15s`)
-                await $.wait(15000)
-                console.log(`检测评论列表`);
-                await this._commentlist()
-                if (this.commentList.length > 0) {
-                    for (let commentId of this.commentList) {
-                        await this._commentdelete(commentId)
-                    }
-                }
-            }
-            await this._getChinaTime()
-            console.log(`11/26截止 Do - 广州车展活动 奖品活动结束后14日内发放`);
-            if (this.BeiJingTime < 1701014400000) {
-                //{"activityId":"467","channel":"carapp_channel"}
-                await this._activity_lotter_common({ "activityId": "467", "channel": "carapp_channel" })
-            }
-            if (process.env["gacmotorPower"]) {
-                console.log(`已设置开启每日助力`);
-                await this._power_auth()//登录活动 获取accessToken
-                await this._power_list()//获取任务列表
-                if (this.powerList.length > 0) {
-                    for (let taskId of this.powerList) {
-                        await this._join_power(taskId)//加入任务  
-                        await this._get_power_id(taskId)//获取助力的utid
-                        await $.wait(2000)
-                        await this._share_power(taskId)//分享
-                        await $.wait(2000)
-                        if (this.powerId !== "") {
-                            await this._power(this.powerId)
-                        }
-                    }
-                }
-
+        } else {
+            return {
+                "Host": "mall.gacmotor.com",
+                "Connection": "keep-alive",
+                "Accept": "application/json, text/plain, */*",
+                "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/111.0.5563.116 Mobile Safari/537.36 XWEB/1110017 MMWEBSDK/20230405 MMWEBID/2585 MicroMessenger/8.0.35.2360(0x2800235D) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
+                "token": this.mallToken,
+                "Content-Type": "application/json;charset=UTF-8",
+                "Origin": "https://mall.gacmotor.com",
+                "X-Requested-With": "com.tencent.mm",
+                "Sec-Fetch-Site": "same-origin",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Dest": "empty",
+                "Referer": "https://mall.gacmotor.com/act/answer-activity-detail?id=464&taskId=7&userSubmit=0",
+                "Accept-Encoding": "gzip, deflate",
+                "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7"
             }
         }
-
-        $.msg($.name, "", `---------- 第[${this.index}]个账号执行完毕 ----------`)
     }
+
     async _getChinaTime() {
         try {
             let options = {
@@ -307,6 +385,110 @@ class UserInfo {
                 msg += `抽奖成功 获得${result.data.name}\n`
             } else {
                 console.log(`抽奖失败`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async _activity_lotter_mall(body) {
+        try {
+            let options = {
+                fn: "活动抽奖(mall)",
+                method: "post",
+                url: `https://mall.gacmotor.com/activity-app/customer/activityPrize/lotter?notip=true`,
+                headers: this._getHeaders_mall("post"),
+                body: JSON.stringify(body)
+            }
+            //console.log(options)
+            let { body: result } = await httpRequest(options)
+            result = JSON.parse(result)
+            if (result.code == "0000") {
+                console.log(`抽奖成功 获得${result.data.name}`);
+                msg += `抽奖成功 获得${result.data.name}\n`
+            } else {
+                console.log(`抽奖失败`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async _question_list(body) {
+        try {
+            let options = {
+                fn: "获取答题活动列表",
+                method: "post",
+                url: `https://mall.gacmotor.com/e-small-bff/fronted/activityAnswer/queryAnswerActivityInfo`,
+                headers: this._getHeaders_mall("post"),
+                body: JSON.stringify(body)
+            }
+            //console.log(options)
+            let { body: result } = await httpRequest(options)
+            result = JSON.parse(result)
+            if (result.code == "0000") {
+                for (let id of result.data.taskInfoList) {
+                    if (id.startTime > this.BeiJingTime && this.BeiJingTime > id.endTime && id.userSubmit == false) {
+                        this.questionTaskId = id.id
+                    }
+                }
+            } else {
+                console.log(`获取问题和选项失败`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+
+    async _question_info(body) {
+        try {
+            let options = {
+                fn: "获取问题和选项",
+                method: "post",
+                url: `https://mall.gacmotor.com/e-small-bff/fronted/activityAnswer/queryQuestionInfo`,
+                headers: this._getHeaders_mall("post"),
+                body: JSON.stringify(body)
+            }
+            //console.log(options)
+            let { body: result } = await httpRequest(options)
+            result = JSON.parse(result)
+            if (result.code == "0000") {
+                this.questionId = result.data.questionInfoList[0].id
+                this.answerIdList = []
+                for (let answer of result.data.questionInfoList[0].answerInfoList) {
+                    this.answerIdList.push(answer.id)
+                    this.userAnswerList.push(answer.answerDesc)
+                }
+                this.userAnswer = userAnswerList.join(';');
+            } else {
+                console.log(`获取问题和选项失败`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+
+    async _submit_answer(body) {
+        try {
+            let options = {
+                fn: "回答问题",
+                method: "post",
+                url: `https://mall.gacmotor.com/e-small-bff/fronted/activityAnswer/submitAnswer`,
+                headers: this._getHeaders_mall("post"),
+                body: JSON.stringify(body)
+            }
+            //console.log(options)
+            let { body: result } = await httpRequest(options)
+            result = JSON.parse(result)
+            if (result.code == "0000") {
+                console.log(result.success);
+            } else {
+                console.log(`回答问题失败`);
                 console.log(JSON.stringify(result));
             }
         } catch (e) {
