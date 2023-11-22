@@ -247,7 +247,9 @@ class UserInfo {
                     for (let taskId of this.powerList) {
                         await this._join_power(taskId)//加入任务  
                         await this._get_power_id(taskId)//获取助力的utid
+                        await $.wait(2000)
                         await this._share_power(taskId)//分享
+                        await $.wait(2000)
                         if (this.powerId !== "") {
                             await this._power(this.powerId)
                         }
@@ -375,7 +377,7 @@ class UserInfo {
                 for (let i of result.body.rows) {
                     if (i.isFinish == 1) {
                         console.log(i.title)
-                        this.powerList = [i.taskId]
+                        this.powerList.push(i.taskId)
                     }
                 }
             } else {
