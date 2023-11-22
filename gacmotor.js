@@ -462,7 +462,7 @@ class UserInfo {
                     this.answerIdList.push(answer.id)
                     this.userAnswerList.push(answer.answerDesc)
                 }
-                this.userAnswer = userAnswerList.join(';');
+                this.userAnswer = this.userAnswerList.join(';');
             } else {
                 console.log(`获取问题和选项失败`);
                 console.log(JSON.stringify(result));
