@@ -164,7 +164,7 @@ class UserInfo {
                 await this._activity_lotter_mall({ "activityId": "465", "channel": "wx_channel" })
                 console.log(`请截图中奖记录找客服领取 微信打开https://mall.gacmotor.com/act/turntable?id=465&channelCode=`);
             } else {
-                console.log(`答题完成或未到活动时间`);
+                console.log(`本周答题完成或未到活动时间`);
             }
             //
             /*if (1700755199000 > this.BeiJingTime && this.BeiJingTime > 1700150400000) {
@@ -429,7 +429,7 @@ class UserInfo {
             result = JSON.parse(result)
             if (result.code == "0000") {
                 for (let id of result.data.taskInfoList) {
-                    if (id.startTime > this.BeiJingTime && this.BeiJingTime > id.endTime && id.userSubmit == false) {
+                    if (id.endTime > this.BeiJingTime && this.BeiJingTime > id.startTime && id.userSubmit == false) {
                         this.questionTaskId = id.id
                     }
                 }
