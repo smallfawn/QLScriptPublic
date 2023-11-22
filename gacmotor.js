@@ -486,7 +486,7 @@ class UserInfo {
             let { body: result } = await httpRequest(options)
             result = JSON.parse(result)
             if (result.code == "0000") {
-                console.log(result.success);
+                console.log(`回答问题` + result.success);
             } else {
                 console.log(`回答问题失败`);
                 console.log(JSON.stringify(result));
