@@ -7,9 +7,9 @@
  * 开启发贴       gacmotorPost=false 默认关闭发表文章功能 true为开启(此功能存在风控检测,谨慎开启)
  * 开启评论       gacmotorComment=false 默认关闭评论功能 true为开启(此功能存在风控检测,谨慎开启)
  * 每日抽奖       gacmotorLuckyDram=1  抽奖次数[1-10]  不写默认抽奖一次(首次免费)  以后每次花费2G豆抽奖 每天上限10次
- * 每天助力       gacmotorPower=""  微信抓gmp.spgacmotorsc.com/partner/api-content/base/content/trafficStatistics?  
- *                          后面的openId的值例如:oQzIW0jx-DbassAsaQgpGsasqXqCWI
- *                          (抓这个需要手动做一次任务,我的-超级合伙人-每日任务-分享,微信自己点击一次)
+ * 每天助力       gacmotorPower=""  (抓这个需要手动做一次任务,我的-超级合伙人-每日任务-分享,微信自己点击自己分享的文章一次)
+ *               微信抓gmp.spgacmotorsc.com/partner/api-content/base/content/trafficStatistics?  
+ *               后面的openId的值例如:oQzIW0jx-DbassAsaQgpGsasqXqCWI
  * 
  */
 
@@ -234,10 +234,8 @@ class UserInfo {
                 }
             }
             await this._getChinaTime()
-            console.log(`11/26截止 做广州车站活动 `);
+            console.log(`11/26截止 Do - 广州车展活动 奖品活动结束后14日内发放`);
             if (this.BeiJingTime < 1701014400000) {
-                //11/26截至
-                //做广州车站活动
                 //{"activityId":"467","channel":"carapp_channel"}
                 await this._activity_lotter_common({ "activityId": "467", "channel": "carapp_channel" })
             }
