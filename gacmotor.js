@@ -558,7 +558,6 @@ class UserInfo {
             if (result.errorCode == "0") {
                 for (let i of result.body.rows) {
                     if (i.isFinish == 1) {
-                        console.log(i.title)
                         this.powerList.push(i.taskId)
                     }
                 }
