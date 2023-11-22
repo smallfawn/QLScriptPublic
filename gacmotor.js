@@ -197,8 +197,10 @@ class UserInfo {
             if (this.signInStatus == false) {
                 await this._signIn()
             }
-            console.log(`正在远程获取15条随机评论~请等待15-20秒`)
-            await this._getText()
+            if (process.env["gacmotorPost"] == "true" || process.env["gacmotorComment"] == "true") {
+                console.log(`正在远程获取15条随机评论~请等待15-20秒`)
+                await this._getText()
+            }
             if (process.env["gacmotorPost"] == "true") {
                 console.log(`已设置发帖功能`);
                 await this._post(this.titleList[0], this.contentList[0])//可能需要图片
@@ -232,6 +234,7 @@ class UserInfo {
                 }
             }
             await this._getChinaTime()
+            console.log(`11/26截止 做广州车站活动 `);
             if (this.BeiJingTime < 1701014400000) {
                 //11/26截至
                 //做广州车站活动
@@ -345,7 +348,7 @@ class UserInfo {
                 body: `taskId=${taskId}&companyCode=CHUANQI&phone=${this.mobile}`
             }
             let { body: result } = await httpRequest(options);
-            console.log(options);
+            //console.log(options);
             result = JSON.parse(result);
             //console.log(result);
             if (result.errorCode == "0") {
