@@ -615,7 +615,8 @@ class UserInfo {
                 console.log(JSON.stringify(result));
             }
         } catch (e) {
-            console.log(e);
+            console.log(`请先手动完成一次任务`);
+            //console.log(e);
         }
     }
 
@@ -640,7 +641,8 @@ class UserInfo {
                 console.log(JSON.stringify(result));
             }
         } catch (e) {
-            console.log(e);
+            console.log(`请先手动完成一次任务`);
+            //console.log(e);
         }
     }
 
