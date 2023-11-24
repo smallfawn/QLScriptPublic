@@ -2,7 +2,7 @@
  * cron 44 14 * * *  baitianGame.js
  * Show:完成每日做任务和积分抢购（兑换）
  * //多账号分隔符 换行 或者 @
- * 变量名:baitianGame
+ * 变量名:baitianGameCookie
  * 变量值:http://www.100bt.com/m/creditMall/?gameId=2#home 网页的cookie 随便找个商品兑换抓http://service.100bt.com/creditmall/
  * 请求头Header cookie 全部
  * scriptVersionNow = "0.0.1";
