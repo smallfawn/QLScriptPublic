@@ -139,8 +139,8 @@ class UserInfo {
                 console.log(`已设置发帖功能`);
                 if (this.postNotFinishedNum !== 0 && this.postNotFinishedNum >= 1) {
                     await this._post(this.titleList[0], this.contentList[0])//可能需要图片
-                    console.log(`等待30s`)
-                    await $.wait(30000)
+                    console.log(`等待15s`)
+                    await $.wait(15000)
                     await this._postlist()
                     for (let postId of this.postList) {
                         await this._delete(postId)
