@@ -204,7 +204,7 @@ class UserInfo {
 
             }
         }
-        if (this.mallToken !== undefined) {
+        if (this.mallToken == undefined) {
             this.mallToken = `DS-${this.ck}`
             console.log(`执行答题&抽奖 并且尝试获取mallToken(如果不是WoolWeb获取的变量 可能执行失败)`);
             //获取答题活动列表
