@@ -43,7 +43,7 @@
  */
 
 const $ = new Env("100bt百田游戏");
-const notify = $.isNode() ? require('./sendNotify') : '';
+const notify = $.isNode() ? require("./sendNotify") : "";
 let ckName = "baitianGameCookie";
 let envSplitor = ["@", "\n"]; //多账号分隔符
 let strSplitor = "&"; //多变量分隔符
@@ -54,51 +54,98 @@ class UserInfo {
         this.index = ++userIdx;
         this.ck = str.split(strSplitor)[0]; //单账号多变量分隔符
         this.ckStatus = true;
-        this.taskIdList = [100, 191, 187, 185, 188, 22]
+        this.taskIdList = [];
     }
     async main() {
-        $.log(`正在做任务请耐心等待`)
-        for (let taskId of this.taskIdList) {
-            await $.wait(10000)
-            await this.do_task(taskId);
+        $.log(`正在做任务请耐心等待`);
+        await this.do_list()
+        if (this.taskIdList.length > 0) {
+            console.log(this.taskIdList)
+            for (let taskId of this.taskIdList) {
+                console.log(`正在做[${taskId.taskName}]任务`)
+                await $.wait(10000);
+                await this.do_task(taskId.taskId);
+            }
         }
+
         if (process.env["baitianExchangeId"]) {
-            await this.do_exchange(process.env["baitianExchangeId"])
+            await this.do_exchange(process.env["baitianExchangeId"]);
         }
     }
-
+    async do_list() {
+        let expando = "jQuery" + ("1.8.3" + Math.random()).replace(/\D/g, "");
+        let time1 = new Date().getTime();
+        let time2 = new Date().getTime();
+        try {
+            let options = {
+                fn: "任务列表查询",
+                method: "get",
+                url: `http://service.100bt.com/creditmall/activity/daily_task_list.jsonp??callback=${expando}_${time1}&gameId=2&_=${time2}`,
+                headers: {
+                    Accept: "*/*",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+                    Cookie: this.ck,
+                    Host: "service.100bt.com",
+                    "Proxy-Connection": "keep-alive",
+                    Referer: "http://www.100bt.com/",
+                    "User-Agent":
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
+                },
+            };
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            //result = JSON.parse(result);
+            result = result.replace(`${expando}_${time1}`, "")
+            result = result.replace(`(`, "")
+            result = result.replace(`)`, "")
+            result = JSON.parse(result)
+            if (result.jsonResult.code == "0") {
+                for (let taskId of result.jsonResult.data) {
+                    if (taskId.status == "0") {
+                        this.taskIdList.push({ taskName: taskId.name, taskId: taskId.taskID })
+                    }
+                }
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
     async do_task(taskId) {
-
-
         //taskId=100 签到
         //"taskID": 191, 奥拉星招募
         //"taskID": 187, 预约奥拉星2手游
         //"taskID": 185, 测测你的额外1小时
         //   "taskID": 188, 进入亚比概念站
         //"taskID": 22每日查看最新预告
-        let expando = "jQuery" + ("1.8.3" + Math.random()).replace(/\D/g, "")
-        let time1 = new Date().getTime()
-        let time2 = new Date().getTime()
+        let expando = "jQuery" + ("1.8.3" + Math.random()).replace(/\D/g, "");
+        let time1 = new Date().getTime();
+        let time2 = new Date().getTime();
         try {
             let options = {
                 fn: "做任务",
                 method: "get",
                 url: `http://service.100bt.com/creditmall/activity/do_task.jsonp?callback=${expando}_${time1}&taskId=${taskId}&gameId=2&_=${time2}`,
                 headers: {
-                    "Accept": "*/*",
+                    Accept: "*/*",
                     "Accept-Encoding": "gzip, deflate",
                     "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-                    "Cookie": this.ck,
-                    "Host": "service.100bt.com",
+                    Cookie: this.ck,
+                    Host: "service.100bt.com",
                     "Proxy-Connection": "keep-alive",
-                    "Referer": "http://www.100bt.com/",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
+                    Referer: "http://www.100bt.com/",
+                    "User-Agent":
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
                 },
-            }
+            };
             let { body: result } = await httpRequest(options);
             //console.log(options);
             //result = JSON.parse(result);
-            $.log(JSON.stringify(result));
+            result = result.replace(`${expando}_${time1}`, "")
+            result = result.replace(`(`, "")
+            result = result.replace(`)`, "")
+            result = JSON.parse(result)
+            $.log(JSON.stringify(result.jsonResult.message));
 
         } catch (e) {
             console.log(e);
@@ -106,31 +153,30 @@ class UserInfo {
     }
 
     async do_exchange(pageIndex) {
-
-        let expando = "jQuery" + ("1.8.3" + Math.random()).replace(/\D/g, "")
-        let time1 = new Date().getTime()
-        let time2 = new Date().getTime()
+        let expando = "jQuery" + ("1.8.3" + Math.random()).replace(/\D/g, "");
+        let time1 = new Date().getTime();
+        let time2 = new Date().getTime();
         try {
             let options = {
                 fn: "兑换",
                 method: "get",
                 url: `http://service.100bt.com/creditmall/mall/page.jsonp?callback=${expando}_${time1}&pageIndex=${pageIndex}&pageSize=1&orderBy=1&_=${time2}`,
                 headers: {
-                    "Accept": "*/*",
+                    Accept: "*/*",
                     "Accept-Encoding": "gzip, deflate",
                     "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-                    "Cookie": this.ck,
-                    "Host": "service.100bt.com",
+                    Cookie: this.ck,
+                    Host: "service.100bt.com",
                     "Proxy-Connection": "keep-alive",
-                    "Referer": "http://www.100bt.com/",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
+                    Referer: "http://www.100bt.com/",
+                    "User-Agent":
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
                 },
-            }
+            };
             let { body: result } = await httpRequest(options);
             //console.log(options);
             //result = JSON.parse(result);
             $.log(JSON.stringify(result));
-
         } catch (e) {
             console.log(e);
         }
@@ -152,7 +198,7 @@ async function start() {
     if (userList.length > 0) {
         await start();
     }
-    await SendMsg($.logs.join("\n"))
+    await SendMsg($.logs.join("\n"));
 })()
     .catch((e) => console.log(e))
     .finally(() => $.done());
@@ -208,9 +254,9 @@ function httpRequest(options) {
 async function SendMsg(message) {
     if (!message) return;
     if ($.isNode()) {
-        await notify.sendNotify($.name, message)
+        await notify.sendNotify($.name, message);
     } else {
-        $.msg($.name, '', message)
+        $.msg($.name, "", message);
     }
 }
 // prettier-ignore
