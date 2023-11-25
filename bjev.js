@@ -190,8 +190,7 @@ class UserInfo {
                 url: `https://beijing-gateway-customer.app-prod.bjev.com.cn/beijing-info-configure/exterior/recommend/list?pageIndex=1&pageSize=20&uuid_check=${this.get_uuid()}`,
             }
             options.headers = this.get_headers(options.method, options.url)
-            console.log(options);
-
+            //console.log(options);
             let { body: result } = await httpRequest(options);
             //console.log(options);
             result = JSON.parse(result);
