@@ -7,9 +7,7 @@
  * 开启发贴       gacmotorPost=false 默认关闭发表文章功能 true为开启(此功能存在风控检测,谨慎开启)
  * 开启评论       gacmotorComment=false 默认关闭评论功能 true为开启(此功能存在风控检测,谨慎开启)
  * 每日抽奖       gacmotorLuckyDram=1  抽奖次数[1-10]  不写默认抽奖一次(首次免费)  以后每次花费2G豆抽奖 每天上限10次
- * 每天助力       gacmotorPower=""  (抓这个需要手动做一次任务,我的-超级合伙人-每日任务-分享,微信自己点击自己分享的文章一次)
- *               微信抓gmp.spgacmotorsc.com/partner/api-content/base/content/trafficStatistics?  
- *               后面的openId的值例如:oQzIW0jx-DbassAsaQgpGsasqXqCWI
+ * 
  * 答题活动(非必填,不填默认不执行)       需要在appToken & deviceCode & registrationID 后加一个 & mallToken
  *                此 malltoken 需要手动获取(微信打开https://mall.gacmotor.com/act/answer-activity?id=464)
  *                抓包https://mall.gacmotor.com/e-small-bff/fronted/activityAnswer/queryAnswerActivityInfo Headers中的token
@@ -185,7 +183,10 @@ class UserInfo {
                 //{"activityId":"467","channel":"carapp_channel"}
                 await this._activity_lotter_common({ "activityId": "467", "channel": "carapp_channel" })
             }
-            if (process.env["gacmotorPower"]) {
+            /*每天助力       gacmotorPower=""  (抓这个需要手动做一次任务,我的-超级合伙人-每日任务-分享,微信自己点击自己分享的文章一次)
+ *               微信抓gmp.spgacmotorsc.com/partner/api-content/base/content/trafficStatistics?  
+ *               后面的openId的值例如:oQzIW0jx-DbassAsaQgpGsasqXqCWI*/
+            /*if (process.env["gacmotorPower"]) {
                 console.log(`已设置开启每日助力`);
                 await this._power_auth()//登录活动 获取accessToken
                 await this._power_list()//获取任务列表
@@ -201,8 +202,7 @@ class UserInfo {
                         }
                     }
                 }
-
-            }
+            }*/
         }
         if (this.mallToken == undefined) {
             this.mallToken = `DS-${this.ck}`
