@@ -89,13 +89,16 @@ class UserInfo {
 }
 
 async function start() {
-    let taskall = [];
+const tasks = userList.map(user => user.main());
+await Promise.all(tasks);
+
+    /*let taskall = [];
     for (let user of userList) {
         if (user.ckStatus) {
             taskall.push(await user.main());
         }
     }
-    await Promise.all(taskall);
+    await Promise.all(taskall);*/
 }
 
 !(async () => {
