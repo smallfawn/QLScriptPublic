@@ -138,17 +138,18 @@ class UserInfo {
                 fn: "签到",
                 method: "post",
                 url: `https://beijing-gateway-customer.app-prod.bjev.com.cn/beijing-zone-asset/exterior/userSignRecord/addSign?uuid_check=${this.get_uuid()}`,
+                body: JSON.stringify({}),
             }
-            options.headers = this.get_headers(options.method, options.url)
+            options.headers = this.get_headers(options.method, options.url, options.body)
             let { body: result } = await httpRequest(options);
             //console.log(options);
             result = JSON.parse(result);
             //console.log(result);
             if (result.code == 0) {
-                $.log(`✅账号[${this.index}]  欢迎用户: ${result.errcode}🎉`)
+                $.log(`✅[${options.fn}]成功🎉`)
             } else {
-                console.log(`❌账号[${this.index}]  用户查询: 失败`);
-                console.log(result);
+                console.log(`❌[${options.fn}]失败`);
+                console.log(JSON.stringify(result));
             }
         } catch (e) {
             console.log(e);
