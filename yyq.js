@@ -2,6 +2,7 @@
  * 悦野圈
  * cron 7 8 * * *  yyq.js
  * 23/04/14  签到 点赞 评论 分享
+ * 23/11/26  删除 评论 分享 只做点赞和签到
  * ========= 青龙--配置文件 ===========
  * # 项目名称
  * export yyq_data='Cookie&13111111 @ Cookie&13111111'
@@ -83,7 +84,7 @@ async function start() {
         }
     }
     await Promise.all(taskall);*/
-    console.log('\n================== 分享 ==================\n');
+    /*console.log('\n================== 分享 ==================\n');
     taskall = [];
     for (let user of userList) {
         if (user.ckStatus) {
@@ -94,7 +95,7 @@ async function start() {
             }
         }
     }
-    await Promise.all(taskall);
+    await Promise.all(taskall);*/
 
 
 }
