@@ -64,15 +64,12 @@ class UserInfo {
         await this._userInfo();
         if (this.ckStatus == true) {
             if (process.env["gacmotorLuckyDram"] == undefined) {
-                console.log(`默认抽奖次数1`);
                 await this._luckyDrawNum()//获取抽奖次数
                 if (this.luckyDrawNum > 1) {
                     await this._luckyDraw()
                 }
             } else if (process.env["gacmotorLuckyDram"] && Number(process.env["gacmotorLuckyDram"]) !== NaN) {
-                if (process.env["gacmotorLuckyDram"] == 0) {
-                    console.log(`抽奖次数为0 不执行抽奖`);
-                } else {
+                if (process.env["gacmotorLuckyDram"] !== 0) {
                     if (Number(process.env["gacmotorLuckyDram"]) > 10) {
                         console.log(`每天最高抽10次哦`);
                         await this._luckyDrawNum()//获取抽奖次数
@@ -91,7 +88,6 @@ class UserInfo {
                         }
 
                     } else {
-                        console.log(`已设置抽奖次数 执行${process.env["gacmotorLuckyDram"]}次抽奖`);
                         await this._luckyDrawNum()//获取抽奖次数
                         if (this.luckyDrawNum < Number(process.env["gacmotorLuckyDram"])) {
                             for (let i = 0; i < this.luckyDrawNum; i++) {
@@ -114,6 +110,8 @@ class UserInfo {
                         }
 
                     }
+                } else {
+
 
                 }
 
@@ -134,7 +132,6 @@ class UserInfo {
             }
 
             if (process.env["gacmotorPost"] == "true") {
-                console.log(`已设置发帖功能`);
                 if (this.postNotFinishedNum !== 0 && this.postNotFinishedNum >= 1) {
                     await this._post(this.titleList[0], this.contentList[0])//可能需要图片
                     console.log(`等待15s`)
@@ -154,7 +151,6 @@ class UserInfo {
             }
 
             if (process.env["gacmotorComment"] == "true") {
-                console.log(`已设置评论功能`);
                 if (this.commentNotFinishedNum !== 0 && this.commentNotFinishedNum >= 1) {
                     for (let postId of this.applatestlist) {
                         await this._add(postId, this.titleList[0])
@@ -178,11 +174,11 @@ class UserInfo {
 
             }
             await this._getChinaTime()
-            console.log(`11/26截止 Do - 广州车展活动 奖品活动结束后14日内发放`);
+            /*console.log(`11/26截止 Do - 广州车展活动 奖品活动结束后14日内发放`);
             if (this.BeiJingTime < 1701014400000) {
                 //{"activityId":"467","channel":"carapp_channel"}
                 await this._activity_lotter_common({ "activityId": "467", "channel": "carapp_channel" })
-            }
+            }*/
             /*每天助力       gacmotorPower=""  (抓这个需要手动做一次任务,我的-超级合伙人-每日任务-分享,微信自己点击自己分享的文章一次)
  *               微信抓gmp.spgacmotorsc.com/partner/api-content/base/content/trafficStatistics?  
  *               后面的openId的值例如:oQzIW0jx-DbassAsaQgpGsasqXqCWI*/
@@ -1125,6 +1121,22 @@ class UserInfo {
 }
 
 async function start() {
+    if (process.env["gacmotorPost"] == "true") {
+        $.log(`已开启发帖`)
+    } else {
+        $.log(`未开启发帖`)
+    }
+    if (process.env["gacmotorComment"] == "true") {
+        $.log(`已开启评论`)
+    } else {
+        $.log(`未开启评论`)
+    }
+    if (process.env["gacmotorLuckyDram"] == "true") {
+        $.log(`已设置抽奖次数[${process.env["gacmotorLuckyDram"]}]次`)
+    } else {
+        $.log(`未设置抽奖次数 默认抽奖1次`)
+    }
+
     let taskall = [];
     for (let user of userList) {
         if (user.ckStatus) {
@@ -1132,6 +1144,7 @@ async function start() {
         }
     }
     await Promise.all(taskall);
+    $.msg($.name, "广汽传祺任务 Over", "smallfawn 提醒您 天冷加衣")
 }
 
 !(async () => {
@@ -1139,7 +1152,7 @@ async function start() {
     if (userList.length > 0) {
         await start();
     }
-    $.msg($.name, "广汽传祺任务 Over", "--------------------")
+
     await SendMsg($.logs.join("\n"))
 })()
     .catch((e) => console.log(e))
