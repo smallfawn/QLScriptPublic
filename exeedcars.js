@@ -5,6 +5,8 @@
  * 变量名:    exeedcarsLife
  * 变量值:    https://starway.exeedcars.com  headers中的Authorization  去掉Bearer 去掉Bearer 去掉Bearer
  * scriptVersionNow = "0.0.1";
+ * export exeedcarsPost=true 无需引号 开启发帖 不填不写 默认不执行
+ * export exeedcarsComment=true 开启评论  不填不写 默认不执行
  */
 
 const $ = new Env("Hi星途");
@@ -42,11 +44,17 @@ class UserInfo {
         $.log(`===== 开始执行第[${this.index}]个账号 =====`)
         await this.user_info();
         if (this.ckStatus) {
-            await this._getText()
-            await this.submit_common("dync", { "hasVideo": "0", "appId": "star", "title": this.titleList[0], "content": this.contentList[0] })
             await this.art_list()
-
-            await this.submit_common("comment", { "appId": "star", "id": this.artList[0].id, "position": "0", "contentType": "1", "content": this.commentList[0] })
+            if (process.env["exeedcarsPost"] == "true" || process.env["exeedcarsComment"] == "true") {
+                console.log(`正在远程获取评论！请等待10s左右`);
+                await this._getText()
+            }
+            if (process.env["exeedcarsPost"] == "true") {
+                await this.submit_common("dync", { "hasVideo": "0", "appId": "star", "title": this.titleList[0], "content": this.contentList[0] })
+            }
+            if (process.env["exeedcarsComment"] == "true") {
+                await this.submit_common("comment", { "appId": "star", "id": this.artList[0].id, "position": "0", "contentType": "1", "content": this.commentList[0] })
+            }
             await this.submit_common("share", { "appId": "star", "shareChannel": "1", "id": this.artList[0].id, "contentType": "1" })
 
 
@@ -248,6 +256,16 @@ class UserInfo {
 }
 
 async function start() {
+    if (process.env["exeedcarsPost"] == "true") {
+        $.log(`您开启了发帖开关---`)
+    } else {
+        $.log(`您未开启发帖开关---`)
+    }
+    if (process.env["exeedcarsComment"] == "true") {
+        $.log(`您开启了评论开关---`)
+    } else {
+        $.log(`您未开启评论开关---`)
+    }
     let taskall = [];
     for (let user of userList) {
         if (user.ckStatus) {
