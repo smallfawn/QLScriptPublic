@@ -41,7 +41,7 @@ class UserInfo {
                             this.task_num_like = Number(task.progressLimit) - Number(task.progress)
 
                         } else if (task.status == "1") {
-                            this.task_award(task.taskGroupCode)
+                            await this.task_award(task.taskGroupCode)
                         }
                         $.log(`点赞 ${task.progress} / ${task.progressLimit}`)
                         //点赞
@@ -59,7 +59,7 @@ class UserInfo {
                         if (task.status == "0") {
                             this.task_num_share = Number(task.progressLimit) - Number(task.progress)
                         } else if (task.status == "1") {
-                            this.task_award(task.taskGroupCode)
+                            await this.task_award(task.taskGroupCode)
                         }
                         $.log(`转发 ${task.progress} / ${task.progressLimit}`)
                         //转发
@@ -95,7 +95,7 @@ class UserInfo {
     get_headers(method, url, body = "") {
         url = url.replace("https://beijing-gateway-customer.app-prod.bjev.com.cn", "")
         let path = url.split('?')[0]
-        let params = url.split('?')[1].replaceAll('&', '').toLowerCase()
+        let params = url.split('?')[1].split('&').sort().join("").toLowerCase()
         method = method.toUpperCase();
         let timestamp = new Date().getTime()
         const key = `96189e76b405f63f8460367ab2ec74ac`
@@ -187,21 +187,23 @@ class UserInfo {
             let options = {
                 fn: "文章列表",
                 method: "get",
-                url: `https://beijing-gateway-customer.app-prod.bjev.com.cn/beijing-info-configure/exterior/recommend/list?pageIndex=1&pageSize=20&uuid_check=${this.get_uuid()}`,
+                url: `https://beijing-gateway-customer.app-prod.bjev.com.cn/beijing-zone-dynamic/exterior/dynamic/list?isRecommend=1&pageIndex=1&pageSize=10&isHot=1&uuid_check=${this.get_uuid()}`,
             }
             options.headers = this.get_headers(options.method, options.url)
-            //console.log(options);
+            console.log(options);
             let { body: result } = await httpRequest(options);
             //console.log(options);
             result = JSON.parse(result);
-            //console.log(result);
+            console.log(result);
             if (result.code == "0") {
                 //领取成功
                 //console.log(`✅[文章列表]成功`)
                 for (let artId of result.data.dataList) {
-                    if (artId.modelType == "2") {
-                        this.artList.push(artId.modelContent.id)
+                    if (artId.liked == "-1") {//判断未点赞的
+                        this.artList.push(artId.id)
+
                     }
+
                 }
             } else {
                 console.log(`❌[${options.fn}]失败`)
