@@ -273,7 +273,7 @@ async function start() {
         }
     }
     await Promise.all(taskall);
-    $.logs($.name, "任务执行 over", "smallfawn 提醒您 天冷加衣")
+    $.msg($.name, "任务执行 over", "smallfawn 提醒您 天冷加衣")
 }
 
 !(async () => {
