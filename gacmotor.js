@@ -1131,7 +1131,7 @@ async function start() {
     } else {
         $.log(`未开启评论`)
     }
-    if (process.env["gacmotorLuckyDram"] == "true") {
+    if (process.env["gacmotorLuckyDram"] && Number(process.env["gacmotorLuckyDram"]) !== NaN) {
         $.log(`已设置抽奖次数[${process.env["gacmotorLuckyDram"]}]次`)
     } else {
         $.log(`未设置抽奖次数 默认抽奖1次`)
