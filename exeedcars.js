@@ -7,6 +7,7 @@
  * scriptVersionNow = "0.0.1";
  * export exeedcarsPost=true 无需引号 开启发帖 不填不写 默认不执行
  * export exeedcarsComment=true 开启评论  不填不写 默认不执行
+ * 11/27 新增果园任务  和  签到 熟成之后获得200积分
  */
 
 const $ = new Env("Hi星途");
@@ -24,6 +25,8 @@ class UserInfo {
         this.titleList = []
         this.contentList = []
         this.commentList = []
+        this.treeTaskList = []
+        this.treeWaterNum = 0
     }
     get_headers() {
         return {
@@ -44,6 +47,8 @@ class UserInfo {
         $.log(`===== 开始执行第[${this.index}]个账号 =====`)
         await this.user_info();
         if (this.ckStatus) {
+            await this.user_point()
+            await this.signIn_status()
             await this.art_list()
             if (process.env["exeedcarsPost"] == "true" || process.env["exeedcarsComment"] == "true") {
                 console.log(`正在远程获取评论！请等待10s左右`);
@@ -56,7 +61,29 @@ class UserInfo {
                 await this.submit_common("comment", { "appId": "star", "id": this.artList[0].id, "position": "0", "contentType": "1", "content": this.commentList[0] })
             }
             await this.submit_common("share", { "appId": "star", "shareChannel": "1", "id": this.artList[0].id, "contentType": "1" })
+            await this.tree_task_common(1)
+            await this.tree_task_list()
+            if (this.treeTaskList.length > 0) {
+                for (let task of this.treeTaskList) {
+                    $.log(`[${task.growName}] - ${task.limit} / ${task.limitTimes}`)
+                }
+                for (let task of this.treeTaskList) {
+                    if (task.limitTimes > task.limit) {
+                        if (task.id == 3) {
+                            let tasknum = Number(task.limitTimes) - Number(task.limit)
+                            for (let i = 0; i < tasknum; i++)
+                                await this.tree_task_common(task.id)
+                        } else {
+                            await this.tree_task_common(task.id)
+                        }
 
+                    }
+                }
+            }
+            await this.tree_task_water_info()
+            if (this.treeWaterNum > 0) {
+                await this.tree_task_water()
+            }
 
         }
 
@@ -104,6 +131,7 @@ class UserInfo {
                 } else {
                     $.log(`今天未签到🎉`)
                     //执行签到
+                    await this.task_signIn()
                 }
 
 
@@ -115,7 +143,148 @@ class UserInfo {
             console.log(e);
         }
     }
+    //
+    async task_signIn() {
+        try {
+            let options = {
+                fn: "签到",
+                method: "get",
+                url: `https://starway.exeedcars.com/api-social/ec/personal/attendance`,
+                headers: this.get_headers(),
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.code == "200") {
+                $.log(`签到成功 获得[${result.data}]分`)
+            } else {
+                console.log(`❌[${options.fn}]失败`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async user_point() {
+        try {
+            let options = {
+                fn: "积分查询",
+                method: "get",
+                url: `https://starway.exeedcars.com/api-user/user/integral/get`,
+                headers: this.get_headers(),
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.code == "200") {
+                $.log(`当前积分[${result.data.pointBalance}]分`)
+            } else {
+                console.log(`❌[${options.fn}]失败`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async tree_task_common(id) {
+        try {
+            let options = {
+                fn: "种树任务通用",
+                method: "post",
+                url: `https://starway.exeedcars.com/api-marking/tree/event/trigger/event`,
+                headers: this.get_headers(),
+                body: JSON.stringify({ "id": id })
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.code == "200") {
+                $.log(`完成任务 获得[${result.data}]💧`)
+            } else {
+                if (id == 1) {
 
+                } else {
+                    console.log(`❌[${options.fn}]失败`);
+                    console.log(JSON.stringify(result));
+                }
+
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async tree_task_list() {
+        try {
+            let options = {
+                fn: "种树任务列表",
+                method: "get",
+                url: `https://starway.exeedcars.com/api-marking/tree/event/get/effect`,
+                headers: this.get_headers(),
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.code == "200") {
+                this.treeTaskList = result.data
+            } else {
+                console.log(`❌[${options.fn}]失败`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async tree_task_water() {
+        try {
+            let options = {
+                fn: "浇水",
+                method: "get",
+                url: `https://starway.exeedcars.com/api-marking/tree/user/water/get/water`,
+                headers: this.get_headers(),
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.code == "200") {
+                $.log(`浇水成功`)
+            } else {
+                console.log(`❌[${options.fn}]失败`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async tree_task_water_info() {
+        try {
+            let options = {
+                fn: "浇水",
+                method: "get",
+                url: `https://starway.exeedcars.com/api-marking/tree/user/water/get`,
+                headers: this.get_headers(),
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.code == "200") {
+                $.log(`剩余[${result.data.water}]💧`)
+                this.treeWaterNum = result.data.water
+            } else {
+                console.log(`❌[${options.fn}]失败`);
+                console.log(JSON.stringify(result));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
     async user_info() {
         try {
             let options = {
