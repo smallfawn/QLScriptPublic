@@ -34,7 +34,7 @@ let userCount = 0;
 //---------------------- 自定义变量区域 -----------------------------------
 
 async function start() {
-    await getNotice()
+    //await getNotice()
     console.log('\n================== 积分查询 ==================\n');
     taskall = [];
     for (let user of userList) {
