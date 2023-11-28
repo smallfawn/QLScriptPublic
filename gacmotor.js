@@ -3,23 +3,25 @@
  * Show:广汽传祺 评论 分享(转发) 签到 发表文章
  * @author https://github.com/smallfawn/QLScriptPublic
  * @tips 本脚本适用于广汽传祺5.0.0以上的版本
- * 变量名: gacmotorToken  https://next.gacmotor.com/app 域名下 headers 中 appToken & deviceCode & registrationID 多账@
+ * COOKIE 参数已改变  COOKIE 参数已改变  COOKIE 参数已改变
+ * 变量名: gacmotorToken  https://next.gacmotor.com/app 域名下 headers 中 appToken 多账 @ 或者换行
  * 开启发贴       gacmotorPost=false 默认关闭发表文章功能 true为开启(此功能存在风控检测,谨慎开启)
  * 开启评论       gacmotorComment=false 默认关闭评论功能 true为开启(此功能存在风控检测,谨慎开启)
  * 每日抽奖       gacmotorLuckyDram=1  抽奖次数[1-10]  不写默认抽奖一次(首次免费)  以后每次花费2G豆抽奖 每天上限10次
  * 
- * 答题活动(非必填,不填默认不执行)       需要在appToken & deviceCode & registrationID 后加一个 & mallToken
+ * 自动刷新TOKEN 需要配置 export QLVersion="new" 如果低于2.11版本的青龙 就把new改为old  
+ * 需要在appToken & 后面添加refreshToken  例如:AT-110052-FFFGGGHHH & RT-110052-AAAAAABBBBBBCCCCCC
+ * 此Token是登录接口返回的 APP关键词为login 推荐使用WOOLweb免抓包网页获取CK demo网站2w.onecc.cc 如需使用正版请加交流群
+ * 
+ * 答题活动       需要在appToken&RefreshToken 后加一个 & mallToken  (非必填,不填默认不执行)
  *                此 malltoken 需要手动获取(微信打开https://mall.gacmotor.com/act/answer-activity?id=464)
  *                抓包https://mall.gacmotor.com/e-small-bff/fronted/activityAnswer/queryAnswerActivityInfo Headers中的token
- *                这个就是mallToken  
- * 注意！使用WOOL WEB获取的CK不需要抓mallToken 也不需要填写
- * 使用WOOL WEB 广汽传祺V2接口获取的CK 无需设置哦
- *               
- * 
+ *                这个就是mallToken  ( * 注意！使用WOOL WEB获取的CK不需要抓mallToken 也不需要填写 )
  */
 
 const $ = new Env("广汽传祺");
 const notify = $.isNode() ? require('./sendNotify') : '';
+const { updateEnv11, getEnvs, updateEnv } = require("./ql")
 const appVersion = "5.1.0"
 let ckName = "gacmotorToken";
 let envSplitor = ["@", "\n"]; //多账号分隔符
@@ -28,12 +30,15 @@ let userIdx = 0;
 let userList = [];
 class UserInfo {
     constructor(str) {
+        this.cookies = str
         this.index = ++userIdx;
         this.ck = str.split(strSplitor)[0]; //单账号多变量分隔符
         this.ckStatus = true;
-        this.deviceCode = str.split(strSplitor)[1];
-        this.registrationID = str.split(strSplitor)[2];
-        this.mallToken = str.split(strSplitor)[3];;
+        this.deviceCode = "";
+        this.registrationID = "";
+        this.refreshToken = str.split(strSplitor)[1];
+
+        this.mallToken = str.split(strSplitor)[2];
         this.signInStatus = false//默认签到状态false
         this.userIdStr = ""
         this.name = ""
@@ -57,149 +62,165 @@ class UserInfo {
         this.postNotFinishedNum = 0//发帖未完成次数
         this.commentNotFinishedNum = 0//评论未完成次数
         this.sharenNotFinishedNum = 0//转发未完成次数
+        this.refreshStatus = false
 
     }
     async main() {
         $.log(`==============开始第${this.index}个账号==============`)
         await this._userInfo();
+
         if (this.ckStatus == true) {
-            if (process.env["gacmotorLuckyDram"] == undefined) {
-                await this._luckyDrawNum()//获取抽奖次数
-                if (this.luckyDrawNum > 1) {
-                    await this._luckyDraw()
-                }
-            } else if (process.env["gacmotorLuckyDram"] && Number(process.env["gacmotorLuckyDram"]) !== NaN) {
-                if (process.env["gacmotorLuckyDram"] !== 0) {
-                    if (Number(process.env["gacmotorLuckyDram"]) > 10) {
-                        console.log(`每天最高抽10次哦`);
-                        await this._luckyDrawNum()//获取抽奖次数
-                        if (this.luckyDrawNum < 10) {
-                            for (let i = 0; i < this.luckyDrawNum; i++) {
-                                $.wait(1000)
-                                await this._luckyDraw()
-                                $.wait(2000)
-                            }
-                        } else if (this.luckyDrawNum = 10) {
-                            for (let index = 0; index < 10; index++) {
-                                $.wait(1000)
-                                await this._luckyDraw()
-                                $.wait(2000)
-                            }
-                        }
-
-                    } else {
-                        await this._luckyDrawNum()//获取抽奖次数
-                        if (this.luckyDrawNum < Number(process.env["gacmotorLuckyDram"])) {
-                            for (let i = 0; i < this.luckyDrawNum; i++) {
-                                $.wait(1000)
-                                await this._luckyDraw()
-                                $.wait(2000)
-                            }
-                        } else if (this.luckyDrawNum > Number(process.env["gacmotorLuckyDram"])) {
-                            for (let index = 0; index < Number(process.env["gacmotorLuckyDram"]); index++) {
-                                $.wait(1000)
-                                await this._luckyDraw()
-                                $.wait(2000)
-                            }
-                        } else if (this.luckyDrawNum == Number(process.env["gacmotorLuckyDram"])) {
-                            for (let index = 0; index < Number(process.env["gacmotorLuckyDram"]); index++) {
-                                $.wait(1000)
-                                await this._luckyDraw()
-                                $.wait(2000)
-                            }
-                        }
-
-                    }
-                } else {
-
-
-                }
-
-
-            }
-            await this._getGDou()
-            await this._signInStatus()
-            await this._signInCounts()
-            if (this.signInStatus == false) {
-                await this._signIn()
-            }
-            await this._taskList()
-            if (this.postNotFinishedNum !== 0 && this.postNotFinishedNum >= 1 || this.commentNotFinishedNum !== 0 && this.commentNotFinishedNum >= 1) {
-                if (process.env["gacmotorPost"] == "true" || process.env["gacmotorComment"] == "true") {
-                    console.log(`正在远程获取15条随机评论~请等待15-20秒`)
-                    await this._getText()
+            await this.mainTask()
+        } else {
+            if (this.refreshToken !== undefined) {
+                $.log(`尝试刷新TOKEN`)
+                await this._refreshToken()
+                if (this.refreshStatus) {
+                    await this.mainTask()
                 }
             }
-
-            if (process.env["gacmotorPost"] == "true") {
-                if (this.postNotFinishedNum !== 0 && this.postNotFinishedNum >= 1) {
-                    await this._post(this.titleList[0], this.contentList[0])//可能需要图片
-                    console.log(`等待15s`)
-                    await $.wait(15000)
-                    await this._postlist()
-                    for (let postId of this.postList) {
-                        await this._delete(postId)
-                    }
-                }
-
-            }
-            await this._applatestlist()
-            if (this.sharenNotFinishedNum !== 0 && this.sharenNotFinishedNum >= 1) {
-                for (let postId of this.applatestlist) {
-                    await this._forward(postId)
-                }
-            }
-
-            if (process.env["gacmotorComment"] == "true") {
-                if (this.commentNotFinishedNum !== 0 && this.commentNotFinishedNum >= 1) {
-                    for (let postId of this.applatestlist) {
-                        await this._add(postId, this.titleList[0])
-                    }
-                }
-
-            }
-
-            if (process.env["gacmotorComment"] == "true") {
-                if (this.commentNotFinishedNum !== 0 && this.commentNotFinishedNum >= 1) {
-                    console.log(`等待15s`)
-                    await $.wait(15000)
-                    console.log(`检测评论列表`);
-                    await this._commentlist()
-                    if (this.commentList.length > 0) {
-                        for (let commentId of this.commentList) {
-                            await this._commentdelete(commentId)
-                        }
-                    }
-                }
-
-            }
-            await this._getChinaTime()
-            /*console.log(`11/26截止 Do - 广州车展活动 奖品活动结束后14日内发放`);
-            if (this.BeiJingTime < 1701014400000) {
-                //{"activityId":"467","channel":"carapp_channel"}
-                await this._activity_lotter_common({ "activityId": "467", "channel": "carapp_channel" })
-            }*/
-            /*每天助力       gacmotorPower=""  (抓这个需要手动做一次任务,我的-超级合伙人-每日任务-分享,微信自己点击自己分享的文章一次)
- *               微信抓gmp.spgacmotorsc.com/partner/api-content/base/content/trafficStatistics?  
- *               后面的openId的值例如:oQzIW0jx-DbassAsaQgpGsasqXqCWI*/
-            /*if (process.env["gacmotorPower"]) {
-                console.log(`已设置开启每日助力`);
-                await this._power_auth()//登录活动 获取accessToken
-                await this._power_list()//获取任务列表
-                if (this.powerList.length > 0) {
-                    for (let taskId of this.powerList) {
-                        await this._join_power(taskId)//加入任务  
-                        await this._get_power_id(taskId)//获取助力的utid
-                        await $.wait(2000)
-                        await this._share_power(taskId)//分享
-                        await $.wait(2000)
-                        if (this.powerId !== "") {
-                            await this._power(this.powerId)
-                        }
-                    }
-                }
-            }*/
         }
+
+
+
+    }
+    async mainTask() {
+        if (process.env["gacmotorLuckyDram"] == undefined) {
+            await this._luckyDrawNum()//获取抽奖次数
+            if (this.luckyDrawNum > 1) {
+                await this._luckyDraw()
+            }
+        } else if (process.env["gacmotorLuckyDram"] && Number(process.env["gacmotorLuckyDram"]) !== NaN) {
+            if (process.env["gacmotorLuckyDram"] !== 0) {
+                if (Number(process.env["gacmotorLuckyDram"]) > 10) {
+                    console.log(`每天最高抽10次哦`);
+                    await this._luckyDrawNum()//获取抽奖次数
+                    if (this.luckyDrawNum < 10) {
+                        for (let i = 0; i < this.luckyDrawNum; i++) {
+                            $.wait(1000)
+                            await this._luckyDraw()
+                            $.wait(2000)
+                        }
+                    } else if (this.luckyDrawNum = 10) {
+                        for (let index = 0; index < 10; index++) {
+                            $.wait(1000)
+                            await this._luckyDraw()
+                            $.wait(2000)
+                        }
+                    }
+
+                } else {
+                    await this._luckyDrawNum()//获取抽奖次数
+                    if (this.luckyDrawNum < Number(process.env["gacmotorLuckyDram"])) {
+                        for (let i = 0; i < this.luckyDrawNum; i++) {
+                            $.wait(1000)
+                            await this._luckyDraw()
+                            $.wait(2000)
+                        }
+                    } else if (this.luckyDrawNum > Number(process.env["gacmotorLuckyDram"])) {
+                        for (let index = 0; index < Number(process.env["gacmotorLuckyDram"]); index++) {
+                            $.wait(1000)
+                            await this._luckyDraw()
+                            $.wait(2000)
+                        }
+                    } else if (this.luckyDrawNum == Number(process.env["gacmotorLuckyDram"])) {
+                        for (let index = 0; index < Number(process.env["gacmotorLuckyDram"]); index++) {
+                            $.wait(1000)
+                            await this._luckyDraw()
+                            $.wait(2000)
+                        }
+                    }
+
+                }
+            } else {
+
+
+            }
+
+
+        }
+        await this._getGDou()
+        await this._signInStatus()
+        await this._signInCounts()
+        if (this.signInStatus == false) {
+            await this._signIn()
+        }
+        await this._taskList()
+        if (this.postNotFinishedNum !== 0 && this.postNotFinishedNum >= 1 || this.commentNotFinishedNum !== 0 && this.commentNotFinishedNum >= 1) {
+            if (process.env["gacmotorPost"] == "true" || process.env["gacmotorComment"] == "true") {
+                console.log(`正在远程获取15条随机评论~请等待15-20秒`)
+                await this._getText()
+            }
+        }
+
+        if (process.env["gacmotorPost"] == "true") {
+            if (this.postNotFinishedNum !== 0 && this.postNotFinishedNum >= 1) {
+                await this._post(this.titleList[0], this.contentList[0])//可能需要图片
+                console.log(`等待15s`)
+                await $.wait(15000)
+                await this._postlist()
+                for (let postId of this.postList) {
+                    await this._delete(postId)
+                }
+            }
+
+        }
+        await this._applatestlist()
+        if (this.sharenNotFinishedNum !== 0 && this.sharenNotFinishedNum >= 1) {
+            for (let postId of this.applatestlist) {
+                await this._forward(postId)
+            }
+        }
+
+        if (process.env["gacmotorComment"] == "true") {
+            if (this.commentNotFinishedNum !== 0 && this.commentNotFinishedNum >= 1) {
+                for (let postId of this.applatestlist) {
+                    await this._add(postId, this.titleList[0])
+                }
+            }
+
+        }
+
+        if (process.env["gacmotorComment"] == "true") {
+            if (this.commentNotFinishedNum !== 0 && this.commentNotFinishedNum >= 1) {
+                console.log(`等待15s`)
+                await $.wait(15000)
+                console.log(`检测评论列表`);
+                await this._commentlist()
+                if (this.commentList.length > 0) {
+                    for (let commentId of this.commentList) {
+                        await this._commentdelete(commentId)
+                    }
+                }
+            }
+
+        }
+        await this._getChinaTime()
+        /*console.log(`11/26截止 Do - 广州车展活动 奖品活动结束后14日内发放`);
+        if (this.BeiJingTime < 1701014400000) {
+            //{"activityId":"467","channel":"carapp_channel"}
+            await this._activity_lotter_common({ "activityId": "467", "channel": "carapp_channel" })
+        }*/
+        /*每天助力       gacmotorPower=""  (抓这个需要手动做一次任务,我的-超级合伙人-每日任务-分享,微信自己点击自己分享的文章一次)
+*               微信抓gmp.spgacmotorsc.com/partner/api-content/base/content/trafficStatistics?  
+*               后面的openId的值例如:oQzIW0jx-DbassAsaQgpGsasqXqCWI*/
+        /*if (process.env["gacmotorPower"]) {
+            console.log(`已设置开启每日助力`);
+            await this._power_auth()//登录活动 获取accessToken
+            await this._power_list()//获取任务列表
+            if (this.powerList.length > 0) {
+                for (let taskId of this.powerList) {
+                    await this._join_power(taskId)//加入任务  
+                    await this._get_power_id(taskId)//获取助力的utid
+                    await $.wait(2000)
+                    await this._share_power(taskId)//分享
+                    await $.wait(2000)
+                    if (this.powerId !== "") {
+                        await this._power(this.powerId)
+                    }
+                }
+            }
+        }*/
         if (this.mallToken == undefined) {
             this.mallToken = `DS-${this.ck}`
             console.log(`执行答题&抽奖 并且尝试获取mallToken(如果不是WoolWeb获取的变量 可能执行失败)`);
@@ -223,161 +244,49 @@ class UserInfo {
                 console.log(`本周答题完成或未到活动时间`);
             }
         }
+    }
+    async _refreshToken() {
+        try {
+            let options = {
+                fn: "刷新token",
+                method: "post",
+                url: `https://next.gacmotor.com/app/app-api/login/refreshAt`,
+                headers: this._getHeaders("post"),
+                body: JSON.stringify({ refreshToken: this.refreshToken })
+            }
+            let { body: result } = await httpRequest(options);
+            //console.log(options);
+            result = JSON.parse(result);
+            //console.log(result);
+            if (result.resultCode == "0") {
+                $.log(`重置accessToken [${result.data.accessToken}] 重置refeshToken [${result.data.refreshToken}]`)
+                //调用青龙API
+                //删除原变量 
+                let originalValue = this.cookies
+                let newValue
+                if (this.mallToken !== undefined) {
+                    newValue = `${result.data.accessToken}${strSplitor}${result.data.refreshToken}${strSplitor}${this.mallToken}`
+                } else {
+                    newValue = `${result.data.accessToken}${strSplitor}${result.data.refreshToken}`
+                }
+                let env = await getEnvs(ckName)
+                if (env[0].value.indexOf(originalValue) !== -1) {
+                    let newEnv = env[0].value.replaceAll(originalValue, newValue)
+                    if (process.env["QLVersion"] == "old") {
+                        await updateEnv(newEnv, env[0].id, null, ckName)
+                    } else {
+                        await updateEnv11(newEnv, env[0].id, null, ckName)
+                    }
+                    this.refreshStatus = true
+                }
 
-
-    }
-    _MD5(str) {
-        const crypto = require("crypto");
-        return crypto.createHash("md5").update(str).digest("hex");
-    }
-    _getHeaders(method) {
-        let timestamp1 = new Date().getTime();
-        let timestamp2 = new Date().getTime();
-        let nonce = Math.floor(100000 + Math.random() * 900000);
-        let appid = `8c4131ff-e326-43ea-b333-decb23936673`
-        let key = `46856407-b211-4a10-9cb2-5a9b94361614`
-        let sig = this._MD5(`${timestamp1}${nonce}${appid}${key}`)
-        let apiSignKey = `a361588rt20dpol`
-        let apiSign = (this._MD5(`${timestamp2}${apiSignKey}`)).toUpperCase()
-        if (method == "get") {
-            return {
-                "Accept": "application/json",
-                "appToken": this.ck,
-                "deviceCode": this.deviceCode,
-                "current-time": timestamp2,
-                "deviceId": this.registrationID,
-                "version": appVersion,
-                "nonce": nonce,
-                "token": this.ck,
-                "Authorization": `Bearer ${this.ck}`,
-                "sig": sig,
-                "platformNo": "Android",
-                "osVersion": 10,
-                "operateSystem": "android",
-                "appId": appid,
-                "registrationID": this.registrationID,
-                "api-sign": apiSign,
-                "deviceModel": "MI 8 Lite",
-                "timestamp": timestamp1,
-                //"Content-Type": "application/json; charset=UTF-8",
-                //"Content-Length": 24,
-                "Host": "next.gacmotor.com",
-                "Connection": "Keep-Alive",
-                "Accept-Encoding": "gzip",
-                "User-Agent": "okhttp/4.8.1"
+            } else {
+                console.log(`❌${options.fn}状态[${result.resultMsg}]`);
+                this.ckStatus = false
+                console.log(JSON.stringify(result));
             }
-        } else {
-            return {
-                "Accept": "application/json",
-                "appToken": this.ck,
-                "deviceCode": this.deviceCode,
-                "current-time": timestamp2,
-                "deviceId": this.registrationID,
-                "version": appVersion,
-                "nonce": nonce,
-                "token": this.ck,
-                "Authorization": `Bearer ${this.ck}`,
-                "sig": sig,
-                "platformNo": "Android",
-                "osVersion": 10,
-                "operateSystem": "android",
-                "appId": appid,
-                "registrationID": this.registrationID,
-                "api-sign": apiSign,
-                "deviceModel": "MI 8 Lite",
-                "timestamp": timestamp1,
-                "Content-Type": "application/json; charset=UTF-8",
-                //"Content-Length": 24,
-                "Host": "next.gacmotor.com",
-                "Connection": "Keep-Alive",
-                "Accept-Encoding": "gzip",
-                "User-Agent": "okhttp/4.8.1"
-            }
-        }
-    }
-    _getHeaders_gmp(method) {
-        let timestamp2 = new Date().getTime();
-        let apiSignKey = `a361588rt20dpol`
-        let apiSign = (this._MD5(`${timestamp2}${apiSignKey}`)).toUpperCase()
-        if (method == "get") {
-            return {
-                "Host": "gmp.spgacmotorsc.com",
-                "Connection": "keep-alive",
-                "accessToken": this.accessToken,
-                "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36 WindVane/8.5.0 StatusBarHeight/31 channel/GACClient",
-                "client": "app",
-                "Content-Type": "application/x-www-form-urlencoded",
-                "current-time": timestamp2,
-                "companyCode": "CHUANQI",
-                "api-sign": apiSign,
-                "ver": "20220513",
-                "Accept": `*/*`,
-                "Origin": "https://gmp.spgacmotorsc.com",
-                "X-Requested-With": "com.cloudy.component",
-                "Sec-Fetch-Site": "same-origin",
-                "Sec-Fetch-Mode": "cors",
-                "Sec-Fetch-Dest": "empty",
-                "Accept-Encoding": "gzip, deflate",
-                "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
-            }
-        } else {
-            return {
-                "Host": "gmp.spgacmotorsc.com",
-                "Connection": "keep-alive",
-                "accessToken": this.accessToken,
-                "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36 WindVane/8.5.0 StatusBarHeight/31 channel/GACClient",
-                "client": "app",
-                "Content-Type": "application/x-www-form-urlencoded",
-                "current-time": timestamp2,
-                "companyCode": "CHUANQI",
-                "api-sign": apiSign,
-                "ver": "20220513",
-                "Accept": "*/*",
-                "Origin": "https://gmp.spgacmotorsc.com",
-                "X-Requested-With": "com.cloudy.component",
-                "Sec-Fetch-Site": "same-origin",
-                "Sec-Fetch-Mode": "cors",
-                "Sec-Fetch-Dest": "empty",
-                "Accept-Encoding": "gzip, deflate",
-                "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
-            }
-        }
-    }
-    _getHeaders_mall(method) {
-        if (method == "get") {
-            return {
-                "Host": "mall.gacmotor.com",
-                "Connection": "keep-alive",
-                "Accept": "application/json, text/plain, */*",
-                "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/111.0.5563.116 Mobile Safari/537.36 XWEB/1110017 MMWEBSDK/20230405 MMWEBID/2585 MicroMessenger/8.0.35.2360(0x2800235D) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
-                "token": this.mallToken,
-                "Content-Type": "application/json;charset=UTF-8",
-                "Origin": "https://mall.gacmotor.com",
-                "X-Requested-With": "com.tencent.mm",
-                "Sec-Fetch-Site": "same-origin",
-                "Sec-Fetch-Mode": "cors",
-                "Sec-Fetch-Dest": "empty",
-                "Referer": "https://mall.gacmotor.com/act/answer-activity-detail?id=464&taskId=7&userSubmit=0",
-                "Accept-Encoding": "gzip, deflate",
-                "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7"
-            }
-        } else {
-            return {
-                "Host": "mall.gacmotor.com",
-                "Connection": "keep-alive",
-                "Accept": "application/json, text/plain, */*",
-                "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/111.0.5563.116 Mobile Safari/537.36 XWEB/1110017 MMWEBSDK/20230405 MMWEBID/2585 MicroMessenger/8.0.35.2360(0x2800235D) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
-                "token": this.mallToken,
-                "Content-Type": "application/json;charset=UTF-8",
-                "Origin": "https://mall.gacmotor.com",
-                "X-Requested-With": "com.tencent.mm",
-                "Sec-Fetch-Site": "same-origin",
-                "Sec-Fetch-Mode": "cors",
-                "Sec-Fetch-Dest": "empty",
-                "Referer": "https://mall.gacmotor.com/act/answer-activity-detail?id=464&taskId=7&userSubmit=0",
-                "Accept-Encoding": "gzip, deflate",
-                "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7"
-            }
+        } catch (e) {
+            console.log(e);
         }
     }
 
@@ -1116,6 +1025,160 @@ class UserInfo {
             }
         } catch (e) {
             console.log(e);
+        }
+    }
+    _MD5(str) {
+        const crypto = require("crypto");
+        return crypto.createHash("md5").update(str).digest("hex");
+    }
+    _getHeaders(method) {
+        let timestamp1 = new Date().getTime();
+        let timestamp2 = new Date().getTime();
+        let nonce = Math.floor(100000 + Math.random() * 900000);
+        let appid = `8c4131ff-e326-43ea-b333-decb23936673`
+        let key = `46856407-b211-4a10-9cb2-5a9b94361614`
+        let sig = this._MD5(`${timestamp1}${nonce}${appid}${key}`)
+        let apiSignKey = `a361588rt20dpol`
+        let apiSign = (this._MD5(`${timestamp2}${apiSignKey}`)).toUpperCase()
+        if (method == "get") {
+            return {
+                "Accept": "application/json",
+                "appToken": this.ck,
+                "deviceCode": this.deviceCode,
+                "current-time": timestamp2,
+                "deviceId": this.registrationID,
+                "version": appVersion,
+                "nonce": nonce,
+                "token": this.ck,
+                "Authorization": `Bearer ${this.ck}`,
+                "sig": sig,
+                "platformNo": "Android",
+                "osVersion": 10,
+                "operateSystem": "android",
+                "appId": appid,
+                "registrationID": this.registrationID,
+                "api-sign": apiSign,
+                "deviceModel": "MI 8 Lite",
+                "timestamp": timestamp1,
+                //"Content-Type": "application/json; charset=UTF-8",
+                //"Content-Length": 24,
+                "Host": "next.gacmotor.com",
+                "Connection": "Keep-Alive",
+                "Accept-Encoding": "gzip",
+                "User-Agent": "okhttp/4.8.1"
+            }
+        } else {
+            return {
+                "Accept": "application/json",
+                "appToken": this.ck,
+                "deviceCode": this.deviceCode,
+                "current-time": timestamp2,
+                "deviceId": this.registrationID,
+                "version": appVersion,
+                "nonce": nonce,
+                "token": this.ck,
+                "Authorization": `Bearer ${this.ck}`,
+                "sig": sig,
+                "platformNo": "Android",
+                "osVersion": 10,
+                "operateSystem": "android",
+                "appId": appid,
+                "registrationID": this.registrationID,
+                "api-sign": apiSign,
+                "deviceModel": "MI 8 Lite",
+                "timestamp": timestamp1,
+                "Content-Type": "application/json; charset=UTF-8",
+                //"Content-Length": 24,
+                "Host": "next.gacmotor.com",
+                "Connection": "Keep-Alive",
+                "Accept-Encoding": "gzip",
+                "User-Agent": "okhttp/4.8.1"
+            }
+        }
+    }
+    _getHeaders_gmp(method) {
+        let timestamp2 = new Date().getTime();
+        let apiSignKey = `a361588rt20dpol`
+        let apiSign = (this._MD5(`${timestamp2}${apiSignKey}`)).toUpperCase()
+        if (method == "get") {
+            return {
+                "Host": "gmp.spgacmotorsc.com",
+                "Connection": "keep-alive",
+                "accessToken": this.accessToken,
+                "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36 WindVane/8.5.0 StatusBarHeight/31 channel/GACClient",
+                "client": "app",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "current-time": timestamp2,
+                "companyCode": "CHUANQI",
+                "api-sign": apiSign,
+                "ver": "20220513",
+                "Accept": `*/*`,
+                "Origin": "https://gmp.spgacmotorsc.com",
+                "X-Requested-With": "com.cloudy.component",
+                "Sec-Fetch-Site": "same-origin",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Dest": "empty",
+                "Accept-Encoding": "gzip, deflate",
+                "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+            }
+        } else {
+            return {
+                "Host": "gmp.spgacmotorsc.com",
+                "Connection": "keep-alive",
+                "accessToken": this.accessToken,
+                "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/81.0.4044.138 Mobile Safari/537.36 WindVane/8.5.0 StatusBarHeight/31 channel/GACClient",
+                "client": "app",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "current-time": timestamp2,
+                "companyCode": "CHUANQI",
+                "api-sign": apiSign,
+                "ver": "20220513",
+                "Accept": "*/*",
+                "Origin": "https://gmp.spgacmotorsc.com",
+                "X-Requested-With": "com.cloudy.component",
+                "Sec-Fetch-Site": "same-origin",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Dest": "empty",
+                "Accept-Encoding": "gzip, deflate",
+                "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+            }
+        }
+    }
+    _getHeaders_mall(method) {
+        if (method == "get") {
+            return {
+                "Host": "mall.gacmotor.com",
+                "Connection": "keep-alive",
+                "Accept": "application/json, text/plain, */*",
+                "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/111.0.5563.116 Mobile Safari/537.36 XWEB/1110017 MMWEBSDK/20230405 MMWEBID/2585 MicroMessenger/8.0.35.2360(0x2800235D) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
+                "token": this.mallToken,
+                "Content-Type": "application/json;charset=UTF-8",
+                "Origin": "https://mall.gacmotor.com",
+                "X-Requested-With": "com.tencent.mm",
+                "Sec-Fetch-Site": "same-origin",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Dest": "empty",
+                "Referer": "https://mall.gacmotor.com/act/answer-activity-detail?id=464&taskId=7&userSubmit=0",
+                "Accept-Encoding": "gzip, deflate",
+                "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7"
+            }
+        } else {
+            return {
+                "Host": "mall.gacmotor.com",
+                "Connection": "keep-alive",
+                "Accept": "application/json, text/plain, */*",
+                "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/111.0.5563.116 Mobile Safari/537.36 XWEB/1110017 MMWEBSDK/20230405 MMWEBID/2585 MicroMessenger/8.0.35.2360(0x2800235D) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
+                "token": this.mallToken,
+                "Content-Type": "application/json;charset=UTF-8",
+                "Origin": "https://mall.gacmotor.com",
+                "X-Requested-With": "com.tencent.mm",
+                "Sec-Fetch-Site": "same-origin",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Dest": "empty",
+                "Referer": "https://mall.gacmotor.com/act/answer-activity-detail?id=464&taskId=7&userSubmit=0",
+                "Accept-Encoding": "gzip, deflate",
+                "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7"
+            }
         }
     }
 }
