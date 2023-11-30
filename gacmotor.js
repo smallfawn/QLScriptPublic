@@ -8,7 +8,7 @@
  * 开启发贴       gacmotorPost=false 默认关闭发表文章功能 true为开启(此功能存在风控检测,谨慎开启)
  * 开启评论       gacmotorComment=false 默认关闭评论功能 true为开启(此功能存在风控检测,谨慎开启)
  * 每日抽奖       gacmotorLuckyDram=1  抽奖次数[1-10]  不写默认抽奖一次(首次免费)  以后每次花费2G豆抽奖 每天上限10次
- * (貌似WOOLWEB获取的CK不需要刷新 正常半个月或者一个月失效 APP则7天失效一次 需要刷新)
+ * (貌似WOOLWEB获取的H5 CK不需要刷新 正常半个月或者一个月失效 APP则7天失效一次 需要刷新)
  * 自动刷新TOKEN 需要配置 export QLVersion="new" 如果低于2.11版本的青龙 就把new改为old  
  * 需要在appToken & 后面添加refreshToken  例如:AT-110052-FFFGGGHHH & RT-110052-AAAAAABBBBBBCCCCCC
  * 此Token是登录接口返回的 APP关键词为login 推荐使用WOOLweb免抓包网页获取CK demo网站2w.onecc.cc 如需使用正版请加交流群
@@ -16,7 +16,7 @@
  * 答题活动       需要在appToken&RefreshToken 后加一个 & mallToken  (非必填,不填默认不执行)
  *                此 malltoken 需要手动获取(微信打开https://mall.gacmotor.com/act/answer-activity?id=464)
  *                抓包https://mall.gacmotor.com/e-small-bff/fronted/activityAnswer/queryAnswerActivityInfo Headers中的token
- *                这个就是mallToken  ( * 注意！使用WOOL WEB获取的CK不需要抓mallToken 也不需要填写 )
+ *                这个就是mallToken  ( * 注意！使用WOOL WEB 广汽传祺H5接口获取的CK不需要抓mallToken 也不需要填写 )
  */
 
 const $ = new Env("广汽传祺");
