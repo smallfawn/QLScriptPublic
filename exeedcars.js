@@ -118,7 +118,7 @@ class UserInfo {
             let options = {
                 fn: "签到状态",
                 method: "get",
-                url: `https://starway.exeedcars.com/api-user/model/switch/home`,
+                url: `https://starway.exeedcars.com/api-social/ec/personal/query/attendanceStatus`,
                 headers: this.get_headers(),
             }
             let { body: result } = await httpRequest(options);
@@ -126,7 +126,7 @@ class UserInfo {
             result = JSON.parse(result);
             //console.log(result);
             if (result.code == "200") {
-                if (result.data.sign == "1") {
+                if (result.data == true) {
                     $.log(`今天已签到🎉`)
                 } else {
                     $.log(`今天未签到🎉`)
