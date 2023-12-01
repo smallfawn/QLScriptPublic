@@ -65,6 +65,7 @@ class UserInfo {
         this.commentNotFinishedNum = 0//评论未完成次数
         this.sharenNotFinishedNum = 0//转发未完成次数
         this.refreshStatus = false
+        this.commenttext = ""
 
     }
     async main() {
@@ -148,18 +149,21 @@ class UserInfo {
             await this._signIn()
         }
         await this._taskList()
-        if (this.postNotFinishedNum !== 0 && this.postNotFinishedNum >= 1 || this.commentNotFinishedNum !== 0 && this.commentNotFinishedNum >= 1) {
+        /*if (this.postNotFinishedNum !== 0 && this.postNotFinishedNum >= 1 || this.commentNotFinishedNum !== 0 && this.commentNotFinishedNum >= 1) {
             if (process.env["gacmotorPost"] == "true" || process.env["gacmotorComment"] == "true") {
                 console.log(`正在远程获取15条随机评论~请等待15-20秒`)
                 await this._getText()
             }
-        }
+        }*/
 
         if (process.env["gacmotorPost"] == "true") {
+
             if (this.postNotFinishedNum !== 0 && this.postNotFinishedNum >= 1) {
+                console.log(`正在远程获取15条随机一言~请等待10-15秒`)
+                await this._getText()
                 await this._post(this.titleList[0], this.contentList[0])//可能需要图片
-                console.log(`等待15s`)
-                await $.wait(15000)
+                console.log(`等待10s`)
+                await $.wait(10000)
                 await this._postlist()
                 for (let postId of this.postList) {
                     await this._delete(postId)
@@ -176,8 +180,9 @@ class UserInfo {
 
         if (process.env["gacmotorComment"] == "true") {
             if (this.commentNotFinishedNum !== 0 && this.commentNotFinishedNum >= 1) {
+                this._getText1()
                 for (let postId of this.applatestlist) {
-                    await this._add(postId, this.titleList[0])
+                    await this._add(postId, this.commenttext)
                 }
             }
 
@@ -185,8 +190,8 @@ class UserInfo {
 
         if (process.env["gacmotorComment"] == "true") {
             if (this.commentNotFinishedNum !== 0 && this.commentNotFinishedNum >= 1) {
-                console.log(`等待15s`)
-                await $.wait(15000)
+                console.log(`等待10s`)
+                await $.wait(10000)
                 console.log(`检测评论列表`);
                 await this._commentlist()
                 if (this.commentList.length > 0) {
@@ -237,7 +242,7 @@ class UserInfo {
                 let lotterId = "465"
                 if (this.questionTaskId == 8) {
                     lotterId = "484"
-                } else if(this.questionTaskId == 9){
+                } else if (this.questionTaskId == 9) {
                     lotterId = "498"
                 }
                 await this._activity_lotter_mall({ "activityId": lotterId, "channel": "wx_channel" })
@@ -456,18 +461,33 @@ class UserInfo {
                 method: "get",
                 url: `https://v1.hitokoto.cn/?c=e`,
             }
-            for (let i = 0; i < 15; i++) {
+            for (let i = 0; i < 10; i++) {
                 await $.wait(1000)
                 let { body: result } = await httpRequest(options);
                 //console.log(options);
                 result = JSON.parse(result);
                 //console.log(result);
-                if (result["length"] > 15) {
+                if (result.hitokoto["length"] > 10) {
                     textList.push(result.hitokoto)
                 }
                 this.titleList = [textList[0]]
                 this.contentList = [textList[1]]
             }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    _getText1() {
+        try {
+            let textList = [
+                `好看好用，我也想拥有同款！`,
+                `好看好开猴赛雷，广汽传祺YYDS！`,
+                `打破0回复，帮你顶个楼！`,
+                `人间自有真情在，给个点赞最实在！`,
+                `实力顶帖，为君打call！`]
+
+            this.commenttext = [textList[Math.floor(Math.random() * 6)]]
+
         } catch (e) {
             console.log(e);
         }
