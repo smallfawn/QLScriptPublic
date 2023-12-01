@@ -486,7 +486,7 @@ class UserInfo {
                 `人间自有真情在，给个点赞最实在！`,
                 `实力顶帖，为君打call！`]
 
-            this.commenttext = [textList[Math.floor(Math.random() * 6)]]
+            this.commenttext = [textList[Math.floor(Math.random() * 5)]]
 
         } catch (e) {
             console.log(e);
