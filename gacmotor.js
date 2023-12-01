@@ -237,6 +237,8 @@ class UserInfo {
                 let lotterId = "465"
                 if (this.questionTaskId == 8) {
                     lotterId = "484"
+                } else if(this.questionTaskId == 9){
+                    lotterId = "498"
                 }
                 await this._activity_lotter_mall({ "activityId": lotterId, "channel": "wx_channel" })
                 //console.log(`目测30天内自动到账`)
