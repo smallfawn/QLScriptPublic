@@ -273,6 +273,7 @@ class UserInfo {
                 //删除原变量 
                 let originalValue = this.cookies
                 let newValue
+                this.ck = result.data.accessToken
                 if (this.mallToken !== undefined) {
                     newValue = `${result.data.accessToken}${strSplitor}${result.data.refreshToken}${strSplitor}${this.mallToken}`
                 } else {
