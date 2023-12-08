@@ -244,6 +244,8 @@ class UserInfo {
                     lotterId = "484"
                 } else if (this.questionTaskId == 9) {
                     lotterId = "498"
+                } else if (this.questionTaskId == 10) {
+                    lotterId = "511"
                 }
                 await this._activity_lotter_mall({ "activityId": lotterId, "channel": "wx_channel" })
                 //console.log(`目测30天内自动到账`)
