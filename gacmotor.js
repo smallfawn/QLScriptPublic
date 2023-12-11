@@ -79,6 +79,7 @@ class UserInfo {
                 $.log(`尝试刷新TOKEN`)
                 await this._refreshToken()
                 if (this.refreshStatus) {
+                    await this._userInfo();
                     await this.mainTask()
                 }
             }
