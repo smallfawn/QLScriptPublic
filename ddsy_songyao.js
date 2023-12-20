@@ -72,8 +72,8 @@ class UserInfo {
                 result = await httpRequest(options);
             //console.log(options);
             result = result.replace(`Zepto${callbackStr}`, "")
-            result = result.replace("(", "")
-            result = result.replace(")", "")
+            result = result.replaceAll("(", "")
+            result = result.replaceAll(")", "")
             result = JSON.parse(result)
             if(result.code = "0"){
                 console.log(result.result.signDayVo.signinId);
