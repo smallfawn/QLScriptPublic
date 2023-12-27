@@ -1,29 +1,30 @@
 /**
- * cron 56 13 * * *  gacmotor.js
+ * cron 56 8 * * *  gacmotor.js
  * Show:广汽传祺 评论 分享(转发) 签到 发表文章
  * @author https://github.com/smallfawn/QLScriptPublic
  * @tips 本脚本适用于广汽传祺5.0.0以上的版本
+ * @update 2023/12/27 更新刷新变量方式 改为写入JSON文件中,并且刷新后自动更新gacmotorCookies.json
+ * 
+ *  * 如果是一个账号一个变量的 请设置变量gacmotorOTO=true 其中 AT和RT的分隔符不再是& 而是 # 例如 AT-XXXX#RT-XXXX 
+ *  * 如果是一个账号一个变量的 请设置变量gacmotorOTO=true 其中 AT和RT的分隔符不再是& 而是 # 例如 AT-XXXX#RT-XXXX 
+ *  * 如果是一个账号一个变量的 请设置变量gacmotorOTO=true 其中 AT和RT的分隔符不再是& 而是 # 例如 AT-XXXX#RT-XXXX 
+ * 
  * 提供三种获取变量COOKIE方式 
- * 1.手动抓https://next.gacmotor.com/app  域名下 headers 中 appToken
- * (refreshTokenn在登录时候抓包 https://next.gacmotor.com/app/app-api/sms/sendSmsCodeV2 响应里面) APP有效期都是7天 需要填写refreshToken来刷新COOKIE有效时间
- * 2.通过WoolWeb获取 2w.onecc.cc 里面有APP接口和H5接口  APP接口会把APP顶下来  H5接口不会 但是H5接口返回的refreshToken不能用
- * 3.通过WoolWeb扫码获取 同样也会把APP顶下啦
- * 变量示例  AT-11111-ASASASASASASASASASAS&RT-11111-BSBSBSBSBSBSBS 多账户 @ 或换行
- * 变量名:   gacmotorToken  
+ * 1.手动抓https://next.gacmotor.com/app
+ * (refreshTokenn和accessToken 在登录时候抓包 https://next.gacmotor.com/app/app-api/sms/sendSmsCodeV2 响应里面) APP有效期都是7天 需要填写refreshToken来刷新COOKIE有效时间
+ * 2.通过WoolWeb获取 2w.onecc.cc 里面有APP接口和H5接口  APP接口带刷新CK H5接口不会
+ * 3.通过WoolWeb扫码获取
+ * 变量示例       AT-11111-ASASASASASASASASASAS&RT-11111-BSBSBSBSBSBSBS 多账户 @ 或换行
+ * 变量名:        gacmotorToken  
  * 开启发贴       gacmotorPost=false 默认关闭发表文章功能 true为开启(此功能存在风控检测,谨慎开启)
  * 开启评论       gacmotorComment=false 默认关闭评论功能 true为开启(此功能存在风控检测,谨慎开启)
  * 每日抽奖       gacmotorLuckyDram=1  抽奖次数[1-10]  不写默认抽奖一次(首次免费)  以后每次花费2G豆抽奖 每天上限10次
- * 自动刷新TOKEN 需要配置 export QLVersion="new" 如果低于2.11版本的青龙 就把new改为old  
  * 
- * 答题活动       需要在appToken&RefreshToken 后加一个 & mallToken  (非必填,不填默认不执行)
- *                此 malltoken 需要手动获取(微信打开https://mall.gacmotor.com/act/answer-activity?id=464)
- *                抓包https://mall.gacmotor.com/e-small-bff/fronted/activityAnswer/queryAnswerActivityInfo Headers中的token
- *                这个就是mallToken  ( * 注意！使用WOOL WEB 广汽传祺H5接口获取的CK不需要抓mallToken 也不需要填写 因为通用 )
  */
 
-const $ = new Env("广汽传祺");
+const $ = new Env("广汽传祺", { dataFile: "gacmotorCookies.json" });
 const notify = $.isNode() ? require('./sendNotify') : '';
-const { updateEnv11, getEnvs, updateEnv } = require("./ql")
+//const { updateEnv11, getEnvs, updateEnv } = require("./ql")
 const appVersion = "5.1.0"
 let ckName = "gacmotorToken";
 let envSplitor = ["@", "\n"]; //多账号分隔符
@@ -31,16 +32,17 @@ let strSplitor = "&"; //多变量分隔符
 let userIdx = 0;
 let userList = [];
 class UserInfo {
-    constructor(str) {
+    constructor(str ="") {
         this.cookies = str
         this.index = ++userIdx;
-        this.ck = str.split(strSplitor)[0]; //单账号多变量分隔符
+        this.cookiesArr = $.getdata(this.index)
+        this.ck = this.cookiesArr[0] //单账号多变量分隔符
         this.ckStatus = true;
         this.deviceCode = "";
         this.registrationID = "";
-        this.refreshToken = str.split(strSplitor)[1];
+        this.refreshToken = this.cookiesArr[1]
 
-        this.mallToken = str.split(strSplitor)[2];
+        //this.mallToken = str.split(strSplitor)[2];
         this.signInStatus = false//默认签到状态false
         this.userIdStr = ""
         this.name = ""
@@ -203,7 +205,7 @@ class UserInfo {
             }
 
         }
-        await this._getChinaTime()
+        //await this._getChinaTime()
         /*console.log(`11/26截止 Do - 广州车展活动 奖品活动结束后14日内发放`);
         if (this.BeiJingTime < 1701014400000) {
             //{"activityId":"467","channel":"carapp_channel"}
@@ -229,7 +231,7 @@ class UserInfo {
                 }
             }
         }*/
-        if (this.mallToken == undefined) {
+        /*if (this.mallToken == undefined) {
             this.mallToken = `DS-${this.ck}`
             console.log(`执行答题&抽奖 并且尝试获取mallToken(如果不是WoolWeb获取的变量 可能执行失败)`);
             //获取答题活动列表
@@ -259,7 +261,7 @@ class UserInfo {
             } else {
                 console.log(`本周答题完成或未到活动时间`);
             }
-        }
+        }*/
     }
     async _refreshToken() {
         try {
@@ -277,16 +279,17 @@ class UserInfo {
             if (result.resultCode == "0") {
                 $.log(`重置accessToken [${result.data.accessToken}] 重置refeshToken [${result.data.refreshToken}]`)
                 //调用青龙API
+                //change:2023/12/27 不再调用青龙API 选择修改文件方式
                 //删除原变量 
-                let originalValue = this.cookies
-                let newValue
+                //let originalValue = this.cookies
+                let newValue = [result.data.accessToken,result.data.refreshToken]
                 this.ck = result.data.accessToken
-                if (this.mallToken !== undefined) {
+                /*if (this.mallToken !== undefined) {
                     newValue = `${result.data.accessToken}${strSplitor}${result.data.refreshToken}${strSplitor}${this.mallToken}`
                 } else {
                     newValue = `${result.data.accessToken}${strSplitor}${result.data.refreshToken}`
-                }
-                let env = await getEnvs(ckName)
+                }*/
+                /*let env = await getEnvs(ckName)
                 if (env[0].value.indexOf(originalValue) !== -1) {
                     let newEnv = env[0].value.replaceAll(originalValue, newValue)
                     if (process.env["QLVersion"] == "old") {
@@ -295,8 +298,8 @@ class UserInfo {
                         await updateEnv11(newEnv, env[0].id, null, ckName)
                     }
                     this.refreshStatus = true
-                }
-
+                }*/
+                $.setdata(newValue,this.index)
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 this.ckStatus = false
@@ -1233,10 +1236,10 @@ async function start() {
     }
 
     let taskall = [];
+
     for (let user of userList) {
-        if (user.ckStatus) {
-            taskall.push(await user.main());
-        }
+                   let taskInit =  new UserInfo()
+                   await taskInit.main()
     }
     await Promise.all(taskall);
     $.msg($.name, "广汽传祺任务 Over", "smallfawn 提醒您 天冷加衣")
@@ -1259,7 +1262,15 @@ async function start() {
  * @returns
  */
 async function checkEnv() {
+    //先读取环境变量里面的 然后写入文件 
+    //执行时根据文件来进行任务
+    if (process.env["gacmotorOTO"] == "true") {
+        envSplitor = "&"
+        strSplitor = "#"
+    }
     let userCookie = ($.isNode() ? process.env[ckName] : $.getdata(ckName)) || "";
+    userCookie = userCookie.replaceAll("accessToken=", "")
+    userCookie = userCookie.replaceAll("refreshToken=", "")
     if (userCookie) {
         let e = envSplitor[0];
         for (let o of envSplitor)
@@ -1267,7 +1278,10 @@ async function checkEnv() {
                 e = o;
                 break;
             }
-        for (let n of userCookie.split(e)) n && userList.push(new UserInfo(n));
+        for (let n of userCookie.split(e)) n && userList.push(n);
+        for (let userId in userList) {
+            $.setdata([userCookie.split(e)[userId].split(strSplitor)[0], userCookie.split(e)[userId].split(strSplitor)[1]], Number(userId)+1)
+        }
     } else {
         console.log("未找到CK");
         return;
