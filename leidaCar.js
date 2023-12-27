@@ -199,7 +199,8 @@ async function start() {
  * @returns
  */
 async function checkEnv() {
-    let userCookie = ($.isNode() ? process.env[ckName] : cookies) || "";
+    let qxCookies = cookies.join("")
+    let userCookie = ($.isNode() ? process.env[ckName] : qxCookies) || "";
     if (userCookie) {
         let e = envSplitor[0];
         for (let o of envSplitor)
