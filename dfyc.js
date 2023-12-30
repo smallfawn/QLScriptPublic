@@ -152,7 +152,7 @@ class UserInfo {
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
                 },
-                body: `platform=android&token=${this.ck}&timestamp=${Date.now()}&api_version=4&newsid=${id}&catid=${catid}`
+                body: `platform=android&token=${this.ck}&timestamp=${Date.now()}&api_version=4&id=${id}&catid=${catid}`
             }
             let { body: result } = await $.httpRequest(options);
             //console.log(options);
