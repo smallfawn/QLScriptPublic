@@ -28,6 +28,7 @@ class UserInfo {
     async main() {
         await this.user_info();
         if (this.ckStatus) {
+            await this.task_daka()
             await this.art_list()
             if (this.artList.length !== 0) {
                 for (let i = 0; i < 3; i++) {
