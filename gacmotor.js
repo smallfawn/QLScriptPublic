@@ -3,8 +3,8 @@
  * Show:广汽传祺 评论 分享(转发) 签到 发表文章
  * @author https://github.com/smallfawn/QLScriptPublic
  * @tips 本脚本适用于广汽传祺5.0.0以上的版本
- * @update 2023/12/31 所有变量全部写到 脚本同目录下GacmotorCookies.json文件
- * 文件内基本格式 [{"AT":"","RT":""},{"AT":"","RT":""}] 仓库里面有基本模板 使用前必须填写COOKIE
+ * @update 2023/12/31 所有变量全部写到 脚本同目录下GacmotorCookies.json文件 
+ * 文件内基本格式 [{"AT":"","RT":""},{"AT":"","RT":""}] 仓库( https://ghproxy.smallfawn.top/https://raw.githubusercontent.com/smallfawn/QLScriptPublic/main/GacmotorCookies.json )里面有基本模板 使用前必须填写COOKIE
  * 提供三种获取变量COOKIE方式 
  * 1.手动抓https://next.gacmotor.com/app
  * (refreshTokenn和accessToken 在登录时候抓包 https://next.gacmotor.com/app/app-api/sms/sendSmsCodeV2 响应里面) APP有效期都是7天 需要填写refreshToken来刷新COOKIE有效时间
