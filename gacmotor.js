@@ -300,6 +300,7 @@ class UserInfo {
                     this.refreshStatus = true
                 }*/
                 $.setdata(newValue,this.index)
+                this.refreshStatus = true
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 this.ckStatus = false
