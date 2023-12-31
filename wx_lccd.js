@@ -36,8 +36,9 @@ class UserInfo {
         }
     }
     async main() {
-
-        await this.task_sign();
+        await this.user_info()
+        if(this.ckStatus){
+            await this.task_sign();
         if (this.signStatus == 0) {
             await this.task_sign();
         } else if (this.signStatus == 1) {
@@ -47,6 +48,8 @@ class UserInfo {
         $.log(`完成充电和看视频任务`)
         await this.task_complete(3)
         await this.task_complete(4)
+        }
+    
     }
     async task_sign() {
         try {
@@ -70,6 +73,28 @@ class UserInfo {
                 }
             } else {
                 this.signStatus = 2
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async user_info() {
+        try {
+            let options = {
+                fn: "信息",
+                method: "get",
+                url: `https://shop.laichon.com/api/v1/member/userinfo`,
+                headers: this.headers,
+            }
+            let { body: result } = await $.httpRequest(options);
+            //console.log(options);
+            //console.log(result);
+            if(result.code_key == "success"){
+                this.ckStatus = true
+                $.log(`当前[${result.data.mobile} 积分[${result.data.point}]]`)
+            }else {
+                this.ckStatus = false
+                console.log(result);
             }
         } catch (e) {
             console.log(e);
