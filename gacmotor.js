@@ -1,47 +1,65 @@
-/**
+/** 
  * cron 56 8 * * *  gacmotor.js
  * Show:广汽传祺 评论 分享(转发) 签到 发表文章
  * @author https://github.com/smallfawn/QLScriptPublic
  * @tips 本脚本适用于广汽传祺5.0.0以上的版本
- * @update 2023/12/27 更新刷新变量方式 改为写入JSON文件中,并且刷新后自动更新gacmotorCookies.json
- * 
- *  * 如果是一个账号一个变量的 请设置变量gacmotorOTO=true 其中 AT和RT的分隔符不再是& 而是 # 例如 AT-XXXX#RT-XXXX 
- *  * 如果是一个账号一个变量的 请设置变量gacmotorOTO=true 其中 AT和RT的分隔符不再是& 而是 # 例如 AT-XXXX#RT-XXXX 
- *  * 如果是一个账号一个变量的 请设置变量gacmotorOTO=true 其中 AT和RT的分隔符不再是& 而是 # 例如 AT-XXXX#RT-XXXX 
- * 
+ * @update 2023/12/31 所有变量全部写到 脚本同目录下GacmotorCookies.json文件
+ * 文件内基本格式 [{"AT":"","RT":""},{"AT":"","RT":""}] 仓库里面有基本模板 使用前必须填写COOKIE
  * 提供三种获取变量COOKIE方式 
  * 1.手动抓https://next.gacmotor.com/app
  * (refreshTokenn和accessToken 在登录时候抓包 https://next.gacmotor.com/app/app-api/sms/sendSmsCodeV2 响应里面) APP有效期都是7天 需要填写refreshToken来刷新COOKIE有效时间
  * 2.通过WoolWeb获取 2w.onecc.cc 里面有APP接口和H5接口  APP接口带刷新CK H5接口不会
- * 3.通过WoolWeb扫码获取
- * 变量示例       AT-11111-ASASASASASASASASASAS&RT-11111-BSBSBSBSBSBSBS 多账户 @ 或换行
- * 变量名:        gacmotorToken  
+ * 3.通过WoolWeb扫码获取 和 APP接口等同
+ * 变量示例       AT-11111-ASASASASASASASASASAS填入AT里面 RT-11111-BSBSBSBSBSBSBS填入RT里面
  * 开启发贴       gacmotorPost=false 默认关闭发表文章功能 true为开启(此功能存在风控检测,谨慎开启)
  * 开启评论       gacmotorComment=false 默认关闭评论功能 true为开启(此功能存在风控检测,谨慎开启)
  * 每日抽奖       gacmotorLuckyDram=1  抽奖次数[1-10]  不写默认抽奖一次(首次免费)  以后每次花费2G豆抽奖 每天上限10次
  * 
  */
-
-const $ = new Env("广汽传祺", { dataFile: "gacmotorCookies.json" });
+let GacmotorCookies = './GacmotorCookies.json';//指定文件目录
+const $ = new Env("广汽传祺");
 const notify = $.isNode() ? require('./sendNotify') : '';
 //const { updateEnv11, getEnvs, updateEnv } = require("./ql")
 const appVersion = "5.1.0"
-let ckName = "gacmotorToken";
-let envSplitor = ["@", "\n"]; //多账号分隔符
-let strSplitor = "&"; //多变量分隔符
+//let ckName = "gacmotorToken";
+//let envSplitor = ["@", "\n"]; //多账号分隔符
+let strSplitor = "#"; //多变量分隔符
 let userIdx = 0;
 let userList = [];
+const fs = require('fs');
+let TempAccount = [];
+
+
+function ReadFiles(filename) {
+    let Fileexists = fs.existsSync(filename);//检测文件是否存在
+    if (Fileexists) {//如果存在
+        console.log("检测到广汽传祺GacmotorCookies.json，载入...");
+        TempAccount = fs.readFileSync(filename, 'utf-8');
+        if (TempAccount) {
+            TempAccount = TempAccount.toString();
+            TempAccount = JSON.parse(TempAccount);
+        }
+    }
+}
+async function writeFile(fileName, data) {
+    return new Promise((resolve, reject) => {
+        fs.writeFile(fileName, data, 'utf8', (err) => {
+            if (err) {
+                reject(err); // 如果写入操作出错，将错误传递给调用者
+                return;
+            }
+            resolve(); // 写入操作成功，没有错误
+        });
+    });
+}
 class UserInfo {
-    constructor(str ="") {
-        this.cookies = str
+    constructor(str) {
         this.index = ++userIdx;
-        this.cookiesArr = $.getdata(this.index)
-        this.ck = this.cookiesArr[0] //单账号多变量分隔符
+        this.ck = str.split(strSplitor)[0]; //单账号多变量分隔符
+        this.refreshToken = str.split(strSplitor)[1]; //单账号多变量分隔符
         this.ckStatus = true;
         this.deviceCode = "";
         this.registrationID = "";
-        this.refreshToken = this.cookiesArr[1]
-
         //this.mallToken = str.split(strSplitor)[2];
         this.signInStatus = false//默认签到状态false
         this.userIdStr = ""
@@ -282,8 +300,18 @@ class UserInfo {
                 //change:2023/12/27 不再调用青龙API 选择修改文件方式
                 //删除原变量 
                 //let originalValue = this.cookies
-                let newValue = [result.data.accessToken,result.data.refreshToken]
+                //let newValue = [result.data.accessToken, result.data.refreshToken]
+                TempAccount.forEach((TempAccount) => {
+                    if (TempAccount.AT === this.ck) {
+                        TempAccount.AT = result.data.accessToken;
+                        TempAccount.RT = result.data.refreshToken;
+                    }
+                });
+                await writeFile(GacmotorCookies, JSON.stringify(TempAccount, null, 2))
                 this.ck = result.data.accessToken
+                this.refreshStatus = true
+
+                //console.log(arr);
                 /*if (this.mallToken !== undefined) {
                     newValue = `${result.data.accessToken}${strSplitor}${result.data.refreshToken}${strSplitor}${this.mallToken}`
                 } else {
@@ -299,8 +327,7 @@ class UserInfo {
                     }
                     this.refreshStatus = true
                 }*/
-                $.setdata(newValue,this.index)
-                this.refreshStatus = true
+
             } else {
                 console.log(`❌${options.fn}状态[${result.resultMsg}]`);
                 this.ckStatus = false
@@ -1239,8 +1266,7 @@ async function start() {
     let taskall = [];
 
     for (let user of userList) {
-                   let taskInit =  new UserInfo()
-                   await taskInit.main()
+        await user.main()
     }
     await Promise.all(taskall);
     $.msg($.name, "广汽传祺任务 Over", "smallfawn 提醒您 天冷加衣")
@@ -1263,29 +1289,17 @@ async function start() {
  * @returns
  */
 async function checkEnv() {
-    //先读取环境变量里面的 然后写入文件 
-    //执行时根据文件来进行任务
-    if (process.env["gacmotorOTO"] == "true") {
-        envSplitor = "&"
-        strSplitor = "#"
+    ReadFiles(GacmotorCookies)
+    if (TempAccount.length <= 0) {
+        return 
     }
-    let userCookie = ($.isNode() ? process.env[ckName] : $.getdata(ckName)) || "";
-    userCookie = userCookie.replaceAll("accessToken=", "")
-    userCookie = userCookie.replaceAll("refreshToken=", "")
-    if (userCookie) {
-        let e = envSplitor[0];
-        for (let o of envSplitor)
-            if (userCookie.indexOf(o) > -1) {
-                e = o;
-                break;
-            }
-        for (let n of userCookie.split(e)) n && userList.push(n);
-        for (let userId in userList) {
-            $.setdata([userCookie.split(e)[userId].split(strSplitor)[0], userCookie.split(e)[userId].split(strSplitor)[1]], Number(userId)+1)
+    for (let cookie of TempAccount) {
+        if (cookie["AT"] && cookie["RT"]) {
+            let n = `${cookie["AT"]}#${cookie["RT"]}`
+            userList.push(new UserInfo(n));
+        } else {
+            //不可为空
         }
-    } else {
-        console.log("未找到CK");
-        return;
     }
     return console.log(`共找到${userList.length}个账号`), true; //true == !0
 }
