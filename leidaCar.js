@@ -139,7 +139,7 @@ class UserInfo {
 
             let { body: result } = await $.httpRequest(options);
             console.log(result);
-            if (result.code == 0) {
+            if (result.code == 200) {
                 $.log(`分享成功`)
             } else {
                 console.log(`❌账号[${this.index}]  分享文章失败`);
