@@ -17,10 +17,12 @@ let userList = [];
 class UserInfo {
     constructor(str) {
         this.index = ++userIdx;
-        this.token = str.split(strSplitor)[0]; //单账号多变量分隔符
+        this.token = (str.split(strSplitor)[0]).split('=')[1]; //单账号多变量分隔符
         this.ckStatus = true;
-        this.userId = str.split(strSplitor)[1];
-        this.uDate = str.split(strSplitor)[2];
+        this.userId = (str.split(strSplitor)[1]).split('=')[1];
+        this.uDate = (str.split(strSplitor)[2]).split('=')[1];
+        console.log('uDate is:' + this.uDate);
+        console.log('userId is:' + this.userId);
     }
     async main() {
         await this.getSignInId()
@@ -70,7 +72,8 @@ class UserInfo {
                 headers: {},
             },
                 result = await httpRequest(options);
-            //console.log(options);
+                console.log(options);
+            console.log(result);
             result = result.replace(`Zepto${callbackStr}`, "")
             result = result.replaceAll("(", "")
             result = result.replaceAll(")", "")
