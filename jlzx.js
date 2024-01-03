@@ -70,7 +70,7 @@ class UserInfo {
                 "Access-Token": `${this.ck}`,
                 "Content-Type": "application/json"
             },
-            body: `{"activityCode":"HD202302090003"}`
+            body: `{"activityCode":"HD202401010007"}`
         };
         //  console.log(options);
         let res = await httpRequest(options);
