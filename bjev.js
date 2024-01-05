@@ -124,7 +124,7 @@ class UserInfo {
             let options = {
                 fn: "信息查询",
                 method: "get",
-                url: `https://beijing-gateway-customer.app-prod.bjev.com.cn/beijing-zone-member/userCustomer/getUserInfo?buildVersion=135&uuid_check=${this.get_uuid()}`,
+                url: `https://beijing-gateway-customer.app-prod.bjev.com.cn/beijing-zone-member/userCustomer/getUserInfo?buildVersion=138&uuid_check=${this.get_uuid()}`,
             }
             options.headers = this.get_headers(options.method, options.url)
             let { body: result } = await httpRequest(options);
@@ -322,8 +322,8 @@ class UserInfo {
         const sign = this.sha256(encodeURIComponent(str))
         return {
             "Content-Type": "application/json;charset=UTF-8",
-            "User-Agent": "(Android 10; Xiaomi MI 8 Lite Build/V12.0.1.0.QDTCNXM 3.11.1 135 release bjApp baic-app-android)",
-            "versionInfo": "(Android 10; Xiaomi MI 8 Lite Build/V12.0.1.0.QDTCNXM 3.11.1 135 release bjApp baic-app-android)",
+            "User-Agent": "(Android 10; Xiaomi MI 8 Lite Build/V12.0.1.0.QDTCNXM 3.11.1 138 release bjApp baic-app-android)",
+            "versionInfo": "(Android 10; Xiaomi MI 8 Lite Build/V12.0.1.0.QDTCNXM 3.11.1 138 release bjApp baic-app-android)",
             "Cache-Control": "no-cache",
             "Authorization": `Bearer ` + this.ck,
             //"userId": "",
