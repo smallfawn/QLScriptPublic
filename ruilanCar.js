@@ -1,6 +1,6 @@
 /**
  * cron 32 17 * * *  
- * Show:睿蓝汽车APP 一天7分左右 积分换实物
+ * Show:睿蓝汽车APP 或者小程序 一天7分左右 积分换实物
  * 变量名:ruilanCar
  * 变量值:https://api-gateway.livanauto.com/app/  Headers中的aid的值 # rid的值  #连接  多账户 & 或创建同名变量
  * scriptVersionNow = "0.0.1";
@@ -26,7 +26,7 @@ class Task {
         await this.user_info()
         if (this.ckStatus == true) {
             await this.content_list();
-            console.log(this.contentList)
+            //console.log(this.contentList)
             if (this.contentList.length > 0) {
                 for (let i = 0; i < 5; i++) {
                     await this.task_like(this.contentList[0].id)
