@@ -2,7 +2,7 @@
  * cron 17 58 * * *  悦拜APP 左上角活动 金币换红包 实物
  * 邀请码 OEJMUR 下载地址 微信打开 https://yuebuy.top/a.jDybfP
  * 变量名:yuepaiToken
- * 变量值:https://app.yuebuy.cn/api/checkin/userinfo Headers请求头中的x-auth-timestamp的值 多账号&或换行或新建同名变量
+ * 变量值:https://app.yuebuy.cn/api/checkin/userinfo Headers请求头中的x-auth-token的值 多账号&或换行或新建同名变量
  * scriptVersionNow = "0.0.1";
  */
 
