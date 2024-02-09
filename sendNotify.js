@@ -73,7 +73,7 @@ let TG_PROXY_HOST = ''; // 例如:127.0.0.1(环境变量名:TG_PROXY_HOST)
 let TG_PROXY_PORT = ''; // 例如:1080(环境变量名:TG_PROXY_PORT)
 let TG_PROXY_AUTH = ''; // tg代理配置认证参数
 // Telegram api自建的反向代理地址(不懂可忽略,telegram机器人通知推送功能中非必填),默认tg官方api(环境变量名:TG_API_HOST)
-let TG_API_HOST = 'https://tgbot.smallfawn.top';
+let TG_API_HOST = 'https://api.telegram.org';
 // =======================================钉钉机器人通知设置区域===========================================
 // 此处填你钉钉 bot 的webhook，例如：5a544165465465645d0f31dca676e7bd07415asdasd
 // (环境变量名 DD_BOT_TOKEN)
