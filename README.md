@@ -28,7 +28,6 @@ docker run -dit \
    -v $PWD/ql/raw:/ql/raw \
    -v $PWD/ql/scripts:/ql/scripts \
    -v $PWD/ql/deps:/ql/deps \
-   -v $PWD/ql/.pnpm-store:/ql/.pnpm-store \
    -p 5700:5700 \
    --name qinglong \
    --hostname qinglong \
