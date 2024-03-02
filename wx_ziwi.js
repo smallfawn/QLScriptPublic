@@ -2,7 +2,7 @@
  * cron 25 10 * * *  wx_ZIWI+.js 
  * 积分换 猫粮狗粮
  * 变量名:ZIWIAUTH
- * 变量值:https://ziwixcx.escase.cn/json-rpc? Headers中的authorization 去掉Bearer 去掉Bearer 去掉Bearer
+ * 变量值:https://ziwi.gzcrm.cn/json-rpc? Headers中的authorization 去掉Bearer 去掉Bearer 去掉Bearer
  * 多账号& 或新增变量
  * scriptVersionNow = "0.0.1";
  */
@@ -36,7 +36,7 @@ class Task {
     async taskRequest(method, url, body = "") {
         //
         let headers = {
-            "Host": "ziwixcx.escase.cn",
+            "Host": "ziwi.gzcrm.cn",
             "Connection": "keep-alive",
             //"Content-Length": "85",
             "authorization": "Bearer "+ this.ck,
@@ -57,26 +57,26 @@ class Task {
     }
     async task_sign() {
         //签到
-        let result = await this.taskRequest("post", `https://ziwixcx.escase.cn/json-rpc?__method=DoCheckin`, { "id": Date.now(), "jsonrpc": "2.0", "method": "DoCheckin", "params": { "activityId": "1" } })
+        let result = await this.taskRequest("post", `https://ziwi.gzcrm.cn/json-rpc?__method=DoCheckin`, { "id": Date.now(), "jsonrpc": "2.0", "method": "DoCheckin", "params": { "activityId": "1" } })
         //console.log(options);
         $.log(JSON.stringify(result.result));
     }
     async task_like(id) {
         //点赞帖子
-        let result = await this.taskRequest("post", `https://ziwixcx.escase.cn/json-rpc?__method=LikeThread`, { "id": Date.now(), "jsonrpc": "2.0", "method": "LikeThread", "params": { "threadId": id } })
+        let result = await this.taskRequest("post", `https://ziwi.gzcrm.cn/json-rpc?__method=LikeThread`, { "id": Date.now(), "jsonrpc": "2.0", "method": "LikeThread", "params": { "threadId": id } })
         //console.log(options);
         $.log(JSON.stringify(result.result));
     }
 
     async task_share(id) {
         //分享帖子
-        let result = await this.taskRequest("post", `https://ziwixcx.escase.cn/json-rpc?__method=LikeThread`, { "id": 1704777211084, "jsonrpc": "2.0", "method": "SubmitCrmTrackLog", "params": { "event": "shareThread", "params": { "threadId": id, "path": "/pages/UserPosters/UserPosters?threadId=" + id } } })
+        let result = await this.taskRequest("post", `https://ziwi.gzcrm.cn/json-rpc?__method=LikeThread`, { "id": 1704777211084, "jsonrpc": "2.0", "method": "SubmitCrmTrackLog", "params": { "event": "shareThread", "params": { "threadId": id, "path": "/pages/UserPosters/UserPosters?threadId=" + id } } })
         //console.log(options);
         $.log(JSON.stringify(result.result));
     }
     async act_list() {
         //分享帖子
-        let result = await this.taskRequest("post", `https://ziwixcx.escase.cn/json-rpc?__method=GetZIWIThreadList`, { "id": 1704777373474, "jsonrpc": "2.0", "method": "GetZIWIThreadList", "params": { "type": "ziwi", "pageSize": 10, "currentPage": 1 } })
+        let result = await this.taskRequest("post", `https://ziwi.gzcrm.cn/json-rpc?__method=GetZIWIThreadList`, { "id": 1704777373474, "jsonrpc": "2.0", "method": "GetZIWIThreadList", "params": { "type": "ziwi", "pageSize": 10, "currentPage": 1 } })
         //console.log(result.result);
         if (result.result.list) {
             for (let act of result.result.list) {
