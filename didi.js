@@ -2,9 +2,10 @@
  * cron 20 8 * * * 
  * Show:滴滴领券&果园 暂时每天一次
  * 变量名:didi
- * 变量值:https://api.didi.cn  抓域名中  请求体*(body) city_id 中的 和请求头Headers中的Didi-Ticket  
+ * 注意:微信小程序和APP的token同样可用 搜不到关键词就搜token 
+ * 变量值:https://api.didi.cn  抓域名中  请求体*(body) city_id 中的 和请求头Headers中的Didi-Ticket 
  * 注意 ut.xiaojukeji.com 请求体中的token和Didi-Ticket是一样的 都可以抓  找不到可以放大镜搜索
- * 有BUG记得反馈
+ * 有BUG记得反馈 果园入口 微信打开 http://www.yuban.ltd/wx/?id=20240322215239111024747  
  * 正确格式     Didi-Ticket  # city_id
  * scriptVersionNow = "0.0.1";
  */
