@@ -117,7 +117,7 @@ class Task {
                 //console.log(`✅账号[${this.index}]  欢迎用户: ${result.errcode}🎉`);
                 $.log(`✅账号[${this.index}]-抽奖成功-[${result.data.prize_data[0].name}]🎉`)
             } else {
-                console.log(`❌账号[${this.index}]-抽奖失败-[${result.errmsg}]`);
+                $.log(`❌账号[${this.index}]-抽奖失败-[${result.errmsg}]`);
                 //console.log(result);
             }
         } catch (e) {
@@ -139,7 +139,7 @@ class Task {
             if (result.errno == 0) {
                 $.log(`✅账号[${this.index}]-领券成功-[${result.data.name}]🎉`)
             } else {
-                console.log(`❌账号[${this.index}]-领券失败-[${result.errmsg}]`);
+                $.log(`❌账号[${this.index}]-领券失败-[${result.errmsg}]`);
                 //console.log(result);
             }
         } catch (e) {
@@ -167,11 +167,11 @@ class Task {
                 }
                 $.log(`✅账号[${this.index}]-领券成功-[${awardArr}]🎉`)
             } else {
-                console.log(`❌账号[${this.index}]-领券失败-[${result.errmsg}]`);
+                $.log(`❌账号[${this.index}]-领券失败-[${result.errmsg}]`);
                 //console.log(result);
             }
         } catch (e) {
-            console.log(`❌账号[${this.index}]-领券失败-[501报错 - 测试版]`);
+            $.log(`❌账号[${this.index}]-领券失败-[501报错 - 测试版]`);
         }
     }
     async sign_do() {
@@ -186,7 +186,7 @@ class Task {
                 $.log(`✅账号[${this.index}]-签到成功-[]🎉`)
 
             } else {
-                console.log(`❌账号[${this.index}]-签到失败-[${result.errmsg}]`);
+                $.log(`❌账号[${this.index}]-签到失败-[${result.errmsg}]`);
                 //console.log(result);
             }
         } catch (e) {
@@ -207,7 +207,7 @@ class Task {
                 $.log(`✅账号[${this.index}]-果园信息获取成功-[${result.data.tree_info.pack_water}💧 ${result.data.tree_info.tree_progress}%]🎉`)
                 this.waterNum = Number(result.data.tree_info.pack_water);
             } else {
-                console.log(`❌账号[${this.index}]-果园信息获取失败-[${result.errmsg}]`);
+                $.log(`❌账号[${this.index}]-果园信息获取失败-[${result.errmsg}]`);
                 //console.log(result);
             }
         } catch (e) {
@@ -230,7 +230,7 @@ class Task {
                 $.log(`✅账号[${this.index}]-领取果园奖励成功-[${result.data.reward[0].count}/${result.data.reward[0].name}]🎉`)
 
             } else {
-                console.log(`❌账号[${this.index}]-领取果园奖励失败-[${result.errmsg}]`);
+                $.log(`❌账号[${this.index}]-领取果园奖励失败-[${result.errmsg}]`);
                 //console.log(result);
             }
         } catch (e) {
@@ -261,7 +261,7 @@ class Task {
                 }
 
             } else {
-                console.log(`❌账号[${this.index}]-果园初始化失败-[${result.errmsg}]`);
+                $.log(`❌账号[${this.index}]-果园初始化失败-[${result.errmsg}]`);
                 //console.log(result);
             }
         } catch (e) {
@@ -279,12 +279,12 @@ class Task {
         try {
             let result = await this.taskRequest("post", `https://game.xiaojukeji.com/api/game/mission/update?wsgsig=${this.get_wsgsig(body)}`, JSON.stringify(body))
             //console.log(options);
-            console.log(result);
+            //console.log(result);
             if (result.errno == 0) {
                 $.log(`✅账号[${this.index}]-上传任务状态成功-[${result.errmsg}]🎉`)
                 await this.mission_award(mission_id)
             } else {
-                console.log(`❌账号[${this.index}]-上传任务状态失败-[${result.errmsg, mission_id}] `);
+                $.log(`❌账号[${this.index}]-上传任务状态失败-[${result.errmsg, mission_id}] `);
                 //console.log(result);
             }
         } catch (e) {
@@ -301,12 +301,12 @@ class Task {
         try {
             let result = await this.taskRequest("post", `https://game.xiaojukeji.com/api/game/subscribe?wsgsig=${this.get_wsgsig(body)}`, JSON.stringify(body))
             //console.log(options);
-            console.log(result);
+            //console.log(result);
             if (result.errno == 0) {
                 $.log(`✅账号[${this.index}]-上传任务状态成功-[${result.errmsg}]🎉`)
                 await this.mission_award(id)
             } else {
-                console.log(`❌账号[${this.index}]-上传任务状态失败-[${result.errmsg, mission_id}] `);
+                $.log(`❌账号[${this.index}]-上传任务状态失败-[${result.errmsg, mission_id}] `);
                 //console.log(result);
             }
         } catch (e) {
@@ -327,7 +327,7 @@ class Task {
                 $.log(`✅账号[${this.index}]-果园签到成功-[${result.errmsg}]🎉`)
 
             } else {
-                console.log(`❌账号[${this.index}]-果园签到失败-[${result.errmsg}]`);
+                $.log(`❌账号[${this.index}]-果园签到失败-[${result.errmsg}]`);
                 //console.log(result);
             }
         } catch (e) {
@@ -348,7 +348,7 @@ class Task {
                 $.log(`✅账号[${this.index}]-浇水成功-[${result.data.tree_progress}%]🎉`)
 
             } else {
-                console.log(`❌账号[${this.index}]-浇水失败-[${result.errmsg}]`);
+                $.log(`❌账号[${this.index}]-浇水失败-[${result.errmsg}]`);
                 //console.log(result);
             }
         } catch (e) {
