@@ -23,7 +23,7 @@ class Task {
         this.ckStatus = true;
         this.couponsBindList = []
         this.waterNum = 0;
-        this.city_id = str.split(strSplitor)[1];
+        this.city_id = Number(str.split(strSplitor)[1]);
     }
     async main() {
         await this.productInit();
