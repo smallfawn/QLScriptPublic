@@ -1,5 +1,6 @@
 #抓这个ecustomer.cntaiping.com域名下的x-ac-token-ticket 一天多运行几次吧 后面加兑换
 #备注名&x-ac-token-ticket 多账号换行
+#变量名taipingtong
 
 import time
 import os
@@ -7,7 +8,7 @@ import random
 import requests   
 import datetime
   
-ck = ""
+ck = os.environ.get("taipingtong")
 
 kqid = 66 #1元e卡id
 
@@ -19,7 +20,12 @@ class TPT:
 
     def run(self):
         for i, account in enumerate(self.accounts_list, start=1):
-            name, ck = account.split('&')
+            try:
+              name, ck = account.split('&')
+            except ValueError:
+                print("输入数据格式不正确，请检查输入并重新尝试。")
+            # 添加适当的处理逻辑，比如给 name 和 ck 赋予默认值或者提示用户重新输入
+
             self.headers = {
                         'Host': 'ecustomer.cntaiping.com',
                         'Accept': 'application/json;charset=UTF-8',
