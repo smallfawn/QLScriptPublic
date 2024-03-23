@@ -197,6 +197,7 @@ class Task {
     async plant_newEnter() {
         let body = {
             platform: 1,
+            game_id: 23,
             token:
                 this.ck
         };
@@ -296,6 +297,7 @@ class Task {
         let body = {
             status: true,
             game_id: 23,
+            platform: 1,
             token:
                 this.ck,
         };
@@ -318,6 +320,8 @@ class Task {
     async plant_sign() {
         try {
             let body = {
+                platform: 1,
+                game_id: 23,
                 token:
                     this.ck,
             }
@@ -338,6 +342,8 @@ class Task {
 
     async plant_newWatering() {
         let body = {
+            platform: 1,
+            game_id: 23,
             token:
                 this.ck,
         }
