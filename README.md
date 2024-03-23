@@ -15,6 +15,7 @@ ql repo https://mirror.ghproxy.com/https://github.com/smallfawn/QLScriptPublic.g
 | 方式 | 金额 | 用户 | 备注 | 时间 |
 | --- | ---  | --- | --- | --- |
 | 微信 | 1.00 | *F | null | 2024-03-23 15.35 |
+| 微信 | 1.00 | *我 | null | 2024-03-23 17.02 |
 # 支付宝
 <img src="https://mirror.ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clzfb.png">
 # 微信
