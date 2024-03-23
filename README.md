@@ -13,6 +13,9 @@ ql repo https://mirror.ghproxy.com/https://github.com/smallfawn/QLScriptPublic.g
 ``````
 # 如果您对我仓库感兴趣可以支付任意金额支持一下！
 # 赞助URL:http://pay.onecc.cc 有机器人插件
+| 方式 | 金额 | 用户 | 备注 |
+| --- | ---  | --- | --- |
+| 支付宝 | null | null | null |
 # 支付宝
 <img src="https://mirror.ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clzfb.png">
 
