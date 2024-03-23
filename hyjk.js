@@ -33,8 +33,10 @@ class Task {
             for (let i of this.taskVenueIdList) {
                 await this.taskList(i.venueId)
             }
-            $.log(`获取到任务列表`)
-            $.log(JSON.stringify(this.taskIdList))
+            if (this.taskIdList.length > 0) {
+                $.log(` 获取到任务列表`)
+                $.log(JSON.stringify(" " + this.taskIdList))
+            }
             for (let i of this.taskIdList) {
                 await this.updateTaskInfo(i.taskId, 0)
                 await $.wait(20000)
@@ -253,6 +255,7 @@ class Task {
             "accept-encoding": "gzip, deflate, br",
             "accept-language": "zh-CN,zh;q=0.9"
         }
+        this.userId != '' ? Object.assign(headers, { "userid": this.userId }) : ''
         const reqeuestOptions = {
             url: url,
             method: method,
