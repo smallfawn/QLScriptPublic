@@ -138,9 +138,9 @@ class Task {
             //console.log(options);
             //console.log(result);
             if (result.errno == 0) {
-                $.log(`✅账号[${this.index}]-领券成功-[${result.data.name}]🎉`)
+                $.log(`✅账号[${this.index}]-时间段领券成功-[${result.data.name}]🎉`)
             } else {
-                $.log(`❌账号[${this.index}]-领券失败-[${result.errmsg}]`);
+                $.log(`❌账号[${this.index}]-时间段领券失败-[${result.errmsg}]`);
                 //console.log(result);
             }
         } catch (e) {
@@ -166,9 +166,9 @@ class Task {
                         awardArr.push(j.info[0].coupon_name)
                     }
                 }
-                $.log(`✅账号[${this.index}]-领券成功-[${awardArr}]🎉`)
+                $.log(`✅账号[${this.index}]-每日领券成功-[${awardArr}]🎉`)
             } else {
-                $.log(`❌账号[${this.index}]-领券失败-[${result.errmsg}]`);
+                $.log(`❌账号[${this.index}]-每日领券失败-[${result.errmsg}]`);
                 //console.log(result);
             }
         } catch (e) {
