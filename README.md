@@ -14,7 +14,7 @@ ql repo https://mirror.ghproxy.com/https://github.com/smallfawn/QLScriptPublic.g
 # 赞助URL:http://pay.onecc.cc 有机器人插件
 | 方式 | 金额 | 用户 | 备注 | 时间 |
 | --- | ---  | --- | --- | --- |
-| 支付宝 | 1.00 | *F | null | 2024-03-23 15.35 |
+| 微信 | 1.00 | *F | null | 2024-03-23 15.35 |
 # 支付宝
 <img src="https://mirror.ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clzfb.png">
 # 微信
