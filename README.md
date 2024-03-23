@@ -11,7 +11,8 @@ export smallfawnPushWhite="脚本名字@脚本名字2"
 ql repo https://mirror.ghproxy.com/https://github.com/smallfawn/QLScriptPublic.git
 ``````
 # 如果您对我仓库感兴趣可以支付任意金额支持一下！
-# 赞助URL:http://pay.onecc.cc 有机器人插件
+# 赞助URL: http://pay.onecc.cc 有机器人插件 可购买源码
+# 开发的另一个项目 http://2w.onecc.cc 
 | 方式 | 金额 | 用户 | 备注 | 时间 |
 | --- | ---  | --- | --- | --- |
 | 微信 | 1.00 | *F | null | 2024-03-23 15.35 |
