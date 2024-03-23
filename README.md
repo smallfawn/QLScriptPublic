@@ -6,7 +6,6 @@ export smallfawnPushWhite="脚本名字@脚本名字2"
 脚本会自行判断是否是在黑白名单内的 如果存在则判断通知或不通知 
 青龙面板脚本公共仓库
 # 组织基地：QQ群1021185005
-这里的脚本只是自己学习 js 的一个实践 仅用于测试和学习研究，禁止用于商业用途，不能保证其合法性，准确性，完整性和有效性，请根据情况自行判断.
 # 青龙面板拉库命令
 ``````
 ql repo https://mirror.ghproxy.com/https://github.com/smallfawn/QLScriptPublic.git
@@ -18,7 +17,6 @@ ql repo https://mirror.ghproxy.com/https://github.com/smallfawn/QLScriptPublic.g
 | 支付宝 | null | null | null |
 # 支付宝
 <img src="https://mirror.ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clzfb.png">
-
 # 微信
 <img src="https://mirror.ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clwx.png">
 
@@ -38,6 +36,7 @@ docker run -dit \
    --restart unless-stopped \
    whyour/qinglong:2.11
 ``````
+这里的脚本只是自己学习 js 的一个实践 仅用于测试和学习研究，禁止用于商业用途，不能保证其合法性，准确性，完整性和有效性，请根据情况自行判断.
 
 仓库内所有资源文件，禁止任何公众号、自媒体进行任何形式的转载、发布。
 
