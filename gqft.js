@@ -58,11 +58,11 @@ if (isRun) {
     //---------------------------------------------------------
 
     async function start() {
-        await getVersion("smallfawn/QLScriptPublic/main/gqft.js");
+        //await getVersion("smallfawn/QLScriptPublic/main/gqft.js");
         log('todoList:CK改变了 修复CK时效短 and CK失效快 的问题 修复refreshToken已改变问题\nupdate:IOS适配 尽可能青龙高版本适配')
         log("tips:可能有未知的BUG,如果遇到请截图和发送自己的CK给github lssues或者加群发给管理")
         log(`\n====== 当前版本：${scriptVersionNow} 📌 最新版本：${scriptVersionLatest} ======`);
-        await getNotice();
+        //await getNotice();
         taskall = [];
         /*for (let user of userList) {
             //taskall.push(await user.getToken());
