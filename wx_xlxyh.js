@@ -16,7 +16,6 @@ let envSplitor = ["&", "\n"]; //多账号分隔符
 let strSplitor = "#"; //多变量分隔符
 let userIdx = 0;
 let userList = [];
-let msg = ""
 class Task {
     constructor(str) {
         this.index = ++userIdx;
@@ -35,8 +34,12 @@ class Task {
         await this.LuckDrawApi()
         await this.ArticleListApi()
         if (this.articleId !== "") {
+            await this.ReadStartApi(this.articleId)
             await this.LikeApi(this.articleId)
             await this.ShareApi(this.articleId)
+            $.log(`模拟阅读55s`)
+            await $.wait(55000)
+            await this.ReadEndApi(this.articleId)
         }
     }
     async taskRequest(method, url, body = "") {
@@ -69,14 +72,13 @@ class Task {
                     if (LuckDrawTaskResult.code == 200) {
                         $.log(`账号[${this.userId}] 抽奖成功 获得[${LuckDrawTaskResult.data.name}]`)
                     } else {
-                      //console.log(LuckDrawTaskResult)
+                        //console.log(LuckDrawTaskResult)
                         $.log(`账号[${this.userId}] 抽奖失败 ${LuckDrawTaskResult.message}`);
                     }
                 }
             } else {
                 $.log(`账号[${this.userId}] 获取抽奖信息失败 ${LuckDrawNumResult.message}`);
             }
-
         } catch (e) {
             console.log(e);
         }
@@ -91,6 +93,33 @@ class Task {
             } else {
                 $.log(`❌账号[${this.userId}] 获取个人信息失败 ${UserInfoResult.message}`);
                 this.ckStatus = false
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async ReadStartApi(articleId) {
+        try {
+            let ReadStartApi = await this.taskRequest("post", `https://qualcomm.growthideadata.com/qualcomm-app/api/article/enterReadDaily`, `articleId=${articleId}&userId=${this.userId}`)
+            if (ReadStartApi.code == 200) {
+                $.log(`✅账号[${this.userId}]  阅读文章开始上传成功🎉`);
+
+            } else {
+                $.log(`❌账号[${this.userId}] 阅读文章开始上传失败 [${ReadStartApi.message}]`);
+
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async ReadEndApi(articleId) {
+        try {
+            let ReadEndApi = await this.taskRequest("post", `https://qualcomm.growthideadata.com/qualcomm-app/api/article/exitReadDaily`, `articleId=${articleId}&userId=${this.userId}`)
+            if (ReadEndApi.code == 200) {
+                $.log(`✅账号[${this.userId}]  阅读文章结束上传成功🎉`);
+
+            } else {
+                $.log(`❌账号[${this.userId}] 阅读文章结束上传失败 [${ReadEndApi.message}]`);
             }
         } catch (e) {
             console.log(e);
