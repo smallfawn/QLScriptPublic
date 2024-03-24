@@ -3,12 +3,14 @@
  * cron 7 8 * * *  yyq.js
  * 23/04/14  签到 点赞 评论 分享
  * 23/11/26  删除 评论 分享 只做点赞和签到
+ * 24/03/24  修复脚本失效问题
  * ========= 青龙--配置文件 ===========
  * # 项目名称
- * export yyq_data='Cookie&13111111 @ Cookie&13111111'
- * 
- * 多账号用 换行 或 @ 分割
- * 抓包 https://customer.yueyequan.cn/ , 找到 headers中的 Cookie和userid=后面的值  即可
+ * export yyq_new='Cookie#13111111 & Cookie#13111111'
+ * 变量名 yyq_new
+ * 抓包 https://customer.yueyequan.cn/ , 找到 headers中的 Cookie中 usersig的值#userid=后面的值
+ * 多账号&或换行 或新建同名变量
+ * 例如axxxxxxx#155511111
  * ====================================
  *   
  */
@@ -16,11 +18,11 @@
 
 
 const $ = new Env("悦野圈");
-const ckName = "yyq_data";
+const ckName = "yyq_new";
 //-------------------- 一般不动变量区域 -------------------------------------
 const Notify = 1;         //0为关闭通知,1为打开通知,默认为1
 const notify = $.isNode() ? require('./sendNotify') : '';
-let envSplitor = ["@","\n"]; //多账号分隔符
+let envSplitor = ["&", "\n"]; //多账号分隔符
 let msg = '';       //let ck,msg
 let userCookie = ($.isNode() ? process.env[ckName] : $.getdata(ckName)) || '';
 let userList = [];
@@ -31,7 +33,7 @@ let userCount = 0;
 
 async function start() {
 
-    await notice()
+    //await notice()
     console.log('\n================== 用户信息 ==================\n');
     taskall = [];
     for (let user of userList) {
@@ -104,22 +106,20 @@ async function start() {
 class UserInfo {
     constructor(str) {
         this.index = ++userIdx;
-        this.ck = str.split('&')[0]; //单账号多变量分隔符
-        //let ck = str.split('&')
+        this.ck = str.split('#')[0]; //单账号多变量分隔符
         //this.data1 = ck[0]
         this.ckStatus = true
         //this.userId = this.ck.match(/userid=(\S*);Path=\/;usersig=/)[1];
-        this.userId = str.split('&')[1]; //单账号多变量分隔符;
+        this.userId = str.split('#')[1]; //单账号多变量分隔符;
         this.headers = {
-            'User-Agent': 'okhttp/3.14.9 (Android 10; Xiaomi MI 8 Lite Build/V12.0.1.0.QDTCNXM 2.1.0 20100 release baicorvApp)',
-            'appInfo': '{"appVersion":"2.1.0","osVersion":"Android 10","appType":"Android","deviceId":"4390c5f92dd2fa05a38f8bd6c10775f6@1681389949113","deviceName":"Xiaomi MI 8 Lite"}',
-            'appTheme': 'AQUA',
-            'Cookie': this.ck,
-            'Cache-Control': 'no-cache',
-            'ice-auth-appkey': 9669092353,
-            'userid': this.userId,
-            'Host': 'customer.yueyequan.cn',
-            'Connection': 'Keep-Alive',
+            "User-Agent": "okhttp/4.2.0 (Android 10; Xiaomi MI 8 Lite Build/V11.0.2.0.QDTCNXM 2.12.0 21200 release baic-orv-app-android baicorvApp baic-orv-app-android)",
+            "appInfo": "{\"appVersion\":\"2.12.0\",\"osVersion\":\"Android 10\",\"appType\":\"Android\",\"deviceId\":\"76a9d22fc49aac9af4a7575488935928@1711269006040\",\"deviceName\":\"Xiaomi MI 8 Lite\"}",
+            "appTheme": "AQUA",
+            "Cookie": `userid=${this.userId};usersig=${this.ck};`,
+            "Cache-Control": "no-cache",
+            "Accept-Encoding": "identity",
+            "ice-auth-appkey": 9687643962,
+
         }
         this.articleIdArr = []
 
@@ -129,13 +129,21 @@ class UserInfo {
     }
     getSign(method, path, timestamp, data) {
         let baseData
-        if (method == 'GET') {
-            baseData = `${method}${path}ice-auth-appkey:9669092353ice-auth-timestamp:${timestamp}${data}c634d5e29a7afd8118eb18a028524835`
+        if (typeof data == 'object' && data !== null) {
+            data = "json=" + JSON.stringify(data)
         } else {
-            baseData = `${method}${path}ice-auth-appkey:9669092353ice-auth-timestamp:${timestamp}json=${data}c634d5e29a7afd8118eb18a028524835`
+            data = data.toLowerCase()
+
         }
-        baseData = encodeURI(baseData)
+        if (method == 'GET') {
+
+            baseData = `${method}${path}ice-auth-appkey:9687643962ice-auth-timestamp:${timestamp}${data}9ee70cb717f382417d1404fca6df80fd`
+        } else {
+            baseData = `${method}${path}ice-auth-appkey:9687643962ice-auth-timestamp:${timestamp}${data}9ee70cb717f382417d1404fca6df80fd`
+        }
+        baseData = encodeURIComponent(baseData)
         //console.log(baseData);
+
         return SHA256_Encrypt(baseData)
     }
     async user_info() {
@@ -217,7 +225,7 @@ class UserInfo {
             }
             options.headers['Content-Type'] = 'application/json;charset=UTF-8'
             options.headers['ice-auth-timestamp'] = ts13()
-            options.headers['ice-auth-sign'] = this.getSign('POST', '/comu-core/v1.0/creation/like', ts13(), `{"entityId":${articleId},"entityType":"002","userId":${this.userId}}`)
+            options.headers['ice-auth-sign'] = this.getSign('POST', '/comu-core/v1.0/creation/like', ts13(), { "entityId": articleId, "entityType": "002", "userId": this.userId })
             //console.log(options);
             let result = await httpRequest(options);
             //console.log(result);
