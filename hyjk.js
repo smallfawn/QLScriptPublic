@@ -35,7 +35,7 @@ class Task {
             }
             if (this.taskIdList.length > 0) {
                 $.log(` 获取到任务列表`)
-                $.log(JSON.stringify(" " + this.taskIdList))
+                $.log(JSON.stringify(this.taskIdList))
             }
             for (let i of this.taskIdList) {
                 await this.updateTaskInfo(i.taskId, 0)
