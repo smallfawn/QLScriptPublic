@@ -14,7 +14,7 @@
  *  COOKIE改为文件模式 参考https://github.com/smallfawn/QLScriptPublic/blob/main/cookies/gqft.json
  *  只需要填每一项中的 enData和enKey即可 记得必须符合JSON格式 可以自行去验证
  *  本版本为测试版 如有BUG 及时联系 群 1021185005
- * enData和enKey是登录接口返回的KEY  其他接口均不可以用 接口地址
+ * enData和enKey是登录接口返回的响应  其他接口均不可以用 接口地址
  * https://gw.nevapp.gtmc.com.cn/ha/iam/api/sec/oauth/token
  * 例如 
  * [
