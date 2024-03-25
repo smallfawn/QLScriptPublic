@@ -73,7 +73,7 @@ class Task {
     }
     async signIn() {
         try {
-            let result = await this.taskRequest("post", `https://tuan.api.ybm100.com/miniapp/marketing/signActivity/signRecord`, JSON.stringify({ "actId": 5712, "sceneId": 6, "channelCode": "130" }))
+            let result = await this.taskRequest("post", `https://tuan.api.ybm100.com/miniapp/marketing/signActivity/sign`, JSON.stringify({ "actId": 5712, "sceneId": 6, "channelCode": "130" }))
             //console.log(options);
             //console.log(result);
             if (result.code == 0) {
