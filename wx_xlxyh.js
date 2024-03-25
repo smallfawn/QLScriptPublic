@@ -30,17 +30,20 @@ class Task {
 
     async main() {
         await this.UserInfoApi();
-        await this.SignInApi()
-        await this.LuckDrawApi()
-        await this.ArticleListApi()
-        if (this.articleId !== "") {
-            await this.ReadStartApi(this.articleId)
-            await this.LikeApi(this.articleId)
-            await this.ShareApi(this.articleId)
-            $.log(`模拟阅读55s`)
-            await $.wait(55000)
-            await this.ReadEndApi(this.articleId)
+        if (this.ckStatus) {
+            await this.SignInApi()
+            await this.LuckDrawApi()
+            await this.ArticleListApi()
+            if (this.articleId !== "") {
+                await this.ReadStartApi(this.articleId)
+                await this.LikeApi(this.articleId)
+                await this.ShareApi(this.articleId)
+                $.log(`模拟阅读55s`)
+                await $.wait(55000)
+                await this.ReadEndApi(this.articleId)
+            }
         }
+
     }
     async taskRequest(method, url, body = "") {
         //
