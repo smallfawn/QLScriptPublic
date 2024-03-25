@@ -15,6 +15,7 @@
  *  只需要填每一项中的 enData和enKey即可 记得必须符合JSON格式 可以自行去验证
  *  本版本为测试版 如有BUG 及时联系 群 1021185005
  * enData和enKey是登录接口返回的响应  其他接口均不可以用 接口地址
+ * 怎么抓登录包？ 退出账号! 打开抓包 登录账号 完毕后关闭抓包（短信登录）
  * https://gw.nevapp.gtmc.com.cn/ha/iam/api/sec/oauth/token
  * 例如 
  * [
