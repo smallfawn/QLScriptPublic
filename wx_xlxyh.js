@@ -31,7 +31,9 @@ class Task {
     async main() {
         await this.UserInfoApi();
         if (this.ckStatus) {
+            await this.updateClick(`userId=${this.userId}&openId=${this.openId}&activityId=&activitySource=Xcx_ShouYeShortCut&isWifi=1&model=microsoft&manufacturer=microsoft&urlQuery=%7B%22channel%22%3A%22Xcx_ShouYeShortCut%22%7D&urlPath=pages%2Ftask-center%2Findex&urlName=%E4%BB%BB%E5%8A%A1%E4%B8%AD%E5%BF%83%E9%A1%B5&referrer=&scene=1256&pageStatus=&sfMsgTitle=&elementId=&elementName=%E4%BB%BB%E5%8A%A1%E4%B8%AD%E5%BF%83_%E4%BB%8A%E6%97%A5%E7%AD%BE%E5%88%B0&elementType=%E9%A1%B5%E9%9D%A2&stallsName=%E4%BB%BB%E5%8A%A1%E4%B8%AD%E5%BF%83_%E4%BB%8A%E6%97%A5%E7%AD%BE%E5%88%B0&eventNameEn=MPClick`)
             await this.SignInApi()
+            await this.updateClick(`userId=${this.userId}&openId=${this.openId}&activityId=7&activitySource=Xcx_MeiRiRenWu&isWifi=1&model=microsoft&manufacturer=microsoft&urlQuery=%7B%22channel%22%3A%22Xcx_MeiRiRenWu%22%7D&urlPath=pages%2Fwheel%2Findex&urlName=%E8%8A%AF%E5%8A%A8%E7%A6%8F%E5%88%A9&referrer=&scene=1256&pageStatus=&sfMsgTitle=&elementId=&elementName=%E7%82%B9%E5%87%BB%E6%8A%BD%E5%A5%96&elementType=%E9%A1%B5%E9%9D%A2&stallsName=&eventNameEn=MPClick`)
             await this.LuckDrawApi()
             await this.ArticleListApi()
             if (this.articleId !== "") {
@@ -46,15 +48,21 @@ class Task {
 
     }
     async taskRequest(method, url, body = "") {
-        //
+
         let headers = {
+            //"requestId": "88bd9fdf29c845be8e41a1e122337d6b",
+            //timestamp: 1711330339720,
+            //xweb_xhr: 1,
             "Host": "qualcomm.growthideadata.com",
+            //sign: "478d557229cdd6ac89128648a2a61e63",
+            Accept: "*/*",
             "User-Agent": this.UA,
+            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             "Referer": "https://servicewechat.com/wx026c06df6adc5d06/413/page-frame.html",
-            "sessionkey": this.ck,
-            "userid": Number(this.userId),
+            "sessionKey": this.ck,
+            "userId": Number(this.userId),
         }
-        this.openId !== "" ? Object.assign(headers, { "openid": this.openId }) : ""
+        this.openId !== "" ? Object.assign(headers, { "openId": this.openId }) : ""
         const reqeuestOptions = {
             url: url,
             method: method,
@@ -73,7 +81,7 @@ class Task {
                 if (LuckDrawNumResult.data.luckDrawCount == LuckDrawNumResult.data.luckDrawSumCount) {
                     let LuckDrawTaskResult = await this.taskRequest("get", `https://qualcomm.growthideadata.com/qualcomm-app/api/luckDraw/getLuck?userId=${this.userId}&activityId=7`)
                     if (LuckDrawTaskResult.code == 200) {
-                        $.log(`账号[${this.userId}] 抽奖成功 获得[${LuckDrawTaskResult.data.name}]`)
+                        $.log(`账号[${this.userId}] 抽奖成功 获得[${LuckDrawTaskResult.data.name}]🎉`)
                     } else {
                         //console.log(LuckDrawTaskResult)
                         $.log(`账号[${this.userId}] 抽奖失败 ${LuckDrawTaskResult.message}`);
@@ -81,6 +89,18 @@ class Task {
                 }
             } else {
                 $.log(`账号[${this.userId}] 获取抽奖信息失败 ${LuckDrawNumResult.message}`);
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async updateClick(body) {
+        try {
+            let Result = await this.taskRequest("post", `https://qualcomm.growthideadata.com/qualcomm-app/api/buryPointApp/save`, body)
+            if (Result.code == 200) {
+                $.log(`账号[${this.userId}] 上传点击成功`);
+            } else {
+                $.log(`账号[${this.userId}] 上传点击失败 ${Result.message}`);
             }
         } catch (e) {
             console.log(e);
@@ -175,7 +195,7 @@ class Task {
                 } else {
                     let SignInResult = await this.taskRequest("get", `https://qualcomm.growthideadata.com/qualcomm-app/api/user/signIn?userId=${this.userId}`)
                     if (SignInResult.code == 200) {
-                        $.log(`✅账号[${this.userId}]  签到成功🎉`);
+                        $.log(`✅账号[${this.userId}]  签到成功[${SignInResult.data.coreCoin}]🎉`);
                     } else {
                         $.log(`❌账号[${this.userId}]  签到失败[${SignInResult.message}]`)
                     }
