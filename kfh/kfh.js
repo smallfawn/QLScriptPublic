@@ -127,7 +127,7 @@ class Task {
         let taskall = [];
         for (let user of userList) {
             if (user.ckStatus) {
-                taskall.push(user.main());
+                taskall.push(await user.main());
             }
         }
         await Promise.all(taskall);
@@ -136,10 +136,10 @@ class Task {
             if (userList[i].ckStatus) {
                 let sharCode = shareList[Number(i) + 1]
                 if (sharCode !== undefined) {
-                    taskall.push(userList[i].help(sharCode));
+                    taskall.push(await userList[i].help(sharCode));
                 } else {
                     if (userList.length > 1) {
-                        userList[i].help(shareList[0])
+                        userList[i].help(await shareList[0])
                     } else {
                         $.log(`账号数目为1 不执行内部助力`)
 
