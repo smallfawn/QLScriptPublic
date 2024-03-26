@@ -18,141 +18,144 @@ let userList = [];
 let shareList = []
 let msg = ""
 class Task {
-    constructor(str) {
-        this.index = ++userIdx;
-        this.ck = str.split(strSplitor)[0]; //单账号多变量分隔符
-        this.ckStatus = true;
-        //定义在这里的headers会被get请求删掉content-type 而不会重置
-    }
-    async main() {
-        await this.userInfo();
-        await this.signIn()
-        await this.getShareUrl()
-    }
-    async taskRequest(method, url, body = "") {
-        //
-        let headers = {
-            "Host": "fscrm.kraftheinz.net.cn",
-            "Connection": "keep-alive",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 NetType/WIFI MicroMessenger/7.0.20.1781(0x6700143B) WindowsWechat(0x6309092b) XWEB/9079 Flue",
-            "token": this.ck,
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "*/*",
-            "Origin": "https://fscrm.kraftheinz.net.cn",
-            "Referer": "https://fscrm.kraftheinz.net.cn/?code=081dcPGa1MYgaH0yI6Ga1Rw39X0dcPGg&state=&appid=wx65da983ae179e97b",
+  constructor(str) {
+    this.index = ++userIdx;
+    this.ck = str.split(strSplitor)[0]; //单账号多变量分隔符
+    this.ckStatus = true;
+    //定义在这里的headers会被get请求删掉content-type 而不会重置
+  }
+  async main() {
+    await this.userInfo();
+    await this.signIn()
+    await this.getShareUrl()
+  }
+  async taskRequest(method, url, body = "") {
+    //
+    let headers = {
+      "Host": "fscrm.kraftheinz.net.cn",
+      "Connection": "keep-alive",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 NetType/WIFI MicroMessenger/7.0.20.1781(0x6700143B) WindowsWechat(0x6309092b) XWEB/9079 Flue",
+      "token": this.ck,
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Accept": "*/*",
+      "Origin": "https://fscrm.kraftheinz.net.cn",
+      "Referer": "https://fscrm.kraftheinz.net.cn/?code=081dcPGa1MYgaH0yI6Ga1Rw39X0dcPGg&state=&appid=wx65da983ae179e97b",
 
-        }
-        const reqeuestOptions = {
-            url: url,
-            method: method,
-            headers: headers
-        }
-        body == "" ? "" : Object.assign(reqeuestOptions, { body: body })
-        let { body: result } = await $.httpRequest(reqeuestOptions)
-        return result
     }
-    async userInfo() {
-        try {
-            let result = await this.taskRequest("get", `https://fscrm.kraftheinz.net.cn/crm/public/index.php/api/v1/getUserInfo`)
-            //console.log(result);
-            if (result.error_code == 0) {
-                $.log(`✅账号[${this.index}]  欢迎用户 ${result.data.nickname} 积分 => ${result.data.memberInfo.score}🎉`)
-                this.ckStatus = true;
-            } else {
-                $.log(`❌账号[${this.index}]  用户查询失败[${result.msg}]`);
-                this.ckStatus = false;
-            }
-        } catch (e) {
-            console.log(e);
+    const reqeuestOptions = {
+      url: url,
+      method: method,
+      headers: headers
+    }
+    body == "" ? "" : Object.assign(reqeuestOptions, { body: body })
+    let { body: result } = await $.httpRequest(reqeuestOptions)
+    return result
+  }
+  async userInfo() {
+    try {
+      let result = await this.taskRequest("get", `https://fscrm.kraftheinz.net.cn/crm/public/index.php/api/v1/getUserInfo`)
+      //console.log(result);
+      if (result.error_code == 0) {
+        $.log(`✅账号[${this.index}]  欢迎用户 ${result.data.nickname} 积分 => ${result.data.memberInfo.score}🎉`)
+        this.ckStatus = true;
+      } else {
+        $.log(`❌账号[${this.index}]  用户查询失败[${result.msg}]`);
+        this.ckStatus = false;
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+  async signIn() {
+    try {
+      let result = await this.taskRequest("post", `https://fscrm.kraftheinz.net.cn/crm/public/index.php/api/v1/dailySign`, ``)
+      //console.log(result);
+      if (result.error_code == 0) {
+        $.log(`✅账号[${this.index}]   [${result.msg}] 当前积分[${result.data.res}]🎉`)
+      } else {
+        $.log(`❌账号[${this.index}]  签到失败[${result.msg}]`);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+  randomInt(min, max) {
+    return Math.round(Math.random() * (max - min) + min);
+  }
+  async getShareUrl() {
+    try {
+      let result = await this.taskRequest("post", `https://fscrm.kraftheinz.net.cn/crm/public/index.php/api/v1/getCookbookIndex`, "page=1&pagesize=10")
+      //console.log(result);
+      if (result.error_code == 0) {
+        let shareid = result.data.chineseCookbook.data[this.randomInt(0, 9)].id
+        let getShareCodeResult = await this.taskRequest("post", `https://fscrm.kraftheinz.net.cn/crm/public/index.php/api/v1/createCookbookCode`, `cookbook_id=${shareid}`)
+        if (getShareCodeResult?.error_code == 0) {
+          //console.log(getShareCodeResult)
+          let code_url = getShareCodeResult?.data.code_url.replace("https://fscrm.kraftheinz.net.cn/?", "")
+          shareList.push(code_url)
+          $.log(`✅账号[${this.index}]${code_url}获取分享文章链接成功,添加到内部助力池成功 🎉`);
         }
+      } else {
+        $.log(`❌账号[${this.index}]  签到失败[${result.msg}]`);
+      }
+    } catch (e) {
+      console.log(e);
     }
-    async signIn() {
-        try {
-            let result = await this.taskRequest("post", `https://fscrm.kraftheinz.net.cn/crm/public/index.php/api/v1/dailySign`, ``)
-            //console.log(result);
-            if (result.error_code == 0) {
-                $.log(`✅账号[${this.index}]   [${result.msg}] 当前积分[${result.data.res}]🎉`)
-            } else {
-                $.log(`❌账号[${this.index}]  签到失败[${result.msg}]`);
-            }
-        } catch (e) {
-            console.log(e);
-        }
+  }
+  //首账号助力作者?，//得到助力码数组后 账号一助力账号二  .....最后一个账号助力账号1
+  async help(params) {
+    try {
+      let result = await this.taskRequest("post", `https://fscrm.kraftheinz.net.cn/crm/public/index.php/api/v1/recordScoreShare`, params)
+      //console.log(result);
+      if (result.error_code == 0) {
+        //console.log(`✅账号[${this.index}]  欢迎用户: ${result.errcode}🎉`);
+        $.log(`✅账号[${this.index}]   助力情况${result.msg}🎉`)
+      } else {
+        $.log(`❌账号[${this.index}]  助力失败[${result.msg}]`);
+      }
+    } catch (e) {
+      console.log(e);
     }
-    randomInt(min, max) {
-        return Math.round(Math.random() * (max - min) + min);
-    }
-    async getShareUrl() {
-        try {
-            let result = await this.taskRequest("post", `https://fscrm.kraftheinz.net.cn/crm/public/index.php/api/v1/getCookbookIndex`, "page=1&pagesize=10")
-            //console.log(result);
-            if (result.error_code == 0) {
-                let shareid = result.data.chineseCookbook.data[this.randomInt(0, 9)].id
-                let getShareCodeResult = await this.taskRequest("post", `https://fscrm.kraftheinz.net.cn/crm/public/index.php/api/v1/createCookbookCode`, `cookbook_id=${shareid}`)
-                if (getShareCodeResult?.error_code == 0) {
-                    //console.log(getShareCodeResult)
-                    let code_url = getShareCodeResult?.data.code_url.replace("https://fscrm.kraftheinz.net.cn/?", "")
-                    shareList.push(code_url)
-                    $.log(`✅账号[${this.index}]${code_url}获取分享文章链接成功,添加到内部助力池成功 🎉`);
-                }
-            } else {
-                $.log(`❌账号[${this.index}]  签到失败[${result.msg}]`);
-            }
-        } catch (e) {
-            console.log(e);
-        }
-    }
-    //首账号助力作者?，//得到助力码数组后 账号一助力账号二  .....最后一个账号助力账号1
-    async help(params) {
-        try {
-            let result = await this.taskRequest("post", `https://fscrm.kraftheinz.net.cn/crm/public/index.php/api/v1/recordScoreShare`, params)
-            //console.log(result);
-            if (result.error_code == 0) {
-                //console.log(`✅账号[${this.index}]  欢迎用户: ${result.errcode}🎉`);
-                $.log(`✅账号[${this.index}]   助力情况${result.msg}🎉`)
-            } else {
-                $.log(`❌账号[${this.index}]  助力失败[${result.msg}]`);
-            }
-        } catch (e) {
-            console.log(e);
-        }
-    }
+  }
 }
 
 
 
 !(async () => {
-    if (!(await checkEnv())) return;
-    if (userList.length > 0) {
-        let taskall = [];
-        for (let user of userList) {
-            if (user.ckStatus) {
-                taskall.push(await user.main());
-            }
-        }
-        await Promise.all(taskall);
-        taskall = [];
-        for (let i in userList) {
-            if (userList[i].ckStatus) {
-                let sharCode = shareList[Number(i) + 1]
-                if (sharCode !== undefined) {
-                    taskall.push(await userList[i].help(sharCode));
-                } else {
-                    if (userList.length > 1) {
-                        userList[i].help(await shareList[0])
-                    } else {
-                        $.log(`账号数目为1 不执行内部助力`)
-
-                    }
-                }
-            }
-        }
-        await Promise.all(taskall);
+  if (!(await checkEnv())) return;
+  if (userList.length > 0) {
+    let taskall = [];
+    for (let user of userList) {
+      if (user.ckStatus) {
+        taskall.push(await user.main());
+      }
     }
-    await $.sendMsg($.logs.join("\n"))
+    await Promise.all(taskall);
+    taskall = [];
+    for (let i in userList) {
+      if (userList[i].ckStatus) {
+        let sharCode = shareList[Number(i) + 1]
+
+        if (sharCode !== undefined) {
+          console.log(userList[i].ck + "=>" + sharCode)
+          taskall.push(await userList[i].help(sharCode));
+        } else {
+          if (userList.length > 1) {
+            console.log(userList[i].ck + "=>" + shareList[0])
+            taskall.push(await userList[i].help(shareList[0]));
+          } else {
+            $.log(`账号数目为1 不执行内部助力`)
+
+          }
+        }
+      }
+    }
+    await Promise.all(taskall);
+  }
+  await $.sendMsg($.logs.join("\n"))
 })()
-    .catch((e) => console.log(e))
-    .finally(() => $.done());
+  .catch((e) => console.log(e))
+  .finally(() => $.done());
 
 //********************************************************
 /**
@@ -160,20 +163,20 @@ class Task {
  * @returns
  */
 async function checkEnv() {
-    let userCookie = ($.isNode() ? process.env[ckName] : $.getdata(ckName)) || "";
-    if (userCookie) {
-        let e = envSplitor[0];
-        for (let o of envSplitor)
-            if (userCookie.indexOf(o) > -1) {
-                e = o;
-                break;
-            }
-        for (let n of userCookie.split(e)) n && userList.push(new Task(n));
-    } else {
-        console.log(`未找到CK【${ckName}】`);
-        return;
-    }
-    return console.log(`共找到${userList.length}个账号`), true; //true == !0
+  let userCookie = ($.isNode() ? process.env[ckName] : $.getdata(ckName)) || "";
+  if (userCookie) {
+    let e = envSplitor[0];
+    for (let o of envSplitor)
+      if (userCookie.indexOf(o) > -1) {
+        e = o;
+        break;
+      }
+    for (let n of userCookie.split(e)) n && userList.push(new Task(n));
+  } else {
+    console.log(`未找到CK【${ckName}】`);
+    return;
+  }
+  return console.log(`共找到${userList.length}个账号`), true; //true == !0
 }
 //Env Api =============================
 /*
