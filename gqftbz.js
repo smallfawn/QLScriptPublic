@@ -32,6 +32,7 @@
         "enKey":"Opsa...."
     }
 ]
+* 如果提示 TypeError:Cannot read properties of null (reading 'split') 那么则可以使用默认的enKey 
  */
 
 const $ = new Env("广汽丰田");
