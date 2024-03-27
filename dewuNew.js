@@ -21,7 +21,7 @@
  * export dewuHelpCode=""
  */
 
-let UAName = "dewuUa";
+let UAName = "dewuUA";
 let helpCodeName = "dewuHelpCode"
 let SKName = "dewuSK"
 let ckName = "dewu";
