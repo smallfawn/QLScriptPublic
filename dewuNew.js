@@ -11,14 +11,14 @@
  * 依赖 crypto-js & jsencrypt 版本最新即可
  * UA变量名 dewuUA  必须填自己的 否则会风控 请求头Headers中的User-Agent 必填
  * SK变量名 dewuSK  任意账号的即可 必填
- * 助力码变量名 helpCode 分享链接中的几个表情 例如 😻💥💬😻🌹🌼😿
+ * 助力码变量名 dewuHelpCode 分享链接中的几个表情 例如 😻💥💬😻🌹🌼😿
  * 首账号助力作者，后面得账号助力heloCode
  * 3/27 11.59 把变量名独立出来了 自己根据自己的情况换变量名 适用于设备多的UA不一致得情况
  * 如果是一个设备抓的很多号 那就不用管
  * 这里我只推荐在青龙配置文件里面写UA SK 和helpCode变量
  * export dewuUA=""
  * export dewuSK=""
- * export helpCode=""
+ * export dewuHelpCode=""
  */
 
 let UAName = "dewuUa";
