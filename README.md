@@ -30,6 +30,9 @@ ql repo https://mirror.ghproxy.com/https://github.com/smallfawn/QLScriptPublic.g
 | 微信 | 5.00 | *客 | null | 2024-03-24 16.23 |
 | QQ | 1.00 | *3171 | null | 2024-03-26 23.29 |
 | 微信 | 6.66 | *方 | 加鸡腿 | 2024-03-27 11.00 |
+| QQ | 1.00 | *阿金 | null | 2024-03-27 18.15 |
+| QQ | 1.00 | *聆风 | null | 2024-03-27 18.23 |
+| QQ | 20.00 | *萌哒 | 等新本 | 2024-03-27 18.50 |
 # 支付宝
 <img src="https://mirror.ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clzfb.png">
 # 微信
