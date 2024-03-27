@@ -15,6 +15,10 @@
  * 首账号助力作者，后面得账号助力heloCode
  * 3/27 11.59 把变量名独立出来了 自己根据自己的情况换变量名 适用于设备多的UA不一致得情况
  * 如果是一个设备抓的很多号 那就不用管
+ * 这里我只推荐在青龙配置文件里面写UA SK 和helpCode变量
+ * export dewuUA=""
+ * export dewuSK=""
+ * export helpCode=""
  */
 
 let UAName = "dewuUa";
