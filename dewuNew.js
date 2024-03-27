@@ -2,7 +2,7 @@
  * cron 10 10 * * *
  * Show:得物农场0.0.4版本得物 心愿森林  &  得物 心愿海洋 入口都在 APP下方=>我=> 下方=>
  * 更新上上签版本
- * 变量名:dewu
+ * 变量名:dewuCookies
  * 变量值:抓app.dewu.com   请求头Headers中的x-auth-token  去掉Bearer  # 连接SK # 连接cookie中dutoken得值 可以直接搜dutoken
  * 例如ejxxxxx...#90xxxx...#d41d8cd9|16...2233|17...|4sasasasa...
  * 一共三个值 不要看错了 分别是x-auth-token得值 # SK得值 # dutoken得值
@@ -23,7 +23,7 @@
 
 let UAName = "dewuUA";
 let helpCodeName = "dewuHelpCode"
-let ckName = "dewu";
+let ckName = "dewuCookies";
 
 
 let UA = process.env[UAName] ? process.env[UAName] : "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_0 like Mac OS X) AppleWebKit/604.5.15 (KHTML, like Gecko) Mobile/15E148/duapp/5.39.0"
