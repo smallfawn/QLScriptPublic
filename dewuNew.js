@@ -23,7 +23,7 @@ let UAName = "dewuUA";
 //助力码变量名
 let helpCodeName = "dewuHelpCode"
 //cookie变量名
-let ckName = "dewu";
+let ckName = "dewuCookies";
 //UA默认值
 let UAdefult = "Mozilla/5.0 (Linux; Android 11; MI 8 Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.99 Mobile Safari/537.36/duapp/5.39.1(android;10)";
 //助力码默认值
