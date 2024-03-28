@@ -10,7 +10,7 @@
 * 变量名称：hlToken
 *
 * ##哈啰 
-* export hlToken="23fexxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+* export hlToken="23fexxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 *  
 * 奖励：积攒奖励金可换手机话费重置抵用券
 
