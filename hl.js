@@ -16,7 +16,7 @@
 
 const axios = require('axios');
 
-const $ = new Env('哈罗自动签到');
+const $ = new Env('哈啰签到');
 
 // 获取系统TOKEN
 let hlTokens = process.env.hlTokens;
@@ -32,7 +32,7 @@ if (hlTokens && hlTokens.includes('&')) {
 !(async()=>{
 
     if(tokens.length === 0 || !tokens[0]){
-        $.msg('请添加哈罗APPToken在运行此脚本');
+        $.msg('请添加哈啰hlToken在运行此脚本');
         return;
     }
 
@@ -59,7 +59,7 @@ if (hlTokens && hlTokens.includes('&')) {
               }
           })
           .catch(function (error) {
-            console.log('哈罗TOKEN已失效');
+            console.log('哈啰TOKEN已失效');
           });
 
         // 查询奖励金操作
