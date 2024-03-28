@@ -1,7 +1,8 @@
 /*
 * 软件名称：哈啰
 *
-* 版本：0.0.1
+* 版本：0.0.2（修复变量问题）
+*
 * 抓包位置：首页 福利中心 查看更多  抓包 api.hellobike.com/api?urser 请求里面的 TOKEN
 *
 * 定时  0 8 * * *
@@ -12,6 +13,7 @@
 * export hlToken="23fexxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 *  
 * 奖励：积攒奖励金可换手机话费重置抵用券
+
 */
 
 const axios = require('axios');
@@ -19,14 +21,14 @@ const axios = require('axios');
 const $ = new Env('哈啰签到');
 
 // 获取系统TOKEN
-let hlTokens = process.env.hlTokens;
+let hlToken = process.env.hlToken;
 
 let tokens = [];
 
-if (hlTokens && hlTokens.includes('&')) {
-    tokens = hlTokens.split('&');
+if (hlToken && hlToken.includes('&')) {
+    tokens = hlToken.split('&');
 } else {
-    tokens.push(hlTokens);
+    tokens.push(hlToken);
 }
 
 !(async()=>{
