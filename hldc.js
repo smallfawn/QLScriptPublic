@@ -9,7 +9,8 @@
 *
 * ##哈啰 
 * export hlToken="23fexxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-*
+*  
+* 奖励：积攒奖励金可换手机话费重置抵用券
 */
 
 const axios = require('axios');
