@@ -37,6 +37,7 @@ ql repo https://mirror.ghproxy.com/https://github.com/smallfawn/QLScriptPublic.g
 | QQ | 20.00 | *萌哒 | 等新本 | 2024-03-27 18.50 |
 | QQ | 2.88 | *鹿管 | null | 2024-03-27 19.13 |
 | 微信 | 1.00 | *陈陈 | null | 2024-03-28 14.15 |
+| 微信 | 1.00 | *z | null | 2024-03-29 5.32 |
 # 支付宝
 <img src="https://mirror.ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clzfb.png">
 # 微信
