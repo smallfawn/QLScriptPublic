@@ -9,13 +9,15 @@
 *
 * 变量名称：hlToken
 *
+* 多账号用&隔开
+*
 * ##哈啰 
 * export hlToken="23fexxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 *  
 * 奖励：积攒奖励金可换手机话费重置抵用券
 
 */
-
+&
 const axios = require('axios');
 
 const $ = new Env('哈啰签到');
