@@ -577,6 +577,9 @@ class UserInfo {
                     let writeResult = await writeFile(newData)
                     if (writeResult) {
                         console.log(`刷新CK && 写入文件成功`)
+                        await this.user_info()
+                        await this.task_signin()
+                        await this.art_list()
                     } else {
                         console.log(`刷新CK && 写入文件失败`)
                     }
