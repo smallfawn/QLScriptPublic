@@ -9,7 +9,7 @@
 *
 * 变量名称：hlToken
 *
-* 多账号用&隔开
+* 多账号用 & 隔开
 *
 * ##哈啰 
 * export hlToken="23fexxxxxxxxxxxxxxxxxxxxxxxxxxxx"
