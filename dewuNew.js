@@ -17,6 +17,7 @@
  * export UAdefult="Mozilla/5.0 (iPhone; CPU iPhone OS 16_1_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148/duapp/5.38.6"
  * export SKdefult="9xxxxxxxxx"
  * 默认UA值和SK值 如果开启了isDefultUASK 那么则生效 不开启则缓存随机UA
+ * 请求失败 请手动进页面过滑块 针对写了SK的用户 
  * --------------------------------------------------
  * new Env("得物")
  */
