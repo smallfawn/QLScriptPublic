@@ -31,7 +31,7 @@ let userCount = 0;
 
 async function start() {
 
-    await getNotice()
+    //await getNotice()
     console.log('\n================== 用户CK ==================\n');
     taskall = [];
     for (let user of userList) {
