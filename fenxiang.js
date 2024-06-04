@@ -3,7 +3,7 @@
  * Show:自己改定时 防止默认定时
  * 变量名:fenxiang
  * 变量值:https://api.fenxianglife.com 或https://fenxiang-lottery-api.fenxianglife.com 请求头Headers中的三个值
- * finger#token#oaid  多账号&或换行 或新建同名变量
+ * did#finger#token#oaid  多账号&或换行 或新建同名变量 四个值
  * 中间的分现金 每天开奖
  * scriptVersionNow = "0.0.1";
  */
@@ -20,9 +20,10 @@ let userList = [];
 class Task {
     constructor(str) {
         this.index = ++userIdx;
-        this.finger = str.split(strSplitor)[0]; //单账号多变量分隔符
-        this.token = str.split(strSplitor)[1]; //单账号多变量分隔符
-        this.oaid = str.split(strSplitor)[2]; //单账号多变量分隔符
+        this.did = str.split(strSplitor)[0];
+        this.finger = str.split(strSplitor)[1]; //单账号多变量分隔符
+        this.token = str.split(strSplitor)[2]; //单账号多变量分隔符
+        this.oaid = str.split(strSplitor)[3]; //单账号多变量分隔符
         this.ckStatus = true;
         this.taskList=[]
 
@@ -134,7 +135,7 @@ class Task {
             noncestr: Math.random().toString().slice(2, 10),
             timestamp: Date.now(),
             platform: "h5",
-            did: 'njia992631e6-b9b2-4383-b67c-86b5d0fe818a',
+            did: this.did,
             version: "1.0.0",
             finger: this.finger,
             token: this.token,
