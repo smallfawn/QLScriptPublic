@@ -5,6 +5,7 @@
  * 变量值:https://api.fenxianglife.com 或https://fenxiang-lottery-api.fenxianglife.com 请求头Headers中的三个值
  * did#finger#token#oaid  多账号&或换行 或新建同名变量 四个值
  * 中间的分现金 每天开奖
+ * 必填邀请码 J5KHD8
  * scriptVersionNow = "0.0.1";
  */
 
