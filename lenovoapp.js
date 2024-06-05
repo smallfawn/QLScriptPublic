@@ -22,12 +22,28 @@ class Task {
         this.token = str.split(strSplitor)[1];
     }
     async main() {
-        await this.isSignIn()
-        await this.getUserTaskList();
+        await this.userInfo()
+        if (this.ckStatus) {
+            await this.isSignIn()
+            await this.getUserTaskList();
+        }
+
 
     }
+    async userInfo() {
+        let result = await this.taskRequest({ method: "POST", url: `https://mmembership.lenovo.com.cn/member-hp-webapi/v1/userBenefit/getMyAssets` })
+        //console.log(result);
+        if (result.code == "0") {
+            $.log(`✅账号[${this.index}]  获取用户信息成功===>[${result.data.userId}]乐豆[${result.data.ledouNum}]`);
+            this.ckStatus = true
+        } else {
+            $.log(`❌账号[${this.index}]  获取用户状态失败`);
+            this.ckStatus = false
+            //console.log(result);
+        }
+    }
     async isSignIn() {
-        let result = await this.taskRequest("post", `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/task/getCheckInList?lenovoId=10219183246`)
+        let result = await this.taskRequest({ method: "POST", url: `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/task/getCheckInList?lenovoId=10219183246` })
         //console.log(result);
         if (result.code == "0") {
             if (result.data.flag == !1) {
@@ -41,7 +57,7 @@ class Task {
         }
     }
     async checkIn() {
-        let result = await this.taskRequest("post", `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/task/checkIn?lenovoId=10219183246&OSType=10011`)
+        let result = await this.taskRequest({ method: "POST", url: `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/task/checkIn?lenovoId=10219183246&OSType=10011` })
         //console.log(result);
         if (result.code == "0") {
             $.log(`✅账号[${this.index}]  签到成功🎉`)
@@ -51,16 +67,17 @@ class Task {
         }
     }
     async getUserTaskList() {
-        let result = await this.taskRequest("post", `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/task/getUserTaskList`)
+        let result = await this.taskRequest({ method: "POST", url: `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/task/getUserTaskList` })
         //console.log(result);
         if (result.code == "0") {
             $.log(`✅账号[${this.index}]  获取任务列表成功🎉`)
             for (let i = 0; i < result.data.length; i++) {
                 let task = result.data[i];
-                if (task.taskState == 0&&task.type !== 13) {
+                if (task.taskState == 0 && task.type !== 13) {
                     await $.wait(5000)
                     await this.doTask(task.taskId);
                 }
+                
             }
         } else {
             $.log(`❌账号[${this.index}]  获取任务列表失败`);
@@ -68,9 +85,9 @@ class Task {
         }
     }
     async doTask(id) {
-        let result_ = await this.taskRequest("post", `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/checkin/selectTaskPrize?taskId=${id}&channelId=1`)
+        let result_ = await this.taskRequest({ method: "POST", url: `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/checkin/selectTaskPrize?taskId=${id}&channelId=1` })
         if (result_.code == "0") {
-            let result = await this.taskRequest("post", `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/Task/userFinishTask?taskId=${id}&channelId=1&state=1`)
+            let result = await this.taskRequest({ method: "POST", url: `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/Task/userFinishTask?taskId=${id}&channelId=1&state=1` })
             //console.log(result);
             if (result.code == "0") {
                 $.log(`✅账号[${this.index}]  任务执行成功🎉`)
@@ -84,14 +101,15 @@ class Task {
 
     }
 
-    async taskRequest(method, url, body = "") {
+    async taskRequest(options) {
+        const axios = require('axios');
         let headers = {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.99 Mobile Safari/537.36/lenovoofficialapp/9e4bb0e5bc326fb1_10219183246/newversion/versioncode-1000112/',
             'Accept-Encoding': 'gzip, deflate',
             'pragma': 'no-cache',
             'cache-control': 'no-cache',
             'origin': 'https://mmembership.lenovo.com.cn',
-            'servicetoken': 'Bearer '+this.token,
+            'servicetoken': 'Bearer ' + this.token,
             'sec-fetch-dest': 'empty',
             'lenovoid': this.ck,
             'clientid': '2',
@@ -101,13 +119,8 @@ class Task {
             'referer': 'https://mmembership.lenovo.com.cn/app?pmf_source=P0000005611M0002',
             'accept-language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
         }
-        const reqeuestOptions = {
-            url: url,
-            method: method,
-            headers: headers,
-            body: body
-        }
-        let { body: result } = await $.httpRequest(reqeuestOptions)
+        Object.assign(options, { headers })
+        let { data: result } = await axios.request(options)
         return result
     }
 }
@@ -176,33 +189,7 @@ function Env(t, s) {
         isQuanX() {
             return "undefined" != typeof $task;
         }
-        isSurge() {
-            return "undefined" != typeof $httpClient && "undefined" == typeof $loon;
-        }
-        isLoon() {
-            return "undefined" != typeof $loon;
-        }
-        initRequestEnv(t) {
-            try {
-                require.resolve("got") &&
-                    ((this.requset = require("got")), (this.requestModule = "got"));
-            } catch (e) { }
-            try {
-                require.resolve("axios") &&
-                    ((this.requset = require("axios")), (this.requestModule = "axios"));
-            } catch (e) { }
-            this.cktough = this.cktough ? this.cktough : require("tough-cookie");
-            this.ckjar = this.ckjar ? this.ckjar : new this.cktough.CookieJar();
-            if (t) {
-                t.headers = t.headers ? t.headers : {};
-                if (
-                    typeof t.headers.Cookie === "undefined" &&
-                    typeof t.cookieJar === "undefined"
-                ) {
-                    t.cookieJar = this.ckjar;
-                }
-            }
-        }
+
         queryStr(options) {
             return Object.entries(options)
                 .map(
@@ -247,65 +234,7 @@ function Env(t, s) {
                 this.msg(this.name, "", message);
             }
         }
-        async httpRequest(options) {
-            let t = { ...options };
-            t.headers = t.headers || {};
-            if (t.params) {
-                t.url += "?" + this.queryStr(t.params);
-            }
-            t.method = t.method.toLowerCase();
-            if (t.method === "get") {
-                delete t.headers["Content-Type"];
-                delete t.headers["Content-Length"];
-                delete t.headers["content-type"];
-                delete t.headers["content-length"];
-                delete t.body;
-            } else if (t.method === "post") {
-                let ContentType;
-                if (!t.body) {
-                    t.body = "";
-                } else if (typeof t.body === "string") {
-                    ContentType = this.isJSONString(t.body)
-                        ? "application/json"
-                        : "application/x-www-form-urlencoded";
-                } else if (this.isJson(t.body)) {
-                    t.body = JSON.stringify(t.body);
-                    ContentType = "application/json";
-                }
-                if (!t.headers["Content-Type"] && !t.headers["content-type"]) {
-                    t.headers["Content-Type"] = ContentType;
-                }
-            }
-            if (this.isNode()) {
-                this.initRequestEnv(t);
-                if (this.requestModule === "axios" && t.method === "post") {
-                    t.data = t.body;
-                    delete t.body;
-                }
-                let httpResult;
-                if (this.requestModule === "got") {
-                    httpResult = await this.requset(t);
-                    if (this.isJSONString(httpResult.body)) {
-                        httpResult.body = JSON.parse(httpResult.body);
-                    }
-                } else if (this.requestModule === "axios") {
-                    httpResult = await this.requset(t);
-                    httpResult.body = httpResult.data;
-                }
-                return httpResult;
-            }
-            if (this.isQuanX()) {
-                t.method = t.method.toUpperCase();
-                return new Promise((resolve, reject) => {
-                    $task.fetch(t).then((response) => {
-                        if (this.isJSONString(response.body)) {
-                            response.body = JSON.parse(response.body);
-                        }
-                        resolve(response);
-                    });
-                });
-            }
-        }
+
         randomNumber(length) {
             const characters = "0123456789";
             return Array.from(
@@ -351,20 +280,16 @@ function Env(t, s) {
         };
         msg(title = t, subtitle = "", body = "", options) {
             const formatOptions = (options) => {
-                if (!options || (!this.isLoon() && this.isSurge())) {
+                if (!options) {
                     return options;
                 } else if (typeof options === "string") {
-                    if (this.isLoon()) {
-                        return options;
-                    } else if (this.isQuanX()) {
+                    if (this.isQuanX()) {
                         return { "open-url": options };
                     } else {
                         return undefined;
                     }
                 } else if (typeof options === "object" && (options["open-url"] || options["media-url"])) {
-                    if (this.isLoon()) {
-                        return options["open-url"];
-                    } else if (this.isQuanX()) {
+                    if (this.isQuanX()) {
                         return options;
                     } else {
                         return undefined;
@@ -373,15 +298,11 @@ function Env(t, s) {
                     return undefined;
                 }
             };
-
             if (!this.isMute) {
-                if (this.isSurge() || this.isLoon()) {
-                    $notification.post(title, subtitle, body, formatOptions(options));
-                } else if (this.isQuanX()) {
+                if (this.isQuanX()) {
                     $notify(title, subtitle, body, formatOptions(options));
                 }
             }
-
             let logs = ["", "==============📣系统通知📣=============="];
             logs.push(title);
             subtitle ? logs.push(subtitle) : "";
@@ -394,7 +315,7 @@ function Env(t, s) {
                 console.log(t.join(this.logSeparator));
         }
         logErr(t, s) {
-            const e = !this.isSurge() && !this.isQuanX() && !this.isLoon();
+            const e = !this.isQuanX();
             e
                 ? this.log("", `\u2757\ufe0f${this.name},\u9519\u8bef!`, t.stack)
                 : this.log("", `\u2757\ufe0f${this.name},\u9519\u8bef!`, t);
