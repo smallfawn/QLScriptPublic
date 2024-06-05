@@ -28,7 +28,7 @@ class Task {
     }
     async isSignIn() {
         let result = await this.taskRequest("post", `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/task/getCheckInList?lenovoId=10219183246`)
-        console.log(result);
+        //console.log(result);
         if (result.code == "0") {
             if (result.data.flag == !1) {
                 $.log(`✅账号[${this.index}]  今日未签到 =====> 签到ing🎉`)
@@ -42,7 +42,7 @@ class Task {
     }
     async checkIn() {
         let result = await this.taskRequest("post", `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/task/checkIn?lenovoId=10219183246&OSType=10011`)
-        console.log(result);
+        //console.log(result);
         if (result.code == "0") {
             $.log(`✅账号[${this.index}]  签到成功🎉`)
         } else {
@@ -52,12 +52,12 @@ class Task {
     }
     async getUserTaskList() {
         let result = await this.taskRequest("post", `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/task/getUserTaskList`)
-        console.log(result);
+        //console.log(result);
         if (result.code == "0") {
             $.log(`✅账号[${this.index}]  获取任务列表成功🎉`)
             for (let i = 0; i < result.data.length; i++) {
                 let task = result.data[i];
-                if (task.taskState == 0) {
+                if (task.taskState == 0&&task.type !== 13) {
                     await $.wait(5000)
                     await this.doTask(task.taskId);
                 }
