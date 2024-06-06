@@ -24,7 +24,7 @@ class Task {
     async main() {
         await this.userInfo()
         if (this.ckStatus) {
-            await this.isSignIn()
+            await this.checkIn()
             await this.getUserTaskList();
         }
 
