@@ -11,8 +11,8 @@
  * 2.通过WoolWeb获取 2w.onecc.cc 里面有APP接口和H5接口  APP接口带刷新CK H5接口不会
  * 3.通过WoolWeb扫码获取 和 APP接口等同
  * 变量示例       AT-11111-ASASASASASASASASASAS填入AT里面 RT-11111-BSBSBSBSBSBSBS填入RT里面
- * 开启发贴       gacmotorPost=false 默认关闭发表文章功能 true为开启(此功能存在风控检测,谨慎开启)
- * 开启评论       gacmotorComment=false 默认关闭评论功能 true为开启(此功能存在风控检测,谨慎开启)
+ * 开启发贴       gacmotorPost=false 默认关闭发表文章功能 true为开启(此功能存在风控检测,谨慎开启)  目前没适配 小心扣豆子
+ * 开启评论       gacmotorComment=false 默认关闭评论功能 true为开启(此功能存在风控检测,谨慎开启)  目前没适配 小心扣豆子
  * 每日抽奖       gacmotorLuckyDram=1  抽奖次数[1-10]  不写默认抽奖一次(首次免费)  以后每次花费2G豆抽奖 每天上限10次
  * 
  */
@@ -30,7 +30,7 @@ const fs = require('fs');
 let TempAccount = [];
 
 
-function ReadFiles (filename) {
+function ReadFiles(filename) {
     let Fileexists = fs.existsSync(filename);//检测文件是否存在
     if (Fileexists) {//如果存在
         console.log("检测到广汽传祺GacmotorCookies.json，载入...");
@@ -39,9 +39,11 @@ function ReadFiles (filename) {
             TempAccount = TempAccount.toString();
             TempAccount = JSON.parse(TempAccount);
         }
+    }else{
+         console.log("未检测到广汽传祺GacmotorCookies.json...");
     }
 }
-async function writeFile (fileName, data) {
+async function writeFile(fileName, data) {
     return new Promise((resolve, reject) => {
         fs.writeFile(fileName, data, 'utf8', (err) => {
             if (err) {
@@ -86,9 +88,14 @@ class UserInfo {
         this.sharenNotFinishedNum = 0//转发未完成次数
         this.refreshStatus = false
         this.commenttext = ""
+        this.signInCaptchaId = null
+        this.signInRequestId = null
+        this.lotteryRequestId = null
+        this.shareCaptchaId = null
+        this.shareRequestId = null
 
     }
-    async main () {
+    async main() {
         $.log(`==============开始第${this.index}个账号==============`)
         await this._userInfo();
 
@@ -108,7 +115,7 @@ class UserInfo {
 
 
     }
-    async mainTask () {
+    async mainTask() {
         if (process.env["gacmotorLuckyDram"] == undefined) {
             await this._luckyDrawNum()//获取抽奖次数
             if (this.luckyDrawNum > 1) {
@@ -224,7 +231,7 @@ class UserInfo {
 
         }
 
-        await this._activity_lotter_common({ "activityId": "531", "channel": "carapp_channel" })
+        //await this._activity_lotter_common({ "activityId": "531", "channel": "carapp_channel" })
         //await this._getChinaTime()
         /*console.log(`11/26截止 Do - 广州车展活动 奖品活动结束后14日内发放`);
         if (this.BeiJingTime < 1701014400000) {
@@ -283,7 +290,7 @@ class UserInfo {
             }
         }*/
     }
-    async _refreshToken () {
+    async _refreshToken() {
         try {
             let options = {
                 fn: "刷新token",
@@ -340,7 +347,7 @@ class UserInfo {
         }
     }
 
-    async _getChinaTime () {
+    async _getChinaTime() {
         try {
             let options = {
                 fn: "获取北京时间",
@@ -354,7 +361,7 @@ class UserInfo {
             console.log(e);
         }
     }
-    async _activity_lotter_common (body) {
+    async _activity_lotter_common(body) {
         try {
             let options = {
                 fn: "活动抽奖",
@@ -391,7 +398,7 @@ class UserInfo {
             console.log(e);
         }
     }
-    async _activity_lotter_mall (body) {
+    async _activity_lotter_mall(body) {
         try {
             let options = {
                 fn: "活动抽奖(mall)",
@@ -414,7 +421,7 @@ class UserInfo {
         }
     }
 
-    async _question_list (body) {
+    async _question_list(body) {
         try {
             let options = {
                 fn: "获取答题活动列表",
@@ -442,7 +449,7 @@ class UserInfo {
     }
 
 
-    async _question_info (body) {
+    async _question_info(body) {
         try {
             let options = {
                 fn: "获取问题和选项",
@@ -472,7 +479,7 @@ class UserInfo {
     }
 
 
-    async _submit_answer (body) {
+    async _submit_answer(body) {
         try {
             let options = {
                 fn: "回答问题",
@@ -494,7 +501,7 @@ class UserInfo {
             console.log(e);
         }
     }
-    async _getText () {
+    async _getText() {
         try {
             let textList = []
             let options = {
@@ -518,7 +525,7 @@ class UserInfo {
             console.log(e);
         }
     }
-    _getText1 () {
+    _getText1() {
         try {
             let textList = [
                 `好看好用，我也想拥有同款！`,
@@ -534,7 +541,7 @@ class UserInfo {
         }
     }
 
-    async _join_power (taskId) {
+    async _join_power(taskId) {
         try {
             let options = {
                 fn: "加入助力",
@@ -557,7 +564,7 @@ class UserInfo {
             console.log(e);
         }
     }
-    async _power_list () {
+    async _power_list() {
         try {
             let options = {
                 fn: "助力任务列表获取",
@@ -585,7 +592,7 @@ class UserInfo {
         }
     }
 
-    async _power_auth () {
+    async _power_auth() {
         try {
             let headers = this._getHeaders("get")
             headers["Host"] = `gmp.spgacmotorsc.com`
@@ -611,7 +618,7 @@ class UserInfo {
         }
     }
 
-    async _get_power_id (taskId) {
+    async _get_power_id(taskId) {
         try {
             let options = {
                 fn: "助力任务ID获取",
@@ -642,7 +649,7 @@ class UserInfo {
         }
     }
 
-    async _share_power (taskId) {
+    async _share_power(taskId) {
         try {
             let options = {
                 fn: "助力任务分享",
@@ -665,7 +672,7 @@ class UserInfo {
             console.log(e);
         }
     }
-    async _power () {
+    async _power() {
         try {
             let options = {
                 fn: "助力",
@@ -699,7 +706,7 @@ class UserInfo {
             console.log(e);
         }
     }
-    async _userInfo () {
+    async _userInfo() {
         try {
             let options = {
                 fn: "信息查询",
@@ -728,7 +735,7 @@ class UserInfo {
             console.log(e);
         }
     }
-    async _taskList () {
+    async _taskList() {
         try {
             let options = {
                 fn: "任务情况查询",
@@ -754,7 +761,7 @@ class UserInfo {
             console.log(e);
         }
     }
-    async _luckyDrawNum () {
+    async _luckyDrawNum() {
         try {
             let options = {
                 fn: "抽奖次数查询",
@@ -778,14 +785,21 @@ class UserInfo {
             console.log(e);
         }
     }
-    async _luckyDraw () {
+    async _luckyDraw() {
+        await this.get_lastReq("lottery")
         try {
             let options = {
                 fn: "抽奖",
                 method: "post",
-                url: `https://next.gacmotor.com/app/activity/shopDraw/luckyDraw`,
+                //https://next.gacmotor.com/app/activity/shopDraw/luckyDraw
+                url: `https://next.gacmotor.com/app/activity/shopDraw/luckyDrawHc`,
                 headers: this._getHeaders("post"),
-                body: JSON.stringify({ "activityCode": "shop-draw", "repeatcheck": true })
+                //body: JSON.stringify({ "activityCode": "shop-draw", "repeatcheck": true })
+                body: JSON.stringify({
+                    "activityCode": "shop-draw",
+                    "repeatcheck": true,
+                    "lastReq": this.lotteryRequestId
+                })
             }
             let { body: result } = await httpRequest(options);
             //console.log(options);
@@ -803,7 +817,7 @@ class UserInfo {
             console.log(e);
         }
     }
-    async _getGDou () {
+    async _getGDou() {
         try {
             let options = {
                 fn: "G豆查询",
@@ -827,7 +841,7 @@ class UserInfo {
         }
     }
 
-    async _applatestlist () {
+    async _applatestlist() {
         try {
             let options = {
                 fn: "最新帖子列表",
@@ -849,7 +863,7 @@ class UserInfo {
             console.log(e);
         }
     }
-    async _signInStatus () {
+    async _signInStatus() {
         try {
             let options = {
                 fn: "签到查询",
@@ -878,7 +892,7 @@ class UserInfo {
         }
     }
 
-    async _signInCounts () {
+    async _signInCounts() {
         try {
             let options = {
                 fn: "签到信息",
@@ -900,14 +914,53 @@ class UserInfo {
             console.log(e);
         }
     }
+    async get_lastReq(event) {
+        let options = {
+            fn: "获取参数",
+            method: "get",
+            url: `https://next.gacmotor.com/app/app-api/common/hcRiskControl/getRiskLevelCommon?eventId=${event}`,
+            headers: this._getHeaders("get"),
 
-    async _signIn () {
+        }
+        let { body: result } = await httpRequest(options);
+        //console.log(options);
+        result = JSON.parse(result);
+        //console.log(result);
+        if (result.resultCode == "0") {
+            if (event == "signIn") {
+                this.signInCaptchaId = result.data.captchaId
+                this.signInRequestId = result.data.requestId
+            }
+            if (event == "lottery") {
+                this.lotteryRequestId = result.data.requestId
+            }
+            if (event == "share") {
+                this.shareCaptchaId = result.data.captchaId
+                this.shareRequestId = result.data.requestId
+            }
+        } else {
+            console.log(`❌${options.fn}状态[${result.resultMsg}]`);
+            console.log(JSON.stringify(result));
+        }
+    }
+    async _signIn() {
+        await this.get_lastReq("signIn")
         try {
-            let options = {
+            /*let options = {
                 fn: "签到执行",
                 method: "get",
                 url: `https://next.gacmotor.com/app/app-api/sign/submit`,
                 headers: this._getHeaders("get"),
+            }*/
+            let options = {
+                fn: "签到执行",
+                method: "post",
+                url: `https://next.gacmotor.com/app/app-api/sign/submitHc`,
+                headers: this._getHeaders("post"),
+                body: JSON.stringify({
+                    "captchaId": this.signInCaptchaId,
+                    "lastReq": this.signInRequestId
+                })
             }
             let { body: result } = await httpRequest(options);
             //console.log(options);
@@ -924,14 +977,22 @@ class UserInfo {
         }
     }
 
-    async _forward (postId) {
+    async _forward(postId) {
+        await this.get_lastReq("share")
         try {
-            let options = {
+            /*let options = {
                 fn: "转发",
                 method: "post",
                 url: `https://next.gacmotor.com/app/community-api/community/api/post/forward`,
                 headers: this._getHeaders("post"),
                 body: JSON.stringify({ "postId": postId })
+            }*/
+            let options = {
+                fn: "转发",
+                method: "post",
+                url: `https://next.gacmotor.com/app/community-api/community/api/post/forwardHc`,
+                headers: this._getHeaders("post"),
+                body: JSON.stringify({ "postId": postId, "captchaId": this.shareCaptchaId, "lastReq": this.shareRequestId })
             }
             let { body: result } = await httpRequest(options);
             //console.log(options);
@@ -948,7 +1009,7 @@ class UserInfo {
         }
     }
 
-    async _add (postId, commentContent) {
+    async _add(postId, commentContent) {
         try {
             let options = {
                 fn: "评论",
@@ -972,7 +1033,7 @@ class UserInfo {
         }
     }
 
-    async _commentlist () {
+    async _commentlist() {
         try {
             let options = {
                 fn: "获取评论列表",
@@ -997,7 +1058,7 @@ class UserInfo {
             console.log(e);
         }
     }
-    async _commentdelete (commentId) {
+    async _commentdelete(commentId) {
         try {
             let options = {
                 fn: "删除评论",
@@ -1020,7 +1081,7 @@ class UserInfo {
             console.log(e);
         }
     }
-    async _post (postTitle, postContent) {
+    async _post(postTitle, postContent) {
         try {
             let options = {
                 fn: "发表文章",
@@ -1044,7 +1105,7 @@ class UserInfo {
         }
     }
 
-    async _delete (postId) {
+    async _delete(postId) {
         try {
             let options = {
                 fn: "删除文章",
@@ -1068,7 +1129,7 @@ class UserInfo {
         }
     }
 
-    async _postlist () {
+    async _postlist() {
         try {
             let options = {
                 fn: "文章列表",
@@ -1092,11 +1153,11 @@ class UserInfo {
             console.log(e);
         }
     }
-    _MD5 (str) {
+    _MD5(str) {
         const crypto = require("crypto");
         return crypto.createHash("md5").update(str).digest("hex");
     }
-    _getHeaders (method) {
+    _getHeaders(method) {
         let timestamp1 = new Date().getTime();
         let timestamp2 = new Date().getTime();
         let nonce = Math.floor(100000 + Math.random() * 900000);
@@ -1161,7 +1222,7 @@ class UserInfo {
             }
         }
     }
-    _getHeaders_gmp (method) {
+    _getHeaders_gmp(method) {
         let timestamp2 = new Date().getTime();
         let apiSignKey = `a361588rt20dpol`
         let apiSign = (this._MD5(`${timestamp2}${apiSignKey}`)).toUpperCase()
@@ -1209,7 +1270,7 @@ class UserInfo {
             }
         }
     }
-    _getHeaders_mall (method) {
+    _getHeaders_mall(method) {
         if (method == "get") {
             return {
                 "Host": "mall.gacmotor.com",
@@ -1248,7 +1309,7 @@ class UserInfo {
     }
 }
 
-async function start () {
+async function start() {
     if (process.env["gacmotorPost"] == "true") {
         $.log(`已开启发帖`)
     } else {
@@ -1290,7 +1351,7 @@ async function start () {
  * 变量检查与处理
  * @returns
  */
-async function checkEnv () {
+async function checkEnv() {
     ReadFiles(GacmotorCookies)
     if (TempAccount.length <= 0) {
         return
@@ -1307,7 +1368,7 @@ async function checkEnv () {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-function httpRequest (options) {
+function httpRequest(options) {
     if (!options["method"]) {
         return console.log(`请求方法不存在`);
     }
@@ -1332,7 +1393,7 @@ function httpRequest (options) {
         });
     });
 }
-async function SendMsg (message) {
+async function SendMsg(message) {
     if (!message) return;
     if ($.isNode()) {
         await notify.sendNotify($.name, message)
@@ -1341,4 +1402,4 @@ async function SendMsg (message) {
     }
 }
 // prettier-ignore
-function Env (t, s) { return new (class { constructor(t, s) { (this.name = t), (this.data = null), (this.dataFile = "box.dat"), (this.logs = []), (this.logSeparator = "\n"), (this.startTime = new Date().getTime()), Object.assign(this, s), this.log("", `\ud83d\udd14${this.name},\u5f00\u59cb!`) } isNode () { return "undefined" != typeof module && !!module.exports } isQuanX () { return "undefined" != typeof $task } isSurge () { return "undefined" != typeof $httpClient && "undefined" == typeof $loon } isLoon () { return "undefined" != typeof $loon } getScript (t) { return new Promise((s) => { this.get({ url: t }, (t, e, i) => s(i)) }) } runScript (t, s) { return new Promise((e) => { let i = this.getdata("@chavy_boxjs_userCfgs.httpapi"); i = i ? i.replace(/\n/g, "").trim() : i; let o = this.getdata("@chavy_boxjs_userCfgs.httpapi_timeout"); (o = o ? 1 * o : 20), (o = s && s.timeout ? s.timeout : o); const [h, a] = i.split("@"), r = { url: `http://${a}/v1/scripting/evaluate`, body: { script_text: t, mock_type: "cron", timeout: o }, headers: { "X-Key": h, Accept: "*/*" }, }; this.post(r, (t, s, i) => e(i)) }).catch((t) => this.logErr(t)) } loaddata () { if (!this.isNode()) return {}; { (this.fs = this.fs ? this.fs : require("fs")), (this.path = this.path ? this.path : require("path")); const t = this.path.resolve(this.dataFile), s = this.path.resolve(process.cwd(), this.dataFile), e = this.fs.existsSync(t), i = !e && this.fs.existsSync(s); if (!e && !i) return {}; { const i = e ? t : s; try { return JSON.parse(this.fs.readFileSync(i)) } catch (t) { return {} } } } } writedata () { if (this.isNode()) { (this.fs = this.fs ? this.fs : require("fs")), (this.path = this.path ? this.path : require("path")); const t = this.path.resolve(this.dataFile), s = this.path.resolve(process.cwd(), this.dataFile), e = this.fs.existsSync(t), i = !e && this.fs.existsSync(s), o = JSON.stringify(this.data); e ? this.fs.writeFileSync(t, o) : i ? this.fs.writeFileSync(s, o) : this.fs.writeFileSync(t, o) } } lodash_get (t, s, e) { const i = s.replace(/\[(\d+)\]/g, ".$1").split("."); let o = t; for (const t of i) if (((o = Object(o)[t]), void 0 === o)) return e; return o } lodash_set (t, s, e) { return Object(t) !== t ? t : (Array.isArray(s) || (s = s.toString().match(/[^.[\]]+/g) || []), (s.slice(0, -1).reduce((t, e, i) => Object(t[e]) === t[e] ? t[e] : (t[e] = Math.abs(s[i + 1]) >> 0 == +s[i + 1] ? [] : {}), t)[s[s.length - 1]] = e), t) } getdata (t) { let s = this.getval(t); if (/^@/.test(t)) { const [, e, i] = /^@(.*?)\.(.*?)$/.exec(t), o = e ? this.getval(e) : ""; if (o) try { const t = JSON.parse(o); s = t ? this.lodash_get(t, i, "") : s } catch (t) { s = "" } } return s } setdata (t, s) { let e = !1; if (/^@/.test(s)) { const [, i, o] = /^@(.*?)\.(.*?)$/.exec(s), h = this.getval(i), a = i ? ("null" === h ? null : h || "{}") : "{}"; try { const s = JSON.parse(a); this.lodash_set(s, o, t), (e = this.setval(JSON.stringify(s), i)) } catch (s) { const h = {}; this.lodash_set(h, o, t), (e = this.setval(JSON.stringify(h), i)) } } else e = this.setval(t, s); return e } getval (t) { return this.isSurge() || this.isLoon() ? $persistentStore.read(t) : this.isQuanX() ? $prefs.valueForKey(t) : this.isNode() ? ((this.data = this.loaddata()), this.data[t]) : (this.data && this.data[t]) || null } setval (t, s) { return this.isSurge() || this.isLoon() ? $persistentStore.write(t, s) : this.isQuanX() ? $prefs.setValueForKey(t, s) : this.isNode() ? ((this.data = this.loaddata()), (this.data[s] = t), this.writedata(), !0) : (this.data && this.data[s]) || null } initGotEnv (t) { (this.got = this.got ? this.got : require("got")), (this.cktough = this.cktough ? this.cktough : require("tough-cookie")), (this.ckjar = this.ckjar ? this.ckjar : new this.cktough.CookieJar()), t && ((t.headers = t.headers ? t.headers : {}), void 0 === t.headers.Cookie && void 0 === t.cookieJar && (t.cookieJar = this.ckjar)) } get (t, s = () => { }) { t.headers && (delete t.headers["Content-Type"], delete t.headers["Content-Length"]), this.isSurge() || this.isLoon() ? $httpClient.get(t, (t, e, i) => { !t && e && ((e.body = i), (e.statusCode = e.status)), s(t, e, i) }) : this.isQuanX() ? $task.fetch(t).then((t) => { const { statusCode: e, statusCode: i, headers: o, body: h } = t; s(null, { status: e, statusCode: i, headers: o, body: h }, h) }, (t) => s(t)) : this.isNode() && (this.initGotEnv(t), this.got(t).on("redirect", (t, s) => { try { const e = t.headers["set-cookie"].map(this.cktough.Cookie.parse).toString(); this.ckjar.setCookieSync(e, null), (s.cookieJar = this.ckjar) } catch (t) { this.logErr(t) } }).then((t) => { const { statusCode: e, statusCode: i, headers: o, body: h, } = t; s(null, { status: e, statusCode: i, headers: o, body: h }, h) }, (t) => s(t))) } post (t, s = () => { }) { if ((t.body && t.headers && !t.headers["Content-Type"] && (t.headers["Content-Type"] = "application/x-www-form-urlencoded"), delete t.headers["Content-Length"], this.isSurge() || this.isLoon())) $httpClient.post(t, (t, e, i) => { !t && e && ((e.body = i), (e.statusCode = e.status)), s(t, e, i) }); else if (this.isQuanX()) (t.method = "POST"), $task.fetch(t).then((t) => { const { statusCode: e, statusCode: i, headers: o, body: h } = t; s(null, { status: e, statusCode: i, headers: o, body: h }, h) }, (t) => s(t)); else if (this.isNode()) { this.initGotEnv(t); const { url: e, ...i } = t; this.got.post(e, i).then((t) => { const { statusCode: e, statusCode: i, headers: o, body: h } = t; s(null, { status: e, statusCode: i, headers: o, body: h }, h) }, (t) => s(t)) } } time (t) { let s = { "M+": new Date().getMonth() + 1, "d+": new Date().getDate(), "H+": new Date().getHours(), "m+": new Date().getMinutes(), "s+": new Date().getSeconds(), "q+": Math.floor((new Date().getMonth() + 3) / 3), S: new Date().getMilliseconds(), }; /(y+)/.test(t) && (t = t.replace(RegExp.$1, (new Date().getFullYear() + "").substr(4 - RegExp.$1.length))); for (let e in s) new RegExp("(" + e + ")").test(t) && (t = t.replace(RegExp.$1, 1 == RegExp.$1.length ? s[e] : ("00" + s[e]).substr(("" + s[e]).length))); return t } msg (s = t, e = "", i = "", o) { const h = (t) => !t || (!this.isLoon() && this.isSurge()) ? t : "string" == typeof t ? this.isLoon() ? t : this.isQuanX() ? { "open-url": t } : void 0 : "object" == typeof t && (t["open-url"] || t["media-url"]) ? this.isLoon() ? t["open-url"] : this.isQuanX() ? t : void 0 : void 0; this.isMute || (this.isSurge() || this.isLoon() ? $notification.post(s, e, i, h(o)) : this.isQuanX() && $notify(s, e, i, h(o))); let logs = ['', '==============📣系统通知📣==============']; logs.push(t); e ? logs.push(e) : ''; i ? logs.push(i) : ''; console.log(logs.join('\n')); this.logs = this.logs.concat(logs) } log (...t) { t.length > 0 && (this.logs = [...this.logs, ...t]), console.log(t.join(this.logSeparator)) } logErr (t, s) { const e = !this.isSurge() && !this.isQuanX() && !this.isLoon(); e ? this.log("", `\u2757\ufe0f${this.name},\u9519\u8bef!`, t.stack) : this.log("", `\u2757\ufe0f${this.name},\u9519\u8bef!`, t) } wait (t) { return new Promise((s) => setTimeout(s, t)) } done (t = {}) { const s = new Date().getTime(), e = (s - this.startTime) / 1e3; this.log("", `\ud83d\udd14${this.name},\u7ed3\u675f!\ud83d\udd5b ${e}\u79d2`), this.log(), (this.isSurge() || this.isQuanX() || this.isLoon()) && $done(t) } })(t, s) }
+function Env(t, s) { return new (class { constructor(t, s) { (this.name = t), (this.data = null), (this.dataFile = "box.dat"), (this.logs = []), (this.logSeparator = "\n"), (this.startTime = new Date().getTime()), Object.assign(this, s), this.log("", `\ud83d\udd14${this.name},\u5f00\u59cb!`) } isNode() { return "undefined" != typeof module && !!module.exports } isQuanX() { return "undefined" != typeof $task } isSurge() { return "undefined" != typeof $httpClient && "undefined" == typeof $loon } isLoon() { return "undefined" != typeof $loon } getScript(t) { return new Promise((s) => { this.get({ url: t }, (t, e, i) => s(i)) }) } runScript(t, s) { return new Promise((e) => { let i = this.getdata("@chavy_boxjs_userCfgs.httpapi"); i = i ? i.replace(/\n/g, "").trim() : i; let o = this.getdata("@chavy_boxjs_userCfgs.httpapi_timeout"); (o = o ? 1 * o : 20), (o = s && s.timeout ? s.timeout : o); const [h, a] = i.split("@"), r = { url: `http://${a}/v1/scripting/evaluate`, body: { script_text: t, mock_type: "cron", timeout: o }, headers: { "X-Key": h, Accept: "*/*" }, }; this.post(r, (t, s, i) => e(i)) }).catch((t) => this.logErr(t)) } loaddata() { if (!this.isNode()) return {}; { (this.fs = this.fs ? this.fs : require("fs")), (this.path = this.path ? this.path : require("path")); const t = this.path.resolve(this.dataFile), s = this.path.resolve(process.cwd(), this.dataFile), e = this.fs.existsSync(t), i = !e && this.fs.existsSync(s); if (!e && !i) return {}; { const i = e ? t : s; try { return JSON.parse(this.fs.readFileSync(i)) } catch (t) { return {} } } } } writedata() { if (this.isNode()) { (this.fs = this.fs ? this.fs : require("fs")), (this.path = this.path ? this.path : require("path")); const t = this.path.resolve(this.dataFile), s = this.path.resolve(process.cwd(), this.dataFile), e = this.fs.existsSync(t), i = !e && this.fs.existsSync(s), o = JSON.stringify(this.data); e ? this.fs.writeFileSync(t, o) : i ? this.fs.writeFileSync(s, o) : this.fs.writeFileSync(t, o) } } lodash_get(t, s, e) { const i = s.replace(/\[(\d+)\]/g, ".$1").split("."); let o = t; for (const t of i) if (((o = Object(o)[t]), void 0 === o)) return e; return o } lodash_set(t, s, e) { return Object(t) !== t ? t : (Array.isArray(s) || (s = s.toString().match(/[^.[\]]+/g) || []), (s.slice(0, -1).reduce((t, e, i) => Object(t[e]) === t[e] ? t[e] : (t[e] = Math.abs(s[i + 1]) >> 0 == +s[i + 1] ? [] : {}), t)[s[s.length - 1]] = e), t) } getdata(t) { let s = this.getval(t); if (/^@/.test(t)) { const [, e, i] = /^@(.*?)\.(.*?)$/.exec(t), o = e ? this.getval(e) : ""; if (o) try { const t = JSON.parse(o); s = t ? this.lodash_get(t, i, "") : s } catch (t) { s = "" } } return s } setdata(t, s) { let e = !1; if (/^@/.test(s)) { const [, i, o] = /^@(.*?)\.(.*?)$/.exec(s), h = this.getval(i), a = i ? ("null" === h ? null : h || "{}") : "{}"; try { const s = JSON.parse(a); this.lodash_set(s, o, t), (e = this.setval(JSON.stringify(s), i)) } catch (s) { const h = {}; this.lodash_set(h, o, t), (e = this.setval(JSON.stringify(h), i)) } } else e = this.setval(t, s); return e } getval(t) { return this.isSurge() || this.isLoon() ? $persistentStore.read(t) : this.isQuanX() ? $prefs.valueForKey(t) : this.isNode() ? ((this.data = this.loaddata()), this.data[t]) : (this.data && this.data[t]) || null } setval(t, s) { return this.isSurge() || this.isLoon() ? $persistentStore.write(t, s) : this.isQuanX() ? $prefs.setValueForKey(t, s) : this.isNode() ? ((this.data = this.loaddata()), (this.data[s] = t), this.writedata(), !0) : (this.data && this.data[s]) || null } initGotEnv(t) { (this.got = this.got ? this.got : require("got")), (this.cktough = this.cktough ? this.cktough : require("tough-cookie")), (this.ckjar = this.ckjar ? this.ckjar : new this.cktough.CookieJar()), t && ((t.headers = t.headers ? t.headers : {}), void 0 === t.headers.Cookie && void 0 === t.cookieJar && (t.cookieJar = this.ckjar)) } get(t, s = () => { }) { t.headers && (delete t.headers["Content-Type"], delete t.headers["Content-Length"]), this.isSurge() || this.isLoon() ? $httpClient.get(t, (t, e, i) => { !t && e && ((e.body = i), (e.statusCode = e.status)), s(t, e, i) }) : this.isQuanX() ? $task.fetch(t).then((t) => { const { statusCode: e, statusCode: i, headers: o, body: h } = t; s(null, { status: e, statusCode: i, headers: o, body: h }, h) }, (t) => s(t)) : this.isNode() && (this.initGotEnv(t), this.got(t).on("redirect", (t, s) => { try { const e = t.headers["set-cookie"].map(this.cktough.Cookie.parse).toString(); this.ckjar.setCookieSync(e, null), (s.cookieJar = this.ckjar) } catch (t) { this.logErr(t) } }).then((t) => { const { statusCode: e, statusCode: i, headers: o, body: h, } = t; s(null, { status: e, statusCode: i, headers: o, body: h }, h) }, (t) => s(t))) } post(t, s = () => { }) { if ((t.body && t.headers && !t.headers["Content-Type"] && (t.headers["Content-Type"] = "application/x-www-form-urlencoded"), delete t.headers["Content-Length"], this.isSurge() || this.isLoon())) $httpClient.post(t, (t, e, i) => { !t && e && ((e.body = i), (e.statusCode = e.status)), s(t, e, i) }); else if (this.isQuanX()) (t.method = "POST"), $task.fetch(t).then((t) => { const { statusCode: e, statusCode: i, headers: o, body: h } = t; s(null, { status: e, statusCode: i, headers: o, body: h }, h) }, (t) => s(t)); else if (this.isNode()) { this.initGotEnv(t); const { url: e, ...i } = t; this.got.post(e, i).then((t) => { const { statusCode: e, statusCode: i, headers: o, body: h } = t; s(null, { status: e, statusCode: i, headers: o, body: h }, h) }, (t) => s(t)) } } time(t) { let s = { "M+": new Date().getMonth() + 1, "d+": new Date().getDate(), "H+": new Date().getHours(), "m+": new Date().getMinutes(), "s+": new Date().getSeconds(), "q+": Math.floor((new Date().getMonth() + 3) / 3), S: new Date().getMilliseconds(), }; /(y+)/.test(t) && (t = t.replace(RegExp.$1, (new Date().getFullYear() + "").substr(4 - RegExp.$1.length))); for (let e in s) new RegExp("(" + e + ")").test(t) && (t = t.replace(RegExp.$1, 1 == RegExp.$1.length ? s[e] : ("00" + s[e]).substr(("" + s[e]).length))); return t } msg(s = t, e = "", i = "", o) { const h = (t) => !t || (!this.isLoon() && this.isSurge()) ? t : "string" == typeof t ? this.isLoon() ? t : this.isQuanX() ? { "open-url": t } : void 0 : "object" == typeof t && (t["open-url"] || t["media-url"]) ? this.isLoon() ? t["open-url"] : this.isQuanX() ? t : void 0 : void 0; this.isMute || (this.isSurge() || this.isLoon() ? $notification.post(s, e, i, h(o)) : this.isQuanX() && $notify(s, e, i, h(o))); let logs = ['', '==============📣系统通知📣==============']; logs.push(t); e ? logs.push(e) : ''; i ? logs.push(i) : ''; console.log(logs.join('\n')); this.logs = this.logs.concat(logs) } log(...t) { t.length > 0 && (this.logs = [...this.logs, ...t]), console.log(t.join(this.logSeparator)) } logErr(t, s) { const e = !this.isSurge() && !this.isQuanX() && !this.isLoon(); e ? this.log("", `\u2757\ufe0f${this.name},\u9519\u8bef!`, t.stack) : this.log("", `\u2757\ufe0f${this.name},\u9519\u8bef!`, t) } wait(t) { return new Promise((s) => setTimeout(s, t)) } done(t = {}) { const s = new Date().getTime(), e = (s - this.startTime) / 1e3; this.log("", `\ud83d\udd14${this.name},\u7ed3\u675f!\ud83d\udd5b ${e}\u79d2`), this.log(), (this.isSurge() || this.isQuanX() || this.isLoon()) && $done(t) } })(t, s) }
