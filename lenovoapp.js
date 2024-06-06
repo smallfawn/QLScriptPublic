@@ -43,7 +43,7 @@ class Task {
         }
     }
     async isSignIn() {
-        let result = await this.taskRequest({ method: "POST", url: `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/task/getCheckInList?lenovoId=10219183246` })
+        let result = await this.taskRequest({ method: "POST", url: `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/task/getCheckInList?lenovoId=${this.ck}` })
         //console.log(result);
         if (result.code == "0") {
             if (result.data.flag == !1) {
@@ -57,7 +57,7 @@ class Task {
         }
     }
     async checkIn() {
-        let result = await this.taskRequest({ method: "POST", url: `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/task/checkIn?lenovoId=10219183246&OSType=10011` })
+        let result = await this.taskRequest({ method: "POST", url: `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/task/checkIn?lenovoId=${this.ck}&OSType=10011` })
         //console.log(result);
         if (result.code == "0") {
             $.log(`✅账号[${this.index}]  签到成功🎉`)
