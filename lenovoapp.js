@@ -39,7 +39,7 @@ class Task {
         } else {
             $.log(`❌账号[${this.index}]  获取用户状态失败`);
             this.ckStatus = false
-            //console.log(result);
+            console.log(result);
         }
     }
     async isSignIn() {
@@ -53,7 +53,7 @@ class Task {
             }
         } else {
             $.log(`❌账号[${this.index}]  获取签到状态`);
-            //console.log(result);
+            console.log(result);
         }
     }
     async checkIn() {
@@ -63,7 +63,7 @@ class Task {
             $.log(`✅账号[${this.index}]  签到成功🎉`)
         } else {
             $.log(`❌账号[${this.index}]  签到失败`);
-            //console.log(result);
+            console.log(result);
         }
     }
     async getUserTaskList() {
@@ -81,7 +81,7 @@ class Task {
             }
         } else {
             $.log(`❌账号[${this.index}]  获取任务列表失败`);
-            //console.log(result);
+            console.log(result);
         }
     }
     async doTask(id) {
