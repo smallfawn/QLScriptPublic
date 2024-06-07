@@ -7,10 +7,10 @@
 
 
 [Script]
-http-response ^https:\/\/mxsa\.mxbc\.net\/api\/v1\/customer\/info script-path=https://gist.githubusercontent.com/Sliverkiss/865c82e42a5730bb696f6700ebb94cee/raw/mxbc.js, requires-body=true, timeout=60, tag=蜜雪冰城获取token
+http-response
 
 [MITM]
-hostname = mxsa.mxbc.net
+hostname = 
 
 ⚠️【免责声明】
 ------------------------------------------
@@ -25,7 +25,6 @@ hostname = mxsa.mxbc.net
 
 const $ = new Env("微信小程序泡泡玛特");
 let ckName = `paopaomate`
-process.env[ckName] = `88528490#oZdQ349xzm92VdabAtMekA5vPPTw`
 let userCookie = checkEnv(($.isNode() ? process.env[ckName] : $.getdata(ckName)) || [])
 const notify = $.isNode() ? require("./sendNotify") : "";
 
@@ -39,26 +38,30 @@ const notify = $.isNode() ? require("./sendNotify") : "";
             8 * 60 * 60 * 1000
         ).toLocaleString()} \n==================================================`
     );
-    console.log(userCookie)
+    //console.log(userCookie)
     if (!userCookie?.length) throw new Error(`没有找到【${ckName}】`);
     let index = 0;
     let strSplitor = "#";
 
     for (let user of userCookie) {
-        $.log(`\n🚀 user:${index || ++index} start work\n`)
+        $.log(`\n🚀 user:【${index || ++index}】 start work\n`)
         let id = user.split(strSplitor)[0]
         let openid = user.split(strSplitor)[1]
         let ckStatus = true
         ckStatus = await UserInfo(id, openid)
-        if (ckStatus) {
+        if (ckStatus !== false) {
             await SignIn(openid)
 
         }
-        X
+
     }
 
     await $.sendMsg($.logs.join("\n"));
 })().catch((e) => console.log(e)).finally(() => $.done());
+function base64Encode(data) {
+    const buffer = Buffer.from(data);
+    return buffer.toString('base64');
+}
 function getSign(t, e, n) {
     function md5(data) {
         const crypto = require('crypto');
@@ -74,7 +77,7 @@ function getSign(t, e, n) {
         var s = (new Date).getTime().toString()
             , c = JSON.stringify(o) + "PopMartminiApp1117" + s
             , u = md5(c);
-        return t.sign = n ? md5(i.Base64.encode(u + "PopMartminiApp0314")) : u,
+        return t.sign = n ? md5(base64Encode(u + "PopMartminiApp0314")) : u,
             t.time = s,
             t.version = "5.0.34",
             t
@@ -82,11 +85,10 @@ function getSign(t, e, n) {
 
     return d(t, e, n)
 }
-
 async function SignIn(openid) {
     let { sign: sign, time: time, version: version } = getSign({
         openid: openid
-    }, 'GET', true)
+    }, 'GET', false)
     let { data: result } = await Request({
         method: 'GET',
         url: 'https://popvip.paquapp.com/miniapp/v2/sign_in/everySignDay/?openid=' + openid + '&sign=' + sign + '&time=' + time + '&version=' + version,
@@ -99,12 +101,15 @@ async function SignIn(openid) {
             'Referer': 'https://servicewechat.com/wx9627eb7f4b1c69d5/638/page-frame.html'
         }
     })
-    $.log(result)
+    return result?.code == 1 ? $.log(`签到状态：${result.data.sign}`) : false
 }
 async function UserInfo(id, openid) {
+    let { sign: sign, time: time, version: version } = getSign({
+        user_id: id
+    }, 'GET', false)
     let { data: result } = await Request({
         method: 'GET',
-        url: 'https://popvip.paquapp.com/miniapp/v2/wechat/getUserInfo/?user_id=' + id + '&sign=bd11fa3de1584216a19e810746315059&time=1717760159176&version=5.0.34',
+        url: 'https://popvip.paquapp.com/miniapp/v2/wechat/getUserInfo/?user_id=' + id + '&sign='+sign+'&time='+time+'&version='+version,
         headers: {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/122.0.6261.120 Mobile Safari/537.36 XWEB/1220067 MMWEBSDK/20240404 MMWEBID/8150 MicroMessenger/8.0.49.2600(0x28003156) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 MiniProgramEnv/android',
             'Accept-Encoding': 'gzip,compress,br,deflate',
@@ -114,7 +119,7 @@ async function UserInfo(id, openid) {
             'Referer': 'https://servicewechat.com/wx9627eb7f4b1c69d5/638/page-frame.html'
         }
     })
-    return code == 1 ? $.log(`${result.data.nickname} 积分【${result.data.points}】`) : false
+    return result?.code == 1 ? $.log(`${result.data.nickname} 积分【${result.data.points}】`) : false
 }
 
 function checkEnv(userCookie) {
@@ -333,44 +338,3 @@ async function Request(options) {
     return await Request(options)
 }
 
-function Bucket() {
-    return new (class {
-        constructor(fileName) {
-            this.fileName = fileName;
-            this.ensureFileExists();
-            this.data = this.readFile();
-        }
-        ensureFileExists() {
-            this.fs ? this.fs : (this.fs = require("fs"));
-            this.path ? this.path : (this.path = require("path"));
-            this.filePath = this.path.join(__dirname, this.fileName);
-            if (!this.fs.existsSync(this.filePath)) {
-                this.fs.writeFileSync(this.filePath, "{}");
-            }
-        }
-        readFile() {
-            try {
-                const data = this.fs.readFileSync(this.filePath, "utf-8");
-                return JSON.parse(data);
-            } catch (error) {
-                console.error(`Error reading file:${error}`);
-                return {};
-            }
-        }
-        writeFile() {
-            try {
-                this.fs.writeFileSync(
-                    this.filePath,
-                    JSON.stringify(this.data, null, 2)
-                );
-            } catch (error) { }
-        }
-        set(key, value) {
-            this.data[key] = value;
-            this.writeFile();
-        }
-        get(key) {
-            return this.data[key];
-        }
-    })();
-}
