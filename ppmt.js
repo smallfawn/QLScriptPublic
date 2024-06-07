@@ -25,7 +25,7 @@ hostname =
 
 const $ = new Env("微信小程序泡泡玛特");
 let ckName = `paopaomate`
-let userCookie = checkEnv(($.isNode() ? process.env[ckName] : $.getdata(ckName)) || [])
+let userCookie = checkEnv(($.isNode() ? process.env[ckName] : $.getdata(ckName)) || "")
 const notify = $.isNode() ? require("./sendNotify") : "";
 
 
@@ -39,19 +39,18 @@ const notify = $.isNode() ? require("./sendNotify") : "";
         ).toLocaleString()} \n==================================================`
     );
     //console.log(userCookie)
-    if (!userCookie?.length) throw new Error(`没有找到【${ckName}】`);
+    if (!userCookie?.length) return console.log(`没有找到CK哦`)
     let index = 0;
     let strSplitor = "#";
 
     for (let user of userCookie) {
         $.log(`\n🚀 user:【${index || ++index}】 start work\n`)
-        let id = user.split(strSplitor)[0]
-        let openid = user.split(strSplitor)[1]
-        let ckStatus = true
-        ckStatus = await UserInfo(id, openid)
-        if (ckStatus !== false) {
-            await SignIn(openid)
-
+        $.id = user.split(strSplitor)[0]
+        $.openid = user.split(strSplitor)[1]
+        $.ckStatus = false
+        $.ckStatus = await UserInfo($.id, $.openid)
+        if ($.ckStatus) {
+            await SignIn($.openid)
         }
 
     }
@@ -85,41 +84,41 @@ function getSign(t, e, n) {
 
     return d(t, e, n)
 }
-async function SignIn(openid) {
+async function SignIn() {
     let { sign: sign, time: time, version: version } = getSign({
-        openid: openid
+        openid: $.openid
     }, 'GET', false)
     let { data: result } = await Request({
         method: 'GET',
-        url: 'https://popvip.paquapp.com/miniapp/v2/sign_in/everySignDay/?openid=' + openid + '&sign=' + sign + '&time=' + time + '&version=' + version,
+        url: 'https://popvip.paquapp.com/miniapp/v2/sign_in/everySignDay/?openid=' + $.openid + '&sign=' + sign + '&time=' + time + '&version=' + version,
         headers: {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/122.0.6261.120 Mobile Safari/537.36 XWEB/1220067 MMWEBSDK/20240404 MMWEBID/8150 MicroMessenger/8.0.49.2600(0x28003156) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 MiniProgramEnv/android',
             'Accept-Encoding': 'gzip,compress,br,deflate',
-            'identity_code': openid,
+            'identity_code': $.openid,
             'charset': 'utf-8',
             'content-type': 'application/x-www-form-urlencoded;charset=utf-8',
             'Referer': 'https://servicewechat.com/wx9627eb7f4b1c69d5/638/page-frame.html'
         }
     })
-    return result?.code == 1 ? $.log(`签到状态：${result.data.sign}`) : false
+    result?.code == 1 ? $.log(`签到状态：${result.data.sign}`) : ""
 }
-async function UserInfo(id, openid) {
+async function UserInfo() {
     let { sign: sign, time: time, version: version } = getSign({
-        user_id: id
+        user_id: $.id
     }, 'GET', false)
     let { data: result } = await Request({
         method: 'GET',
-        url: 'https://popvip.paquapp.com/miniapp/v2/wechat/getUserInfo/?user_id=' + id + '&sign='+sign+'&time='+time+'&version='+version,
+        url: 'https://popvip.paquapp.com/miniapp/v2/wechat/getUserInfo/?user_id=' + $.id + '&sign=' + sign + '&time=' + time + '&version=' + version,
         headers: {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/122.0.6261.120 Mobile Safari/537.36 XWEB/1220067 MMWEBSDK/20240404 MMWEBID/8150 MicroMessenger/8.0.49.2600(0x28003156) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 MiniProgramEnv/android',
             'Accept-Encoding': 'gzip,compress,br,deflate',
-            'identity_code': openid,
+            'identity_code': $.openid,
             'charset': 'utf-8',
             'content-type': 'application/x-www-form-urlencoded;charset=utf-8',
             'Referer': 'https://servicewechat.com/wx9627eb7f4b1c69d5/638/page-frame.html'
         }
     })
-    return result?.code == 1 ? $.log(`${result.data.nickname} 积分【${result.data.points}】`) : false
+    result?.code == 1 ? ($.log(`${result.data.nickname} 积分【${result.data.points}】`), $.ckStatus = true) : $.ckStatus = false
 }
 
 function checkEnv(userCookie) {
@@ -128,6 +127,7 @@ function checkEnv(userCookie) {
         return;
     }
     const envSplitor = ["&", "\n"];
+    console.log(userCookie)
     let userList = userCookie.split(envSplitor.find(o => userCookie.includes(o)) || "&").filter(n => n);
     console.log(`共找到${userList.length}个账号`);
     return userList;
