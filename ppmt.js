@@ -48,7 +48,7 @@ const notify = $.isNode() ? require("./sendNotify") : "";
         $.id = user.split(strSplitor)[0]
         $.openid = user.split(strSplitor)[1]
         $.ckStatus = false
-        $.ckStatus = await UserInfo($.id, $.openid)
+        await UserInfo($.id, $.openid)
         if ($.ckStatus) {
             await SignIn($.openid)
         }
@@ -122,12 +122,7 @@ async function UserInfo() {
 }
 
 function checkEnv(userCookie) {
-    if (!userCookie) {
-        console.log(`未找到CK【${ckName}】`);
-        return;
-    }
     const envSplitor = ["&", "\n"];
-    console.log(userCookie)
     let userList = userCookie.split(envSplitor.find(o => userCookie.includes(o)) || "&").filter(n => n);
     console.log(`共找到${userList.length}个账号`);
     return userList;
