@@ -1,15 +1,17 @@
 /**
  * cron 5 12 * * *
  * Show:每日做联想乐豆任务 可以换东西
- * 变量名:lenovoapp
+ * 变量名:lenovoAccessToken
  * 变量值:  APP 我的 乐豆 前往乐豆兑换中心 抓 https://mmembership.lenovo.com.cn/member-hp-task-center 
- * 请求头Headers 中 lenovoid#servicetoken 去掉Bearer 前缀 的值  两个值缺一不可
- * scriptVersionNow = "0.0.1";
+ * 请求头Headers 中 accesstoken 的值 多账号@ 分割
+ * scriptVersionNow = "0.0.2";
  */
 
 const $ = new Env("联想App");
+const axios = require('axios');
+
 const notify = $.isNode() ? require('./sendNotify') : '';
-let ckName = "lenovoapp";
+let ckName = "lenovoAccessToken";
 let envSplitor = ["&", "\n"]; //多账号分隔符
 let strSplitor = "#"; //多变量分隔符
 let userIdx = 0;
@@ -17,16 +19,21 @@ let userList = [];
 class Task {
     constructor(str) {
         this.index = ++userIdx;
-        this.ck = str.split(strSplitor)[0]; //单账号多变量分隔符
+        this.ck = null //单账号多变量分隔符
         this.ckStatus = true;
-        this.token = str.split(strSplitor)[1];
+        this.token = null
+        this.accesstoken = str.split(strSplitor)[0];
     }
     async main() {
-        await this.userInfo()
-        if (this.ckStatus) {
+        await this.ssoCheck()
+        console.log(this.ck, this.token)
+        if (this.ck && this.token) {
+            await this.userInfo()
             await this.checkIn()
             await this.getUserTaskList();
+
         }
+
 
 
     }
@@ -66,6 +73,35 @@ class Task {
             console.log(result);
         }
     }
+    getSignKey() {
+        global["window"] = {}
+        const JSEncrypt = require("jsencrypt")
+        let pt = ["cD", "BT", "Uzn", "Po", "Luu", "Yhc", "Cj", "FP", "al", "Tq"]
+            , ht = ["MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJB", "L7qpP6mG6ZHdDKEIdTqQDo/WQ", "6NaWftXwOTHnnbnwUEX2/2jI4qALxRWMliYI80cszh6", "ySbap0KIljDCN", "w0CAwEAAQ=="]
+            , mt = function (text) {
+                var t, e, n = "";
+                try {
+                    var r = new JSEncrypt;
+                    r.setPublicKey((t = ["A", "b", "C", "D", ""],
+                        e = "",
+                        ht.forEach((function (n, r) {
+                            return e += n + t[r]
+                        }
+                        )),
+                        e)),
+                        n = r.encrypt(text)
+                } catch (t) {
+                    console.log("rsa加密错误！", n)
+                }
+                return n
+            }
+        for (var t = function () {
+            var t = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 8;
+            return Math.floor(Math.random() * Math.pow(10, t))
+        }(8).toString(), e = "", i = 0; i < t.length; i++)
+            e += pt[Number(t[i])];
+        return mt(t + ":" + e)
+    }
     async getUserTaskList() {
         let result = await this.taskRequest({ method: "POST", url: `https://mmembership.lenovo.com.cn/member-hp-task-center/v1/task/getUserTaskList` })
         //console.log(result);
@@ -77,7 +113,7 @@ class Task {
                     await $.wait(5000)
                     await this.doTask(task.taskId);
                 }
-                
+
             }
         } else {
             $.log(`❌账号[${this.index}]  获取任务列表失败`);
@@ -94,23 +130,57 @@ class Task {
 
             } else {
                 $.log(`❌账号[${this.index}]  任务执行失败`);
-                console.log(result);
+                console.log(result_.message);
                 console.log(id)
             }
+        } else {
+            console.log(result_.message)
         }
 
     }
+    async ssoCheck() {
+
+        let config = {
+            method: 'POST',
+            url: 'https://mmembership.lenovo.com.cn/member-center-api/v2/access/ssoCheck?lenovoId=&unionId=&clientId=2',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.99 Mobile Safari/537.36/lenovoofficialapp/9e4bb0e5bc326fb1_10219183246/newversion/versioncode-1000112/',
+                'Accept-Encoding': 'gzip, deflate',
+                'pragma': 'no-cache',
+                'cache-control': 'no-cache',
+                'accesstoken': this.accesstoken,
+                'signkey': this.getSignKey(),
+                'origin': 'https://mmembership.lenovo.com.cn',
+                'servicetoken': '',
+                'tenantid': '25',
+                'sec-fetch-dest': 'empty',
+                //'lenovoid': ,
+                'clientid': '2',
+                'x-requested-with': 'com.lenovo.club.app',
+                'sec-fetch-site': 'same-origin',
+                'sec-fetch-mode': 'cors',
+                'referer': 'https://mmembership.lenovo.com.cn/app?pmf_source=P0000005611M0002',
+                'accept-language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+            }
+        }
+        let { data: result } = await axios.request(config)
+        //console.log(result)
+        if (result.code == "0") {
+            this.token = result.data.serviceToken
+            this.ck = result.data.lenovoId
+        }
+    }
 
     async taskRequest(options) {
-        const axios = require('axios');
         let headers = {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.99 Mobile Safari/537.36/lenovoofficialapp/9e4bb0e5bc326fb1_10219183246/newversion/versioncode-1000112/',
             'Accept-Encoding': 'gzip, deflate',
             'pragma': 'no-cache',
             'cache-control': 'no-cache',
             'origin': 'https://mmembership.lenovo.com.cn',
-            'servicetoken': 'Bearer ' + this.token,
+            'servicetoken': this.token,
             'sec-fetch-dest': 'empty',
+            //'service-authentication':this.token,
             'lenovoid': this.ck,
             'clientid': '2',
             'x-requested-with': 'com.lenovo.club.app',
