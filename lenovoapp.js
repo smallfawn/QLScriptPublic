@@ -3,7 +3,7 @@
  * Show:每日做联想乐豆任务 可以换东西
  * 变量名:lenovoAccessToken
  * 变量值:  APP 我的 乐豆 前往乐豆兑换中心 抓 https://mmembership.lenovo.com.cn/member-hp-task-center 
- * 请求头Headers 中 accesstoken 的值 多账号@ 分割
+ * 请求头Headers 中 accesstoken 的值 多账号&或换行 分割 或新建同名变量
  * scriptVersionNow = "0.0.2";
  */
 
