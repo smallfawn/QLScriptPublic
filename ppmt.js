@@ -4,7 +4,7 @@
 @Date: 2024.06.07 19:15
 @Description: 微信小程序泡泡玛特
 ------------------------------------------
-抓user_id和openid和 分别在请求头和请求参数里面 用#连接 多账号@分开
+抓user_id和openid和 分别在请求头和请求参数里面 用#连接 多账号&或换行 分开 或新建同名变量
 https://popvip.paquapp.com/miniapp/v2/wechat/getUserInfo/
 [Script]
 http-response
