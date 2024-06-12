@@ -4,22 +4,12 @@
 export smallfawnPushWhite="脚本名字@脚本名字2"
 ``````
 # https://shopping.onecc.cc 小卖部
-脚本会自行判断是否是在黑白名单内的 如果存在则判断通知或不通知 
-青龙面板脚本公共仓库
 # 组织基地：QQ群551674817
 # 青龙面板拉库命令
 ``````
 ql repo https://mirror.ghproxy.com/https://github.com/smallfawn/QLScriptPublic.git
 ``````
-# 如果您对我仓库感兴趣可以支付任意金额支持一下！
-# 赞助URL: http://pay.onecc.cc 有机器人插件 可购买源码
-
 # 开发的另一个项目 http://2w.onecc.cc 
-# 支付宝
-<img src="https://mirror.ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clzfb.png">
-# 微信
-<img src="https://mirror.ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Images/clwx.png">
-
 自用青龙docker搭建命令
 ``````
 docker run -dit \
