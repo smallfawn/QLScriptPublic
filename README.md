@@ -18,6 +18,7 @@ ql repo https://mirror.ghproxy.com/https://github.com/smallfawn/QLScriptPublic.g
 # 开发的另一个项目 http://2w.onecc.cc 
 自用青龙docker搭建命令
 ``````
+#老版青龙(2.11.3)搭建命令
 docker run -dit \
    -v $PWD/ql/config:/ql/config \
    -v $PWD/ql/log:/ql/log \
@@ -31,6 +32,20 @@ docker run -dit \
    --hostname qinglong \
    --restart unless-stopped \
    registry.cn-hangzhou.aliyuncs.com/smallfawn/qinglong:2.11.3
+``````
+#最新版青龙搭建命令
+docker run -dit \
+-v $PWD/ql:/ql/data \
+-p 5600:5700 \
+-e TZ=Asia/Shanghai \
+--dns 114.114.114.114 \
+--name qinglong \
+--hostname qinglong \
+--no-healthcheck \
+--restart always \
+whyour/qinglong
+
+
 ``````
 这里的脚本只是自己学习 js 的一个实践 仅用于测试和学习研究，禁止用于商业用途，不能保证其合法性，准确性，完整性和有效性，请根据情况自行判断.
 
