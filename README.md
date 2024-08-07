@@ -1,6 +1,6 @@
 # QLScriptpublic
 打个广告:闲置倍控J4125 4网口 4USB DP+HDMI + 原装电源和包装 + 三星内存条D4  8G  448包邮 (原价557+80)
-
+需要的联系 QQ 860562056
 # 由于特殊原因可能最近几年不会写脚本了 特此招收30名脚本携手共创QLPublicScript仓库 请把GITHUB用户名饲料发送给我 我给你们申请上传和编辑权限
 https://github.com/PickHeBin/Python-111
 https://github.com/smallfawn/captcha
