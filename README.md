@@ -1,5 +1,6 @@
 # QLScriptpublic
-JD账密登录插件 10r一位 联系860562056
+【闲鱼】https://m.tb.cn/h.gl6rDES?tk=L4Fe33wtKth CZ0015 「我在闲鱼发布了【爱国者sata3.0 256g（2.5寸）S500读500m】」
+点击链接直接打开
 # 由于特殊原因可能最近几年不会写脚本了 特此招收30名脚本携手共创QLPublicScript仓库 请把GITHUB用户名饲料发送给我 我给你们申请上传和编辑权限
 https://github.com/PickHeBin/Python-111
 https://github.com/smallfawn/captcha
