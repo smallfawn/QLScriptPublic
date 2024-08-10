@@ -1,9 +1,5 @@
 # QLScriptpublic
-出一个J4125 4网口带电源 4USB MINI DP + HDMI 倍控出品 在保
-价格428不包邮 + 40送内存条 468不包邮 邮费12 爽快包邮
-支持双通道内存 最高16G 支持SATA和NVME硬盘
-挂青龙和网站 机器人绰绰有余 黑裙等等等等..咸鱼看了下 最低都要450准系统（倍控同款同配置）
-需要的联系 QQ 860562056
+JD账密登录插件 10r一位 联系860562056
 # 由于特殊原因可能最近几年不会写脚本了 特此招收30名脚本携手共创QLPublicScript仓库 请把GITHUB用户名饲料发送给我 我给你们申请上传和编辑权限
 https://github.com/PickHeBin/Python-111
 https://github.com/smallfawn/captcha
