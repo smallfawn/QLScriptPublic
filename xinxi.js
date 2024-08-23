@@ -1,13 +1,12 @@
 /**
  * cron 9 9 * * *  xx.js
  * 变量名: xinxi
- * 每天运行一次就行 运行多次任务也不会多做
+ * 每天运行一次就行
  * 报错是正常情况
  * 变量值:api.xinc818.com 请求头中sso的值 多账户&或者换行
- * scriptVersionNow = "0.0.1";
  */
 
-const $ = new Env("心喜-微信小程序");
+const $ = new Env("心喜");
 const notify = $.isNode() ? require('./sendNotify') : '';
 let ckName = "xinxi";
 let envSplitor = ["&", "\n"]; //多账号分隔符
@@ -31,10 +30,10 @@ class Task {
             await this.task_lottery()
             await this.task_share()
             await this.task_goods()
-            /*await this.art_list()
+            await this.art_list()
             if (this.artList.length > 0) {
                 await this.task_follow(this.artList[0])
-            }*/
+            }
             await this.goods_list()
             if (this.goodsList.length > 0) {
                 await this.task_like(this.goodsList[0])
@@ -62,7 +61,7 @@ class Task {
         try {
             let result = await this.taskRequest("get", `https://api.xinc818.com/mini/user`)
             //console.log(options);
-            //console.log(result);
+            console.log(result);
             if (result.code == 0) {
                 $.log(`✅账号[${this.index}]  【${result.data.nickname}】积分【${result.data.integral}】🎉`)
                 this.userId = result.data.id
@@ -79,7 +78,7 @@ class Task {
         try {
             let result = await this.taskRequest("get", `https://api.xinc818.com/mini/dailyTask/browseGoods/22`)
             //console.log(options);
-            //console.log(result);
+            console.log(result);
             if (result.code == 0) {
                 if (result.data !== null) {
                     $.log(`✅账号[${this.index}]  完成浏览30s成功 获得【${result.data.singleReward}】`)
@@ -100,13 +99,13 @@ class Task {
 
     //想要任务API
     async task_like(id) {
-        //console.log(`https://api.xinc818.com/mini/integralGoods/${id}?type=`)
+        console.log(`https://api.xinc818.com/mini/integralGoods/${id}?type=`)
         try {
             let goodsResult = await this.taskRequest("get", `https://api.xinc818.com/mini/integralGoods/${id}?type=`)
             if (goodsResult.data) {
                 let likeResult = await this.taskRequest("post", `https://api.xinc818.com/mini/live/likeLiveItem`, { "isLike": true, "dailyTaskId": 20, "productId": Number(goodsResult.data.outerId) })
                 //console.log(options);
-                //console.log(likeResult);
+                console.log(likeResult);
                 if (likeResult.code == 0) {
                     if (likeResult.data !== null) {
                         $.log(`✅账号[${this.index}]  完成点击想要任务成功 获得【${likeResult.data.singleReward}】`)
@@ -151,9 +150,9 @@ class Task {
     //抽奖API
     async task_lottery() {
         try {
-            let result = await this.taskRequest("post", `https://api.xinc818.com/mini/lottery/draw`, { "activity": 63, "batch": false, "isIntegral": false, "userId": Number(this.userId), "dailyTaskId": 9 })
+            let result = await this.taskRequest("post", `https://api.xinc818.com/mini/lottery/draw`, { "activity": 61, "batch": false, "isIntegral": false, "userId": Number(this.userId), "dailyTaskId": 9 })
             //console.log(options);
-            //console.log(result);
+            console.log(result);
             if (result.code == 0) {
                 if (result.data !== null) {
                     $.log(`✅账号[${this.index}]  完成抽奖成功 获得【${result.data.taskResult.singleReward}】积分 奖品【${result.data.lotteryResult.integral}】`)
@@ -175,7 +174,7 @@ class Task {
         try {
             let result = await this.taskRequest("get", `https://api.xinc818.com/mini/dailyTask/share`)
             //console.log(options);
-            //console.log(result);
+            console.log(result);
             if (result.code == 0) {
                 if (result.data !== null) {
                     $.log(`✅账号[${this.index}]  完成分享成功 获得【${result.data.singleReward}】`)
@@ -216,7 +215,7 @@ class Task {
         try {
             let result = await this.taskRequest("get", `https://cdn-api.xinc818.com/mini/integralGoods?orderField=sort&orderScheme=DESC&pageSize=10&pageNum=1`)
             //console.log(options);
-            //console.log(result);
+            console.log(result);
             if (result.code == 0) {
                 if (result.data.list.length > 0) {
                     for (let i = 0; i < 2; i++)
@@ -373,7 +372,7 @@ function Env(t, s) {
                                     ? t[e]
                                     : (t[e] = Math.abs(s[i + 1]) >> 0 == +s[i + 1] ? [] : {}),
                             t
-                        )[s[s.length - 1]] = e),
+)[s[s.length - 1]] = e),
                     t);
         }
         getdata(t) {
@@ -581,7 +580,7 @@ function Env(t, s) {
                 (t = t.replace(
                     RegExp.$1,
                     (new Date().getFullYear() + "").substr(4 - RegExp.$1.length)
-                ));
+));
             for (let e in s)
                 new RegExp("(" + e + ")").test(t) &&
                     (t = t.replace(
@@ -589,7 +588,7 @@ function Env(t, s) {
                         1 == RegExp.$1.length
                             ? s[e]
                             : ("00" + s[e]).substr(("" + s[e]).length)
-                    ));
+));
             return t;
         }
         msg(s = t, e = "", i = "", o) {
@@ -639,7 +638,7 @@ function Env(t, s) {
             this.log(
                 "",
                 `\ud83d\udd14${this.name}, \u7ed3\u675f! \ud83d\udd5b ${e} \u79d2`
-            )
+)
             this.log()
             if (this.isNode()) {
                 process.exit(1)
