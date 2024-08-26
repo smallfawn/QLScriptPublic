@@ -1,4 +1,5 @@
 # QLScriptpublic
+
 # 由于特殊原因可能最近几年不会写脚本了 特此招收30名脚本携手共创QLPublicScript仓库 请把GITHUB用户名饲料发送给我 我给你们申请上传和编辑权限
 https://github.com/PickHeBin/Python-111
 time:2024/08/03
