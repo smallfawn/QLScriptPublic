@@ -1,4 +1,12 @@
 # QLScriptpublic
+# JD 京东账密登录协议版本已发布 DOCKER一键部署 对接青龙 对接BOT
+购买地址
+http://smshop.back1.idcfengye.com/
+
+体验地址
+http://smjd.back1.idcfengye.com/
+
+
 
 # 由于特殊原因可能最近几年不会写脚本了 特此招收30名脚本携手共创QLPublicScript仓库 请把GITHUB用户名饲料发送给我 我给你们申请上传和编辑权限
 https://github.com/PickHeBin/Python-111
