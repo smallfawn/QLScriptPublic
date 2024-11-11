@@ -16,13 +16,11 @@ time:2024/08/03
 ``````
 export smallfawnPushWhite="脚本名字@脚本名字2"
 ``````
-# https://shopping.onecc.cc 小卖部
 # 组织基地：QQ群551674817
 # 青龙面板拉库命令
 ``````
 ql repo https://mirror.ghproxy.com/https://github.com/smallfawn/QLScriptPublic.git
 ``````
-# 开发的另一个项目 http://2w.onecc.cc 
 自用青龙docker搭建命令
 ``````
 #老版青龙(2.11.3)搭建命令
