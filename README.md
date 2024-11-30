@@ -16,7 +16,7 @@ time:2024/08/03
 ``````
 export smallfawnPushWhite="脚本名字@脚本名字2"
 ``````
-# 组织基地：QQ群551674817
+# 组织基地：QQ群1021185005
 # 青龙面板拉库命令
 ``````
 ql repo https://mirror.ghproxy.com/https://github.com/smallfawn/QLScriptPublic.git
