@@ -16,7 +16,7 @@
  * 每日抽奖       gacmotorLuckyDram=1  抽奖次数[1-10]  不写默认抽奖一次(首次免费)  以后每次花费2G豆抽奖 每天上限10次
  * 
  */
-let GacmotorCookies = './gac.json';//指定文件目录
+let GacmotorCookies = './GacmotorCookies.json';//指定文件目录
 const $ = new Env("广汽传祺");
 const notify = $.isNode() ? require('./sendNotify') : '';
 //const { updateEnv11, getEnvs, updateEnv } = require("./ql")
