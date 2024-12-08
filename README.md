@@ -25,18 +25,36 @@ ql repo https://mirror.ghproxy.com/https://github.com/smallfawn/QLScriptPublic.g
 ``````
 #老版青龙(2.11.3)搭建命令
 docker run -dit \
-   -v $PWD/ql/config:/ql/config \
-   -v $PWD/ql/log:/ql/log \
-   -v $PWD/ql/db:/ql/db \
-   -v $PWD/ql/repo:/ql/repo \
-   -v $PWD/ql/raw:/ql/raw \
-   -v $PWD/ql/scripts:/ql/scripts \
-   -v $PWD/ql/deps:/ql/deps \
-   -p 5700:5700 \
-   --name qinglong \
-   --hostname qinglong \
-   --restart unless-stopped \
-   registry.cn-hangzhou.aliyuncs.com/smallfawn/qinglong:2.11.3
+  -v $PWD/ql/config:/ql/config \
+  -v $PWD/ql/log:/ql/log \
+  -v $PWD/ql/db:/ql/db \
+  -v $PWD/ql/repo:/ql/repo \
+  -v $PWD/ql/raw:/ql/raw \
+  -v $PWD/ql/scripts:/ql/scripts \
+  -p 5700:5700 \
+  --name qinglong \
+  --hostname qinglong \
+  --restart unless-stopped \
+  yanyu.icu/whyour/qinglong:2.11
+
+version: '3'
+services:
+  qinglong:
+    image: yanyu.icu/whyour/qinglong:2.11
+    container_name: qinglong
+    hostname: qinglong
+    volumes:
+      - $PWD/ql/config:/ql/config
+      - $PWD/ql/log:/ql/log
+      - $PWD/ql/db:/ql/db
+      - $PWD/ql/repo:/ql/repo
+      - $PWD/ql/raw:/ql/raw
+      - $PWD/ql/scripts:/ql/scripts
+    ports:
+      - 5700:5700
+    restart: unless-stopped
+
+https://github.com/whyour/qinglong/tree/d6614acf66a243fddc494bcfcee44b3a55020591
 ``````
 #最新版青龙搭建命令
 docker run -dit \
