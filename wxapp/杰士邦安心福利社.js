@@ -5,7 +5,7 @@
  * @base 幻生 https://github.com/Huansheng1/
  * @change smallfawn https://github.com/smallfawn/QLScriptPublic
  * 变量名:jsbaxfls
- * 变量值:https://vip.ixiliu.cn/mp/sign/applyV2 请求头Headers中access-token的值 多账户&分割 或换行 或新建同名变量
+ * 变量值: 请求头Headers中access-token的值 多账户&分割 或换行 或新建同名变量
  * scriptVersionNow = "0.0.1";
  */
 
@@ -50,7 +50,6 @@ class Task {
     }
     body == "" ? "" : Object.assign(reqeuestOptions, { body: body })
     let { body: result } = await $.httpRequest(reqeuestOptions)
-    console.log(reqeuestOptions)
     return result
   }
   async taskSignIn() {
@@ -94,12 +93,12 @@ class Task {
       //console.log(options);
       console.log(result);
       if (result.status == 200) {
-        $.log(`✅账号[${this.nick_name}]  当天签到状态[${result.data.today_is_signed}]🎉`)
+        $.log(`✅账号[${this.index}]  当天签到状态[${result.data.today_is_signed}]🎉`)
         if (!result.data.today_is_signed) {
           await this.taskSignIn();
         }
       } else {
-        $.log(`❌账号[${this.nick_name}]  当天签到状态[${result.message}]`);
+        $.log(`❌账号[${this.index}]  当天签到状态[${result.message}]`);
         console.log(result);
       }
     } catch (e) {
@@ -114,9 +113,9 @@ class Task {
       //console.log(options);
       //console.log(result);
       if (result.status == 200) {
-        $.log(`✅账号[${this.nick_name}]  分享执行状态[${result.msg}]🎉`)
+        $.log(`✅账号[${this.index}]  分享执行状态[${result.msg}]🎉`)
       } else {
-        $.log(`❌账号[${this.nick_name}]  分享执行状态[${result.msg}]`);
+        $.log(`❌账号[${this.index}]  分享执行状态[${result.msg}]`);
         //console.log(result);
       }
     } catch (e) {
