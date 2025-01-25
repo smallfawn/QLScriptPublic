@@ -33,7 +33,6 @@ class Task {
   async taskRequest(method, url, body = "") {
     //
     let headers = {
-      "Host": "vip.ixiliu.cn",
       "Connection": "keep-alive",
       "charset": "utf-8",
       "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/116.0.0.0 Mobile Safari/537.36 XWEB/1160065 MMWEBSDK/20231002 MMWEBID/2585 MicroMessenger/8.0.43.2480(0x28002B51) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 MiniProgramEnv/android",
@@ -51,19 +50,21 @@ class Task {
     }
     body == "" ? "" : Object.assign(reqeuestOptions, { body: body })
     let { body: result } = await $.httpRequest(reqeuestOptions)
+    console.log(reqeuestOptions)
     return result
   }
   async taskSignIn() {
     try {
-      let result = await this.taskRequest("get", `https://vip.ixiliu.cn/mp/sign/applyV2`)
+      let result = await this.taskRequest("get", `https://xh-vip-api.a-touchin.com/mp/sign/applyV2`)
       //console.log(options);
       //console.log(result);
-      if (result.code == 200) {
+      $.log(`✅账号[${this.nick_name}]  签到执行状态[${result.message}]🎉`)
+      /*if (result.code == 200) {
         $.log(`✅账号[${this.nick_name}]  签到执行状态[${result.message}]🎉`)
       } else {
         $.log(`❌账号[${this.nick_name}]  签到执行状态[${result.message}]`);
         //console.log(result);
-      }
+      }*/
     } catch (e) {
       console.log(e);
     }
@@ -71,13 +72,12 @@ class Task {
 
   async userInfo() {
     try {
-      let result = await this.taskRequest("get", `https://vip.ixiliu.cn/mp/user/info`)
+      let result = await this.taskRequest("get", `https://xh-vip-api.a-touchin.com/mp/welfare/info`)
       //console.log(options);
       //console.log(result);
       if (result.status == 200) {
-        $.log(`✅账号[${this.index}]  当前积分[${result.data.userInfo.points}]🎉`)
+        $.log(`✅账号[${this.index}]  当前积分[${result.data.user.points}]🎉`)
         this.ckStatus = true
-        this.nick_name = result.data.userInfo.nick_name;
       } else {
         $.log(`❌账号[${this.index}]  获取用户信息失败[${result.message}]`);
         this.ckStatus = false
@@ -90,9 +90,9 @@ class Task {
 
   async signInInfo() {
     try {
-      let result = await this.taskRequest("get", `https://vip.ixiliu.cn/mp/sign/infoV2`)
+      let result = await this.taskRequest("get", `https://xh-vip-api.a-touchin.com/mp/sign/infoV2`)
       //console.log(options);
-      //console.log(result);
+      console.log(result);
       if (result.status == 200) {
         $.log(`✅账号[${this.nick_name}]  当天签到状态[${result.data.today_is_signed}]🎉`)
         if (!result.data.today_is_signed) {
@@ -110,7 +110,7 @@ class Task {
 
   async taskShare() {
     try {
-      let result = await this.taskRequest("get", `https://vip.ixiliu.cn/mp/guess.home/share?project_id=pages%2Fguess%2Findex%3Fproject_id%3D333480658633344`)
+      let result = await this.taskRequest("get", `https://xh-vip-api.a-touchin.com/mp/guess.home/share?project_id=pages%2Fguess%2Findex%3Fproject_id%3D333480658633344`)
       //console.log(options);
       //console.log(result);
       if (result.status == 200) {
