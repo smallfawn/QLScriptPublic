@@ -11,8 +11,8 @@ let _0x5405b0 = ["@", "\n"],
   _0x45299e = "&",
   _0x5e6b99 = "0.0.1";
 async function _0x104bb7() {
-  await _0x11b342("smallfawn/QLScriptPublic@main/bnmdhg_wx.js");
-  await _0x455560();
+  //await _0x11b342("smallfawn/QLScriptPublic@main/bnmdhg_wx.js");
+ // await _0x455560();
   console.log("\n================== \u7528\u6237\u4FE1\u606F ==================\n");
   let _0x5c3f2e = [];
   for (let _0x33113a of _0x58a094.userList) {
@@ -692,7 +692,7 @@ function _0x313dd5(_0x5ccb4a, _0x528fb9) {
       if (!_0x82d415) return;
       if (_0x521cbd > 0) {
         if (this.isNode()) {
-          var _0x55fa57 = require("./sendNotify");
+          var _0x55fa57 = require("../sendNotify");
           await _0x55fa57.sendNotify(this.name, _0x82d415);
         } else this.msg(this.name, "", _0x82d415);
       } else {
