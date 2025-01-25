@@ -10,7 +10,7 @@
  */
 
 const $ = new Env("杰士邦安心福利社-小程序");
-const notify = $.isNode() ? require('./sendNotify') : '';
+const notify = $.isNode() ? require('../sendNotify') : '';
 let ckName = "jsbaxfls";
 let envSplitor = ["&", "\n"]; //多账号分隔符
 let strSplitor = "#"; //多变量分隔符

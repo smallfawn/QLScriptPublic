@@ -183,7 +183,7 @@ const SaltConfig = {
 //---------------------------------------------------------
 
 async function start() {
-  await getVersion("smallfawn/QLScriptPublic/main/mys.js");
+  //await getVersion("smallfawn/QLScriptPublic/main/mys.js");
   log(`todoList:此次版本更新为过渡版本,以后将增加米游币的任务`)
   log(`tips:更新双变量模式,两个网址获取的两个cookie用&分割`)
   log(`\n====== 当前版本：${scriptVersionNow} 📌 最新版本：${scriptVersionLatest} ======`);
