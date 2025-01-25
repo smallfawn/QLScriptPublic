@@ -20,8 +20,8 @@ let msg = "";
 
 
 async function start() {
-    await getVersion("smallfawn/QLScriptPublic@main/zstjjsb.js");
-    await getNotice();
+    //await getVersion("smallfawn/QLScriptPublic@main/zstjjsb.js");
+    //await getNotice();
 
     let taskall = [];
     for (let user of $.userList) {
