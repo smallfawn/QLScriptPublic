@@ -1,6 +1,6 @@
 /**
  *
- * Xbox俱乐部
+ * Xbox俱乐部 微信小程序
  *
  * cron 0 0,7 * * *  xbox_v2.js         
  *  多账号并行执行任务模板V2  
@@ -8,7 +8,7 @@
  */
 //=====================================================//
 const $ = new Env("xbox俱乐部V2");
-const notify = $.isNode() ? require("./sendNotify") : "";
+const notify = $.isNode() ? require("../sendNotify") : "";
 const Notify = 1
 const debug = 0
 let ckStr = ($.isNode() ? process.env.xbox_data : $.getdata('xbox_data')) || '';  //检测CK  外部
@@ -212,7 +212,7 @@ async function SendMsg(message) {
     if (!message) return;
     if (Notify > 0) {
         if ($.isNode()) {
-            var notify = require("./sendNotify");
+            var notify = require("../sendNotify");
             await notify.sendNotify($.name, message);
         } else {
             // $.msg(message);

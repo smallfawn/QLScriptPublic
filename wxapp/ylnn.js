@@ -146,7 +146,7 @@ class UserInfo {
 
 // 入口
 !(async () => {
-    const notify = require("./sendNotify");
+    const notify = require("../sendNotify");
     $.doubleLog(await $.yiyan());
     let users = await getUsers(CK_NAME, async (index, element) => {
         let userInfo = new UserInfo(index, element);
@@ -382,7 +382,7 @@ function Env(name, env) {
             if (!message) return;
             if (Notify > 0) {
                 if ($.isNode()) {
-                    var notify = require("./sendNotify");
+                    var notify = require("../sendNotify");
                     await notify.sendNotify($.name, message);
                 } else {
                     console.log($.name, "", message);

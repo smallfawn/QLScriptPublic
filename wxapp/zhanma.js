@@ -6,7 +6,7 @@
  */
 
 const $ = Env('战马能量星球');
-const notify = $.isNode() ? require('./sendNotify') : '';      // 这里是 node（青龙属于node环境）通知相关的
+const notify = $.isNode() ? require('../sendNotify') : '';      // 这里是 node（青龙属于node环境）通知相关的
 const Notify = 0; //0为关闭通知，1为打开通知,未添加
 const debug = 0; //0为关闭调试，1为打开调试,默认为0
 const ganta = 1; //0为关闭饲料互助，1为打开互助,默认为1
@@ -29,7 +29,7 @@ let ok = ''
         return;
     else {
         //await getVersion();
-        console.log(`\n============ 当前版本：${Version} ============\n\n幻生提示：${addFriend ? '已开启互相加好友功能' : '已关闭加好友功能'} ${ganta ? '`)
+        console.log(``)
         console.log(`目前实现功能：日常签到、摸马儿、喂马、偷饲料、分享马儿、喂饲料、互助点赞、完善个人信息`);
 
         console.log(`\n\n=========================================    \n脚本执行 - 北京时间(UTC+8)：${new Date(
@@ -942,7 +942,7 @@ async function SendMsg (message) {
 
     if (Notify > 0) {
         if ($.isNode()) {
-            var notify = require('./sendNotify');
+            var notify = require('../sendNotify');
             await notify.sendNotify($.name, message);
         } else {
             $.msg(message);

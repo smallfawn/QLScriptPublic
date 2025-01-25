@@ -18,7 +18,7 @@ const $ = new Env("高济健康pro小程序签到");
 const ckName = "wx_gjjkpro_data";
 //-------------------- 一般不动变量区域 -------------------------------------
 const Notify = 1;		 //0为关闭通知,1为打开通知,默认为1
-const notify = $.isNode() ? require('./sendNotify') : '';
+const notify = $.isNode() ? require('../sendNotify') : '';
 let debug = 1;           //Debug调试   0关闭  1开启
 let envSplitor = ["@"]; //多账号分隔符
 let ck = msg = '';       //let ck,msg

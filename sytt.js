@@ -12,10 +12,8 @@ const Notify = 1
 const debug = 0
 let ckStr = ($.isNode() ? process.env.sytt_data : $.getdata('sytt_data')) || '';  //检测CK  外部
 let msg, ck;
-let host = 'xxx.xxx.xxx';
-let hostname = 'https://' + host;
-let rand = randomInt(0, 14)
-let rand1 = randomInt(0, 9)
+
+
 let replytxtArr = ["好的政府办好事", "美丽十堰", "十堰欢迎大家", "我爱十堰", "十堰真的好美"];
 let randReply = randomInt(0, 4)
 let replytxt = replytxtArr[randReply]

@@ -8,7 +8,7 @@
  */
 
 const $ = new Env("微信小程序 - 美的会员");
-const notify = $.isNode() ? require('./sendNotify') : '';
+const notify = $.isNode() ? require('../sendNotify') : '';
 let ckName = "wx_midea";
 let envSplitor = ["@", "\n"]; //多账号分隔符
 let strSplitor = "&"; //多变量分隔符
