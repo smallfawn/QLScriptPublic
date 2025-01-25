@@ -10,7 +10,6 @@
  */
 //=====================================================//
 const $ = new Env("zippo");
-const notify = $.isNode() ? require("../sendNotify") : "";
 const Notify = 1
 const debug = 0
 const axios = require("axios");
