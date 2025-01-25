@@ -26,7 +26,7 @@ hostname =
 const $ = new Env("微信小程序泡泡玛特");
 let ckName = `paopaomate`
 let userCookie = checkEnv($.isNode() ? process.env[ckName] : "");
-const notify = $.isNode() ? require("./sendNotify") : "";
+const notify = $.isNode() ? require("../sendNotify") : "";
 
 
 

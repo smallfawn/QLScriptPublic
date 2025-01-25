@@ -981,7 +981,7 @@ async function SendMsg(message) {
 
     if (Notify > 0) {
         if ($.isNode()) {
-            var notify = require('./sendNotify');
+            var notify = require('../sendNotify');
             await notify.sendNotify($.name, message);
         } else {
             $.msg(message);
