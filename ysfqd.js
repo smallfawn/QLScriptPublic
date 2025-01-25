@@ -21,8 +21,8 @@ let msg = "";
 
 
 async function start() {
-    await getVersion("smallfawn/QLScriptPublic@main/ysfqd.js");
-    await getNotice();
+    //await getVersion("smallfawn/QLScriptPublic@main/ysfqd.js");
+    //await getNotice();
     $.DoubleLog(`---------------------------`)
     let taskall = [];
     for (let user of $.userList) {

@@ -18,8 +18,8 @@ let scriptVersionNow = "1.0.0";//脚本版本号
 let msg = "";
 // ==================================异步顺序==============================================================================
 !(async () => {
-    await getNotice();  //远程通知
-    await getVersion("yang53458/ohhh154@main/babaycare.js");
+    //await getNotice();  //远程通知
+    //await getVersion("yang53458/ohhh154@main/babaycare.js");
     await main();//主函数
     await SendMsg(msg); //发送通知
 

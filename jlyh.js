@@ -18,8 +18,8 @@ const $ = new Env("吉利银河");
 let scriptVersionNow = "0.0.1";
 let msg = "";
 async function start() {
-    await getVersion("smallfawn/QLScriptPublic@main/jlyh.js");
-    await getNotice();
+    //await getVersion("smallfawn/QLScriptPublic@main/jlyh.js");
+    //await getNotice();
 
     let taskall = [];
     for (let user of $.userList) {

@@ -18,8 +18,8 @@ let scriptVersionNow = "1.0.0";
 let msg = "";
 // ==================================异步顺序==============================================================================
 !(async () => {
-    await getNotice();
-    await getVersion("yang7758258/ohhh154@main/gljj.js");
+    //await getNotice();
+    //await getVersion("yang7758258/ohhh154@main/gljj.js");
     await main();
     await SendMsg(msg);
 

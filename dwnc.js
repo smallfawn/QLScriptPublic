@@ -40,7 +40,7 @@ let UserAgent = 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002
 //---------------------------------------------------------
 
 async function start() {
-    await getVersion('smallfawn/QLScriptPublic/main/dwnc.js')
+    //await getVersion('smallfawn/QLScriptPublic/main/dwnc.js')
     console.log(`\n============ 当前版本：${scriptVersionNow} 📌 最新版本：${scriptVersionLatest} ============`);
     console.log(`获取首账号助力码`);
     taskall = [];
