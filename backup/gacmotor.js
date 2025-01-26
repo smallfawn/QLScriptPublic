@@ -18,7 +18,7 @@
  */
 let GacmotorCookies = './GacmotorCookies.json';//指定文件目录
 const $ = new Env("广汽传祺");
-const notify = $.isNode() ? require('./sendNotify') : '';
+const notify = $.isNode() ? require('../sendNotify') : '';
 //const { updateEnv11, getEnvs, updateEnv } = require("./ql")
 const appVersion = "5.1.22"
 //let ckName = "gacmotorToken";
