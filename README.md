@@ -1,10 +1,8 @@
 # QLScriptpublic
 # JD 京东账密登录协议版本已发布 DOCKER一键部署 对接青龙 对接BOT
 购买地址
-http://smshop.back1.idcfengye.com/
+http://shop.smallfawn.top/
 
-体验地址
-http://smjd.back1.idcfengye.com/
 
 
 
@@ -54,6 +52,7 @@ services:
 https://github.com/whyour/qinglong/tree/d6614acf66a243fddc494bcfcee44b3a55020591
 ``````
 #最新版青龙搭建命令
+``````
 docker run -dit \
 -v $PWD/ql:/ql/data \
 -p 5600:5700 \
@@ -64,8 +63,6 @@ docker run -dit \
 --no-healthcheck \
 --restart always \
 whyour/qinglong
-
-
 ``````
 这里的脚本只是自己学习 js 的一个实践 仅用于测试和学习研究，禁止用于商业用途，不能保证其合法性，准确性，完整性和有效性，请根据情况自行判断.
 
