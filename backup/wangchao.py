@@ -1,6 +1,8 @@
 
 
 import hashlib
+from gmalg import SM2
+
 import math
 import time
 import requests
@@ -14,7 +16,9 @@ import base64
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import urllib.parse
+import json
 debug=0
+account_id = ""
 def jm(password):
     public_key_base64 = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQD6XO7e9YeAOs+cFqwa7ETJ+WXizPqQeXv68i5vqw9pFREsrqiBTRcg7wB0RIp3rJkDpaeVJLsZqYm5TW7FWx/iOiXFc+zCPvaKZric2dXCw27EvlH5rq+zwIPDAJHGAfnn1nmQH7wR3PCatEIb8pz5GFlTHMlluw4ZYmnOwg+thwIDAQAB"
     public_key_der = base64.b64decode(public_key_base64)
@@ -41,6 +45,7 @@ def sign(phone, password):
     url_encoded_data = jm(password)
     url = "https://passport.tmuyun.com/web/oauth/credential_auth"
     payload = f"client_id=10019&password={url_encoded_data}&phone_number={phone}"
+    print(payload)
     headers = {
         'User-Agent': "ANDROID;13;10019;6.0.2;1.0;null;MEIZU 20",
         'Connection': "Keep-Alive",
@@ -51,11 +56,12 @@ def sign(phone, password):
     }
 
     response = requests.post(url, data=payload, headers=headers)
-    try:
-        code = response.json()['data']['authorization_code']['code']
-        url = "https://vapp.taizhou.com.cn/api/zbtxz/login"
-        payload = f"check_token=&code={code}&token=&type=-1&union_id="
-        headers = {
+    print(response.json())
+    code = response.json()['data']['authorization_code']['code']
+    
+    url = "https://vapp.taizhou.com.cn/api/zbtxz/login"
+    payload = f"check_token=&code={code}&token=&type=-1&union_id="
+    headers = {
             'User-Agent': "6.0.2;{deviceid};Meizu MEIZU 20;Android;13;tencent;6.10.0",
             'Connection': "Keep-Alive",
             'Accept-Encoding': "gzip",
@@ -66,16 +72,15 @@ def sign(phone, password):
             'X-SIGNATURE': "a69f171e284594a5ecc4baa1b2299c99167532b9795122bae308f27592e94381",
             'X-TENANT-ID': "64",
             'Cache-Control': "no-cache"
-        }
-        response = requests.post(url, data=payload, headers=headers)
-        message = response.json()['message']
-        account_id = response.json()['data']['account']['id']
-        session_id = response.json()['data']['session']['id']
-        name = response.json()['data']['account']['nick_name']
-        return message, account_id, session_id, name
-    except Exception:
-        print('出错啦！')
-        return None, None, None, None
+    }
+    response = requests.post(url, data=payload, headers=headers)
+    message = response.json()['message']
+    account_id = response.json()['data']['account']['id']
+    session_id = response.json()['data']['session']['id']
+    name = response.json()['data']['account']['nick_name']
+        
+    return message, account_id, session_id, name
+
 
 #生成验证码
 def generate_md5(input_str):
@@ -145,7 +150,36 @@ def fetch_article_list():
     msg = response.json()['msg']
     print(msg)
     return response.json()
+def encrypt_with_sm2(article_id, account_id):
+    # 获取当前时间戳
+    timestamp = int(time.time() * 1000)
+    # 构造数据
+    data = {
+        "timestamp": timestamp,
+        "articleId": article_id,
+        "accountId": account_id
+    }
+    # 将数据序列化为JSON字符串
+    data_json = json.dumps(data, separators=(',', ':'))
+    print("Data to be encrypted:", data_json)
+    
+    # SM2公钥，确保公钥以04开头（未压缩格式）
+    public_key_hex = "04A50803A27F000D6B310607EBA2A1C899E82872C0B538CA41DB6F0183B4C7E164DAFC6946ABF93C8AF1C0AD96D0E770D29264EF9F907DDBAE97A2A0BB1036D4AC"
+    public_key = bytes.fromhex(public_key_hex)
+    
+    # 创建SM2对象
+    sm2_crypt = SM2(pk=public_key)
+    
+    # 加密数据
+    encrypted_data = sm2_crypt.encrypt(data_json.encode('utf-8'))
+    print(len(encrypted_data.hex()))
 
+    
+    # 返回加密后的十六进制字符串
+    encrypted_data_hex = encrypted_data.hex()
+    #去掉前面两位
+    encrypted_data_hex = encrypted_data_hex[2:]
+    return encrypted_data_hex
 #阅读文章
 def mark_article_as_read(article_id,retry_count=3):
     headers = {
@@ -161,8 +195,9 @@ def mark_article_as_read(article_id,retry_count=3):
     'cookie': f'{special_cookie}',
 }
     timestamp_str = str(math.floor(time.time() * 1000))
-    signature = generate_md5('&&' + str(article_id) + '&&TlGFQAOlCIVxnKopQnW&&' + timestamp_str)
-    url = f'https://xmt.taizhou.com.cn/prod-api/already-read/article?articid={article_id}&timestamp={timestamp_str}&signature={signature}'
+    signature = encrypt_with_sm2(article_id,account_id)
+    url = f'https://xmt.taizhou.com.cn/prod-api/already-read/article/new?signature={signature}'
+    print(url)
     
     # 创建一个包含重试策略的会话
     session = requests.Session()
@@ -291,7 +326,6 @@ def display_draw_results(cookies):
 
 # 从环境变量中读取账户和密码
 accounts = os.getenv("wangchaoAccount")
-
 if not accounts:
     print("❌未找到环境变量！")    
 else:
@@ -301,6 +335,7 @@ else:
         password, phone  = account.split("#")
         message, account_id, session_id, name = sign(phone, password)
         deviceid = generate_random_uuid()
+        print()
         if account_id and session_id:
             mobile = phone[:3] + "*" * 4 + phone[7:]
             print(f"账号 {mobile} 登录成功")
