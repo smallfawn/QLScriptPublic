@@ -1,173 +1,316 @@
-/**
- * cron 5 8 * * *
- * Show:重写请求函数 在got环境或axios环境都可以请求 适用于本地版本运行
- * 杰士邦安心福利社 小程序 每日签到分享
- * @base 幻生 https://github.com/Huansheng1/
- * @change smallfawn https://github.com/smallfawn/QLScriptPublic
- * 变量名:jsbaxfls
- * 变量值: 请求头Headers中access-token的值 多账户&分割 或换行 或新建同名变量
- * scriptVersionNow = "0.0.1";
- */
+/*
+------------------------------------------
+@Author: sm
+@Date: 2024.06.07 19:15
+@Description: 测试
+------------------------------------------
+#Notice:
+ 变量名jieshibang   抓小程序杰士邦会员中心https://api.vshop.hchiv.cn/jfmb/api  Headers中 authorization  去掉Bearer   多账号&连接
+⚠️【免责声明】
+------------------------------------------
+1、此脚本仅用于学习研究，不保证其合法性、准确性、有效性，请根据情况自行判断，本人对此不承担任何保证责任。
+2、由于此脚本仅用于学习研究，您必须在下载后 24 小时内将所有内容从您的计算机或手机或任何存储设备中完全删除，若违反规定引起任何事件本人对此均不负责。
+3、请勿将此脚本用于任何商业或非法目的，若违反规定请自行对此负责。
+4、此脚本涉及应用与本人无关，本人对因此引起的任何隐私泄漏或其他后果不承担任何责任。
+5、本人对任何脚本引发的问题概不负责，包括但不限于由脚本错误引起的任何损失和损害。
+6、如果任何单位或个人认为此脚本可能涉嫌侵犯其权利，应及时通知并提供身份证明，所有权证明，我们将在收到认证文件确认后删除此脚本。
+7、所有直接或间接使用、查看此脚本的人均应该仔细阅读此声明。本人保留随时更改或补充此声明的权利。一旦您使用或复制了此脚本，即视为您已接受此免责声明。
+*/
 
-const $ = new Env("杰士邦安心福利社-小程序");
-const notify = $.isNode() ? require('../sendNotify') : '';
-let ckName = "jsbaxfls";
-let envSplitor = ["&", "\n"]; //多账号分隔符
-let strSplitor = "#"; //多变量分隔符
-let userIdx = 0;
-let userList = [];
-let msg = ""
-class Task {
-  constructor(str) {
-    this.index = ++userIdx;
-    this.ck = str.split(strSplitor)[0]; //单账号多变量分隔符
-    this.ckStatus = true;
-    this.nick_name = null
-    //定义在这里的headers会被get请求删掉content-type 而不会重置
-  }
-  async main() {
-    await this.userInfo()
-    await this.signInInfo();
-    await this.taskShare();
-  }
-  async taskRequest(method, url, body = "") {
-    //
-    let headers = {
-      "Connection": "keep-alive",
-      "charset": "utf-8",
-      "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/116.0.0.0 Mobile Safari/537.36 XWEB/1160065 MMWEBSDK/20231002 MMWEBID/2585 MicroMessenger/8.0.43.2480(0x28002B51) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 MiniProgramEnv/android",
-      "content-type": "application/json;charset=utf-8",
-      "access-token": this.ck,
-      "Accept-Encoding": "gzip,compress,br,deflate",
-      "platform": "MP-WEIXIN",
-      "sid": "10009",
-      "Referer": "https://servicewechat.com/wx9a2dc52c95994011/81/page-frame.html"
-    }
-    const reqeuestOptions = {
-      url: url,
-      method: method,
-      headers: headers
-    }
-    body == "" ? "" : Object.assign(reqeuestOptions, { body: body })
-    let { body: result } = await $.httpRequest(reqeuestOptions)
-    return result
-  }
-  async taskSignIn() {
-    try {
-      let result = await this.taskRequest("get", `https://xh-vip-api.a-touchin.com/mp/sign/applyV2`)
-      //console.log(options);
-      //console.log(result);
-      $.log(`✅账号[${this.nick_name}]  签到执行状态[${result.message}]🎉`)
-      /*if (result.code == 200) {
-        $.log(`✅账号[${this.nick_name}]  签到执行状态[${result.message}]🎉`)
-      } else {
-        $.log(`❌账号[${this.nick_name}]  签到执行状态[${result.message}]`);
-        //console.log(result);
-      }*/
-    } catch (e) {
-      console.log(e);
-    }
-  }
+const $ = new Env("杰士邦会员中心");
+let ckName = `jieshibang`;
+const strSplitor = "#";
+const envSplitor = ["&", "\n"];
+const notify = $.isNode() ? require("./sendNotify") : "";
+const axios = require("axios");
+const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.31(0x18001e31) NetType/WIFI Language/zh_CN miniProgram"
 
-  async userInfo() {
-    try {
-      let result = await this.taskRequest("get", `https://xh-vip-api.a-touchin.com/mp/welfare/info`)
-      //console.log(options);
-      //console.log(result);
-      if (result.status == 200) {
-        $.log(`✅账号[${this.index}]  当前积分[${result.data.user.points}]🎉`)
-        this.ckStatus = true
-      } else {
-        $.log(`❌账号[${this.index}]  获取用户信息失败[${result.message}]`);
-        this.ckStatus = false
-        //console.log(result);
-      }
-    } catch (e) {
-      console.log(e);
+class Public {
+    async request(options) {
+        return await axios.request(options);
     }
-  }
-
-  async signInInfo() {
-    try {
-      let result = await this.taskRequest("get", `https://xh-vip-api.a-touchin.com/mp/sign/infoV2`)
-      //console.log(options);
-      console.log(result);
-      if (result.status == 200) {
-        $.log(`✅账号[${this.index}]  当天签到状态[${result.data.today_is_signed}]🎉`)
-        if (!result.data.today_is_signed) {
-          await this.taskSignIn();
-        }
-      } else {
-        $.log(`❌账号[${this.index}]  当天签到状态[${result.message}]`);
-        console.log(result);
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
-
-  async taskShare() {
-    try {
-      let result = await this.taskRequest("get", `https://xh-vip-api.a-touchin.com/mp/guess.home/share?project_id=pages%2Fguess%2Findex%3Fproject_id%3D333480658633344`)
-      //console.log(options);
-      //console.log(result);
-      if (result.status == 200) {
-        $.log(`✅账号[${this.index}]  分享执行状态[${result.msg}]🎉`)
-      } else {
-        $.log(`❌账号[${this.index}]  分享执行状态[${result.msg}]`);
-        //console.log(result);
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  }
 }
+class Task extends Public {
+    constructor(env) {
+
+        super();
+        this.index = $.userIdx++
+        let user = env.split("#");
+        this.token = user[0];
+        this.isSign = false;
+    }
+    async addSign() {
+        let options = {
+            method: "POST",
+            url: "https://api.vshop.hchiv.cn/jfmb/api/play-default/sign/add-sign-new.do?sideType=3&mob=&appId=wx5966681b4a895dee&shopNick=wx5966681b4a895dee&timestamp=1739704494584&guideNo=&encryPlatId=d89385f4d1a7783414258f80d3fbedf6bb2d0e10f94fc010eb524fdd2a14f9a3",
+            headers: {
+                "accept": "*/*",
+                "accept-language": "zh-CN,zh;q=0.9",
+                "appenv": "test",
+                "authorization": "Bearer " + this.token,
+                "content-type": "application/json",
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "cross-site",
+                "xweb_xhr": "1",
+                "cookie": "JSESSIONID=acb5cc02-db4e-4caf-9ebf-c5b67524ec06",
+                "Referer": "https://servicewechat.com/wx5966681b4a895dee/30/page-frame.html",
+                "Referrer-Policy": "unsafe-url"
+            },
+            data: JSON.stringify({
+                "appId": "wx5966681b4a895dee",
+                "openId": true,
+                "shopNick": "",
+                "timestamp": Date.now(),
+                "interfaceSource": 0,
+                "activityId": "156947"
+            }),
+        }
+        try {
+            let { data: res } = await this.request(options);
+            if (res.success == true) {
+                $.log(`签到成功 获得【${res.data.integral}】积分`)
+            } else {
+                $.log(`签到失败`)
+                console.log(res);
+            }
+        } catch (e) {
+            console.log(e);
+
+        }
+    }
+    async activityInfo() {
+        let options = {
+            method: "POST",
+            url: "https://api.vshop.hchiv.cn/jfmb/api/activity/activity-info.do?sideType=3&mob=&appId=wx5966681b4a895dee&shopNick=wx5966681b4a895dee&timestamp=1739705505052&guideNo=&encryPlatId=d89385f4d1a7783414258f80d3fbedf6bb2d0e10f94fc010eb524fdd2a14f9a3",
+            headers: {
+                "accept": "*/*",
+                "accept-language": "zh-CN,zh;q=0.9",
+                "appenv": "test",
+                "authorization": "Bearer " + this.token,
+                "content-type": "application/json",
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "cross-site",
+                "xweb_xhr": "1",
+                "cookie": "JSESSIONID=acb5cc02-db4e-4caf-9ebf-c5b67524ec06",
+                "Referer": "https://servicewechat.com/wx5966681b4a895dee/30/page-frame.html",
+                "Referrer-Policy": "unsafe-url"
+            },
+            data: JSON.stringify({
+                "appId": "wx5966681b4a895dee",
+                "openId": true,
+                "shopNick": "",
+                "timestamp": Date.now(),
+                "interfaceSource": 0,
+                "id": "156947"
+            }),
+        }
+        try {
+            let { data: res } = await this.request(options);
+            if (res.code == '1') {
+
+                if (res.data.isSign == false) {
+                    $.log(`今日未签到`)
+                    this.isSign = false
+                } else {
+                    $.log(`今日已签到`)
+                    this.isSign = true
+                }
+            } else {
+
+            }
+        } catch (e) {
+            console.log(e);
+
+        }
+    }
+    async run() {
+
+        await this.activityInfo();
+        if (this.isSign == false) {
+            await this.addSign();
+        }
+
+
+    }
+
+
+}
+
+
+
+
 
 
 
 !(async () => {
-  if (!(await checkEnv())) return;
-  if (userList.length > 0) {
-    let taskall = [];
-    for (let user of userList) {
-      if (user.ckStatus) {
-        taskall.push(user.main());
-      }
+    await getNotice()
+    $.checkEnv(ckName);
+
+    for (let user of $.userList) {
+        //
+
+        await new Task(user).run();
+
     }
-    await Promise.all(taskall);
-  }
-  await $.sendMsg($.logs.join("\n"))
+
+
 })()
-  .catch((e) => console.log(e))
-  .finally(() => $.done());
+    .catch((e) => console.log(e))
+    .finally(() => $.done());
 
-//********************************************************
-/**
- * 变量检查与处理
- * @returns
- */
-async function checkEnv() {
-  let userCookie = ($.isNode() ? process.env[ckName] : $.getdata(ckName)) || "";
-
-  if (userCookie) {
-    let e = envSplitor[0];
-    for (let o of envSplitor)
-      if (userCookie.indexOf(o) > -1) {
-        e = o;
-        break;
-      }
-    for (let n of userCookie.split(e)) n && userList.push(new Task(n));
-  } else {
-    console.log(`未找到CK【${ckName}】`);
-    return;
-  }
-  return console.log(`共找到${userList.length}个账号`), true; //true == !0
+async function getNotice() {
+    let options = {
+        url: `https://gitee.com/smallfawn/Note/raw/main/Notice.json`,
+        headers: {
+            "User-Agent": defaultUserAgent,
+        }
+    }
+    let { data: res } = await new Public().request(options);
+    return res
 }
-//Env Api =============================
-/*
-*   @modifyAuthor @smallfawn 
-*   @modifyTime 2024-03-23
-*   @modifyInfo 重写请求函数 在got环境或axios环境都可以请求
-*/
-function Env(t, s) { return new (class { constructor(t, s) { this.name = t; this.data = null; this.dataFile = "box.dat"; this.logs = []; this.logSeparator = "\n"; this.startTime = new Date().getTime(); Object.assign(this, s); this.log("", `\ud83d\udd14${this.name},\u5f00\u59cb!`) } isNode() { return "undefined" != typeof module && !!module.exports } isQuanX() { return "undefined" != typeof $task } isSurge() { return "undefined" != typeof $httpClient && "undefined" == typeof $loon } isLoon() { return "undefined" != typeof $loon } loaddata() { if (!this.isNode()) return {}; { this.fs = this.fs ? this.fs : require("fs"); this.path = this.path ? this.path : require("path"); const t = this.path.resolve(this.dataFile), s = this.path.resolve(process.cwd(), this.dataFile), e = this.fs.existsSync(t), i = !e && this.fs.existsSync(s); if (!e && !i) return {}; { const i = e ? t : s; try { return JSON.parse(this.fs.readFileSync(i)) } catch (t) { return {} } } } } writedata() { if (this.isNode()) { this.fs = this.fs ? this.fs : require("fs"); this.path = this.path ? this.path : require("path"); const t = this.path.resolve(this.dataFile), s = this.path.resolve(process.cwd(), this.dataFile), e = this.fs.existsSync(t), i = !e && this.fs.existsSync(s), o = JSON.stringify(this.data); e ? this.writeFileSync(t, o) : i ? this.fs.writeFileSync(s, o) : this.fs.writeFileSync(t, o) } } lodash_get(t, s, e) { const i = s.replace(/\[(\d+)\]/g, ".$1").split("."); let o = t; for (const t of i) if (((o = Object(o)[t]), void 0 === o)) return e; return o } lodash_set(t, s, e) { return Object(t) !== t ? t : (Array.isArray(s) || (s = s.toString().match(/[^.[\]]+/g) || []), (s.slice(0, -1).reduce((t, e, i) => Object(t[e]) === t[e] ? t[e] : (t[e] = Math.abs(s[i + 1]) >> 0 == +s[i + 1] ? [] : {}), t)[s[s.length - 1]] = e), t) } getdata(t) { let s = this.getval(t); if (/^@/.test(t)) { const [, e, i] = /^@(.*?)\.(.*?)$/.exec(t), o = e ? this.getval(e) : ""; if (o) try { const t = JSON.parse(o); s = t ? this.lodash_get(t, i, "") : s } catch (t) { s = "" } } return s } setdata(t, s) { let e = !1; if (/^@/.test(s)) { const [, i, o] = /^@(.*?)\.(.*?)$/.exec(s), h = this.getval(i), a = i ? ("null" === h ? null : h || "{}") : "{}"; try { const s = JSON.parse(a); this.lodash_set(s, o, t), (e = this.setval(JSON.stringify(s), i)) } catch (s) { const h = {}; this.lodash_set(h, o, t), (e = this.setval(JSON.stringify(h), i)) } } else e = this.setval(t, s); return e } getval(t) { if (this.isSurge() || this.isLoon()) { return $persistentStore.read(t) } else if (this.isQuanX()) { return $prefs.valueForKey(t) } else if (this.isNode()) { this.data = this.loaddata(); return this.data[t] } else { return this.data && this.data[t] || null } } setval(t, s) { if (this.isSurge() || this.isLoon()) { return $persistentStore.write(t, s) } else if (this.isQuanX()) { return $prefs.setValueForKey(t, s) } else if (this.isNode()) { this.data = this.loaddata(); this.data[s] = t; this.writedata(); return true } else { return this.data && this.data[s] || null } } initRequestEnv(t) { try { require.resolve('got') && (this.requset = require("got"), this.requestModule = "got") } catch (e) { } try { require.resolve('axios') && (this.requset = require("axios"), this.requestModule = "axios") } catch (e) { } this.cktough = this.cktough ? this.cktough : require("tough-cookie"); this.ckjar = this.ckjar ? this.ckjar : new this.cktough.CookieJar(); if (t) { t.headers = t.headers ? t.headers : {}; if (typeof t.headers.Cookie === "undefined" && typeof t.cookieJar === "undefined") { t.cookieJar = this.ckjar } } } queryStr(options) { return Object.entries(options).map(([key, value]) => `${key}=${typeof value === 'object' ? JSON.stringify(value) : value}`).join('&') } getURLParams(url) { const params = {}; const queryString = url.split('?')[1]; if (queryString) { const paramPairs = queryString.split('&'); paramPairs.forEach(pair => { const [key, value] = pair.split('='); params[key] = value }) } return params } isJSONString(str) { try { return JSON.parse(str) && typeof JSON.parse(str) === 'object' } catch (e) { return false } } isJson(obj) { var isjson = typeof (obj) == "object" && Object.prototype.toString.call(obj).toLowerCase() == "[object object]" && !obj.length; return isjson } async sendMsg(message) { if (!message) return; if ($.isNode()) { await notify.sendNotify($.name, message) } else { $.msg($.name, '', message) } } async httpRequest(options) { let t = { ...options }; t.headers = t.headers || {}; if (t.params) { t.url += '?' + this.queryStr(t.params) } t.method = t.method.toLowerCase(); if (t.method === 'get') { delete t.headers['Content-Type']; delete t.headers['Content-Length']; delete t.headers['content-type']; delete t.headers['content-length']; delete t.body } else if (t.method === 'post') { let ContentType; if (!t.body) { t.body = "" } else if (typeof t.body === "string") { ContentType = this.isJSONString(t.body) ? 'application/json' : 'application/x-www-form-urlencoded' } else if (this.isJson(t.body)) { t.body = JSON.stringify(t.body); ContentType = 'application/json' } if (!t.headers['Content-Type'] && !t.headers['content-type']) { t.headers['Content-Type'] = ContentType } } if (this.isNode()) { this.initRequestEnv(t); if (this.requestModule === "axios" && t.method === "post") { t.data = t.body; delete t.body } let httpResult; if (this.requestModule === "got") { httpResult = await this.requset(t); if (this.isJSONString(httpResult.body)) { httpResult.body = JSON.parse(httpResult.body) } } else if (this.requestModule === "axios") { httpResult = await this.requset(t); httpResult.body = httpResult.data } return httpResult } if (this.isQuanX()) { t.method = t.method.toUpperCase(); return new Promise((resolve, reject) => { $task.fetch(t).then(response => { if (this.isJSONString(response.body)) { response.body = JSON.parse(response.body) } resolve(response) }) }) } } randomNumber(length) { const characters = '0123456789'; return Array.from({ length }, () => characters[Math.floor(Math.random() * characters.length)]).join('') } randomString(length) { const characters = 'abcdefghijklmnopqrstuvwxyz0123456789'; return Array.from({ length }, () => characters[Math.floor(Math.random() * characters.length)]).join('') } timeStamp() { return new Date().getTime() } uuid() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8); return v.toString(16) }) } time(t) { let s = { "M+": new Date().getMonth() + 1, "d+": new Date().getDate(), "H+": new Date().getHours(), "m+": new Date().getMinutes(), "s+": new Date().getSeconds(), "q+": Math.floor((new Date().getMonth() + 3) / 3), S: new Date().getMilliseconds(), }; /(y+)/.test(t) && (t = t.replace(RegExp.$1, (new Date().getFullYear() + "").substr(4 - RegExp.$1.length))); for (let e in s) new RegExp("(" + e + ")").test(t) && (t = t.replace(RegExp.$1, 1 == RegExp.$1.length ? s[e] : ("00" + s[e]).substr(("" + s[e]).length))); return t } msg(s = t, e = "", i = "", o) { const h = (t) => !t || (!this.isLoon() && this.isSurge()) ? t : "string" == typeof t ? this.isLoon() ? t : this.isQuanX() ? { "open-url": t } : void 0 : "object" == typeof t && (t["open-url"] || t["media-url"]) ? this.isLoon() ? t["open-url"] : this.isQuanX() ? t : void 0 : void 0; this.isMute || (this.isSurge() || this.isLoon() ? $notification.post(s, e, i, h(o)) : this.isQuanX() && $notify(s, e, i, h(o))); let logs = ['', '==============📣系统通知📣==============']; logs.push(t); e ? logs.push(e) : ''; i ? logs.push(i) : ''; console.log(logs.join('\n')); this.logs = this.logs.concat(logs) } log(...t) { t.length > 0 && (this.logs = [...this.logs, ...t]), console.log(t.join(this.logSeparator)) } logErr(t, s) { const e = !this.isSurge() && !this.isQuanX() && !this.isLoon(); e ? this.log("", `\u2757\ufe0f${this.name},\u9519\u8bef!`, t.stack) : this.log("", `\u2757\ufe0f${this.name},\u9519\u8bef!`, t) } wait(t) { return new Promise((s) => setTimeout(s, t)) } done(t = {}) { const s = new Date().getTime(), e = (s - this.startTime) / 1e3; this.log("", `\ud83d\udd14${this.name},\u7ed3\u675f!\ud83d\udd5b ${e}\u79d2`); this.log(); if (this.isNode()) { process.exit(1) } if (this.isQuanX()) { $done(t) } } })(t, s) }
+
+
+// prettier-ignore
+function Env(t, s) {
+    return new (class {
+        constructor(t, s) {
+            this.userIdx = 1;
+            this.userList = [];
+            this.userCount = 0;
+            this.name = t;
+            this.notifyStr = [];
+            this.logSeparator = "\n";
+            this.startTime = new Date().getTime();
+            Object.assign(this, s);
+            this.log(`\ud83d\udd14${this.name},\u5f00\u59cb!`);
+        }
+        checkEnv(ckName) {
+            let userCookie = (this.isNode() ? process.env[ckName] : "") || "";
+            this.userList = userCookie.split(envSplitor.find((o) => userCookie.includes(o)) || "&").filter((n) => n);
+            this.userCount = this.userList.length;
+            this.log(`共找到${this.userCount}个账号`);
+        }
+        async sendMsg() {
+            this.log("==============📣Center 通知📣==============")
+            let message = this.notifyStr.join(this.logSeparator);
+            if (this.isNode()) {
+
+                await notify.sendNotify(this.name, message);
+            } else {
+
+            }
+        }
+        isNode() {
+            return "undefined" != typeof module && !!module.exports;
+        }
+
+        queryStr(options) {
+            return Object.entries(options)
+                .map(
+                    ([key, value]) =>
+                        `${key}=${typeof value === "object" ? JSON.stringify(value) : value
+                        }`
+                )
+                .join("&");
+        }
+        getURLParams(url) {
+            const params = {};
+            const queryString = url.split("?")[1];
+            if (queryString) {
+                const paramPairs = queryString.split("&");
+                paramPairs.forEach((pair) => {
+                    const [key, value] = pair.split("=");
+                    params[key] = value;
+                });
+            }
+            return params;
+        }
+        isJSONString(str) {
+            try {
+                return JSON.parse(str) && typeof JSON.parse(str) === "object";
+            } catch (e) {
+                return false;
+            }
+        }
+        isJson(obj) {
+            var isjson =
+                typeof obj == "object" &&
+                Object.prototype.toString.call(obj).toLowerCase() ==
+                "[object object]" &&
+                !obj.length;
+            return isjson;
+        }
+
+        randomNumber(length) {
+            const characters = "0123456789";
+            return Array.from(
+                { length },
+                () => characters[Math.floor(Math.random() * characters.length)]
+            ).join("");
+        }
+        randomString(length) {
+            const characters = "abcdefghijklmnopqrstuvwxyz0123456789";
+            return Array.from(
+                { length },
+                () => characters[Math.floor(Math.random() * characters.length)]
+            ).join("");
+        }
+        uuid() {
+            return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+                /[xy]/g,
+                function (c) {
+                    var r = (Math.random() * 16) | 0,
+                        v = c == "x" ? r : (r & 0x3) | 0x8;
+                    return v.toString(16);
+                }
+            );
+        }
+        time(t) {
+            let s = {
+                "M+": new Date().getMonth() + 1,
+                "d+": new Date().getDate(),
+                "H+": new Date().getHours(),
+                "m+": new Date().getMinutes(),
+                "s+": new Date().getSeconds(),
+                "q+": Math.floor((new Date().getMonth() + 3) / 3),
+                S: new Date().getMilliseconds(),
+            };
+            /(y+)/.test(t) &&
+                (t = t.replace(
+                    RegExp.$1,
+                    (new Date().getFullYear() + "").substr(4 - RegExp.$1.length)
+                ));
+            for (let e in s) {
+                new RegExp("(" + e + ")").test(t) &&
+                    (t = t.replace(
+                        RegExp.$1,
+                        1 == RegExp.$1.length
+                            ? s[e]
+                            : ("00" + s[e]).substr(("" + s[e]).length)
+                    ));
+            }
+            return t;
+        }
+
+        log(content) {
+            this.notifyStr.push(content)
+            console.log(content)
+        }
+        wait(t) {
+            return new Promise((s) => setTimeout(s, t));
+        }
+        done(t = {}) {
+            this.sendMsg();
+            const s = new Date().getTime(),
+                e = (s - this.startTime) / 1e3;
+            this.log(
+                `\ud83d\udd14${this.name},\u7ed3\u675f!\ud83d\udd5b ${e}\u79d2`
+            );
+            if (this.isNode()) {
+                process.exit(1);
+            }
+        }
+    })(t, s);
+}
