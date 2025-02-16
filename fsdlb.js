@@ -4,64 +4,26 @@
  * Fsdlb
  * Date: 2024-07-31
  * cron "58 59 1 * * *" fsdlb.js
- * export fsdlb= Authorization 多账号换行或者#分隔
+ * export fsdlb= Authorization 多账号&分开  去掉Bearer
  
 
  */
 // ============================================================================================================
-const $ = new Env('逢三得利吧') 
+const $ = new Env('逢三得利吧')
 const axios = require('axios')
 const env_name = 'fsdlb' //环境变量名字
-const env = process.env[env_name] || '' 
+const env = process.env[env_name] || ''
 const Notify = 1
 const debug = 0
 let scriptVersionNow = "1.0.0";
 let msg = "";
 // ==================================异步顺序==============================================================================
-!(async () => {
-    //await getNotice();
-    //await getVersion("yang7758258/ohhh154@main/fsdlb.js");
-    await main();
-    await SendMsg(msg);
 
-})()
-    .catch((e) => $.logErr(e))
-    .finally(() => $.done());
 //==================================脚本入口函数main()==============================================================
 
-async function main() {
-    if (env == '') {
-        //没有设置变量,直接退出
-        console.log(`没有填写变量,请查看脚本说明: ${env_name}`)
-        return
-    }
-    let user_ck = env.split('\n')
-    DoubleLog(`\n========= 共找到 ${user_ck.length} 个账号 =========`);
-    let index = 1 //用来给账号标记序号, 从1开始
-    for (let ck of user_ck) {
-        if (!ck) continue //跳过空行
-        let ck_info = ck.split('&')
-        let Authorization = ck_info[0] 
-        //let ticket = ck_info[1]
-        //let deviceCode = ck_info[2]
-        let user = {
-            index: index,
-            Authorization, 
-            //ticket,
-            //deviceCode,
-        }
-        index = index + 1 //每次用完序号+1
-        //开始账号任务
-        let Run = new run(user);
-        await Run.userTask(user)
-        //每个账号之间等1~5秒随机时间
-        let rnd_time = Math.floor(Math.random() * 4000) + 1000
-        console.log(`随机等待${rnd_time / 1000}秒...`)
-        await $.wait(rnd_time)
-    }
-}
+
 // ======================================开始任务=========================================
-class run {
+class AAA {
     constructor(user) {
         let timestamp = Date.now()
         this.headers = {
@@ -74,18 +36,18 @@ class run {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36",
         }
     }
-async  userTask(user) {
-    console.log(`\n========= 账号[${user.index}]开始任务 =========`)
-    await this.sign(user)
-    await this.account(user)
-   
-}
-// =============================================================================================================================
-//
-    async  sign(user) {
+    async userTask(user) {
+        console.log(`\n========= 账号[${user.index}]开始任务 =========`)
+        await this.sign(user)
+        await this.account(user)
+
+    }
+    // =============================================================================================================================
+    //
+    async sign(user) {
         try {
             DoubleLog(`🕊账号[${user.index}] 开始签到...`);
-            
+
             //console.log(formattedDate);
             let urlObject = {
                 method: 'post',
@@ -93,48 +55,86 @@ async  userTask(user) {
                 headers: this.headers,
                 data: {
                     "miniappId": 159
-                  }
+                }
             }
             //console.log(urlObject);
-            let { data: result} = await axios.request(urlObject)
+            let { data: result } = await axios.request(urlObject)
             //console.log(result);
             if (result?.code == 200) {
                 //打印签到结果
                 DoubleLog(`🕊账号[${user.index}] 签到成功:[${result.data.integralToastText}]🎉`);
-            }else{
+            } else {
                 DoubleLog(`🕊账号[${user.index}] 签到失败:${result.msg}🚫`)
             }
         } catch (e) {
-           console.log(e);
+            console.log(e);
         }
     }
 
-//
-async  account(user) {
-    try {
-        DoubleLog(`🕊账号[${user.index}] 开始查询...`);
-        let urlObject = {
-            method: 'get',
-            url: `https://xiaodian.miyatech.com/api/user/auth/member/integral/union/flow/list?pageNo=1&pageSize=10&dataType=SCORE`,
-            headers: this.headers,
-            
-        }
-        //console.log(urlObject);
-        let { data: result} = await axios.request(urlObject)
-        //console.log(result);
-        if (result?.code == 200) {
-            //打印签到结果
-            DoubleLog(`🕊账号[${user.index}] 查询成功:总积分[${result.data.totalScore}]🎉`);
-            
-        }else {
-            DoubleLog(`🕊账号[${user.index}] 查询失败:${result.msg}🚫`)
-        }
+    //
+    async account(user) {
+        try {
+            DoubleLog(`🕊账号[${user.index}] 开始查询...`);
+            let urlObject = {
+                method: 'get',
+                url: `https://xiaodian.miyatech.com/api/user/auth/member/integral/union/flow/list?pageNo=1&pageSize=10&dataType=SCORE`,
+                headers: this.headers,
+
+            }
+            //console.log(urlObject);
+            let { data: result } = await axios.request(urlObject)
+            //console.log(result);
+            if (result?.code == 200) {
+                //打印签到结果
+                DoubleLog(`🕊账号[${user.index}] 查询成功:总积分[${result.data.totalScore}]🎉`);
+
+            } else {
+                DoubleLog(`🕊账号[${user.index}] 查询失败:${result.msg}🚫`)
+            }
         } catch (e) {
-        console.log(e);
+            console.log(e);
         }
     }
 
 }
+async function main() {
+    if (env == '') {
+        //没有设置变量,直接退出
+        console.log(`没有填写变量,请查看脚本说明: ${env_name}`)
+        return
+    }
+    let user_ck = env.split('&')
+    DoubleLog(`\n========= 共找到 ${user_ck.length} 个账号 =========`);
+    let index = 1 //用来给账号标记序号, 从1开始
+    for (let ck of user_ck) {
+        if (!ck) continue //跳过空行
+        let ck_info = ck.split('#')
+        let Authorization = 'Bearer ' + ck_info[0]
+        //let ticket = ck_info[1]
+        //let deviceCode = ck_info[2]
+        let user = {
+            index: index,
+            Authorization,
+            //ticket,
+            //deviceCode,
+        }
+        index = index + 1 //每次用完序号+1
+        //开始账号任务
+        let Run = new AAA(user);
+        await Run.userTask(user)
+        //每个账号之间等1~5秒随机时间
+        let rnd_time = Math.floor(Math.random() * 4000) + 1000
+        console.log(`随机等待${rnd_time / 1000}秒...`)
+        await $.wait(rnd_time)
+    }
+}
+!(async () => {
+    await main();
+    await SendMsg(msg);
+
+})()
+    .catch((e) => $.logErr(e))
+    .finally(() => $.done());
 /**
  * =========================================================发送消息=============================================
  */
@@ -170,91 +170,17 @@ function DoubleLog(data) {
 /**
 * ======================================================等待 X 秒============================================
 */
-function wait(n) {
-    return new Promise(function (resolve) {
-        setTimeout(resolve, n * 1000);
-    });
-}
-/**
-* ======================================================随机等待 1-5 秒============================================
-*/
-function sjwait() {
-    return new Promise(function (resolve) {
-        let waitTime = Math.floor(Math.random() * 4000 + 1000);
-        setTimeout(resolve, waitTime);
-    });
-}
+
 // ==========================================================13位时间戳=====================================================
-function getTimestamp() {
-    return new Date().getTime();
-}
+
 //===============================================网络请求httpRequest=========================================
-function httpRequest(options, timeout = 1 * 1000) {
-    method = options.method ? options.method.toLowerCase() : options.body ? "post" : "get";
-    return new Promise(resolve => {
-        setTimeout(() => {
-            $[method](options, (err, resp, data) => {
-                try {
-                    if (err) {
-                        console.log(JSON.stringify(err));
-                        $.logErr(err);
-                    } else {
-                        try { data = JSON.parse(data); } catch (error) { }
-                    }
-                } catch (e) {
-                    console.log(e);
-                    $.logErr(e, resp);
-                } finally {
-                    resolve(data);
-                }
-            })
-        }, timeout)
-    })
-}
+
 //==============================================Debug模式===============================================
-function debugLog(...args) {
-    if (debug) {
-        console.log(...args);
-    }
-}
+
 //===============================================获取远程通知========================================
-async function getNotice() {
-    try {
-        const urls = [
-            "https:tl.json",
-            
-        ];
-        let notice = null;
-        for (const url of urls) {
-            const options = { url, headers: { "User-Agent": "" }, };
-            const result = await httpRequest(options);
-            if (result && "notice" in result) {
-                notice = result.notice.replace(/\\n/g, "\n");
-                break;
-            }
-        }
-        if (notice) { $.DoubleLog(notice); }
-    } catch (e) {
-        console.log(e);
-    }
-}
+
 //==============================================获取远程版本=================================================
-function getVersion(scriptUrl, timeout = 3 * 1000) {
-    return new Promise((resolve) => {
-        const options = { url: `https://fastly.jsdelivr.net/gh/${scriptUrl}` };
-        $.get(options, (err, resp, data) => {
-            try {
-                const regex = /scriptVersionNow\s*=\s*(["'`])([\d.]+)\1/;
-                const match = data.match(regex);
-                const scriptVersionLatest = match ? match[2] : "";
-                DoubleLog(`\n当前版本:[${scriptVersionNow}]>>>云端☁️版本:[${scriptVersionLatest}]`);
-            } catch (e) {
-                $.logErr(e, resp);
-            }
-            resolve();
-        }, timeout);
-    });
-}
+
 
 //===============================================================================================================================================
 //================================================固定API===============================================================================================
