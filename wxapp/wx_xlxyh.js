@@ -3,14 +3,16 @@
  * Show:重写请求函数 在got环境或axios环境都可以请求
  * 微信小程序_骁龙骁友会 每日签到 点赞分享文章 免费抽奖一次 阅读和看视频以后更新
  * 变量名:wx_xlxyh 
- * 变量值:https://qualcomm.growthideadata.com/qualcomm-app/    
+ * 变量值:https://qualcomm.boysup.cn/qualcomm-app/    
  * headers请求头中 sessionkey的值和userid的值 用#拼接 用#拼接 用#拼接
+ * 多账号&拼接
  * 需要手动进一次抽奖界面 进行抽奖后再来运行脚本
- * scriptVersionNow = "0.0.1";
+ * scriptVersionNow = "0.0.2";
  */
 
 const $ = new Env("微信小程序_骁龙骁友会");
-const notify = $.isNode() ? require('../sendNotify') : '';
+process.env.wx_xlxyh = 'I5Elqfeb+gGwKVEKXD95Tg==#297212'
+const notify = $.isNode() ? require('./sendNotify') : '';
 let ckName = "wx_xlxyh";
 let envSplitor = ["&", "\n"]; //多账号分隔符
 let strSplitor = "#"; //多变量分隔符
@@ -48,12 +50,15 @@ class Task {
 
     }
     async taskRequest(method, url, body = "") {
-
+       
         let headers = {
             //"requestId": "88bd9fdf29c845be8e41a1e122337d6b",
             //timestamp: 1711330339720,
             //xweb_xhr: 1,
-            "Host": "qualcomm.growthideadata.com",
+            //"openid": "o2jYV5ZUH59H9uGcY04vSdV0Rbso",
+            //"sign": "34bd7bc53e90128e6aba9d96dba5e40f",
+            //"timestamp": "1739706208412",
+            "Host": "qualcomm.boysup.cn",
             //sign: "478d557229cdd6ac89128648a2a61e63",
             Accept: "*/*",
             "User-Agent": this.UA,
@@ -62,6 +67,7 @@ class Task {
             "sessionKey": this.ck,
             "userId": Number(this.userId),
         }
+       
         this.openId !== "" ? Object.assign(headers, { "openId": this.openId }) : ""
         const reqeuestOptions = {
             url: url,
@@ -75,11 +81,13 @@ class Task {
     }
     async LuckDrawApi() {
         try {
-            let LuckDrawNumResult = await this.taskRequest("get", `https://qualcomm.growthideadata.com/qualcomm-app/api/luckDraw/list?userId=${this.userId}&activityId=7`)
+            let LuckDrawNumResult = await this.taskRequest("get", `https://qualcomm.boysup.cn/qualcomm-app/api/luckDraw/list?userId=297212&activityId=7`)
             if (LuckDrawNumResult.code == 200) {
                 //当前剩余签到次数 == 总数 //可以免费抽奖一次
                 if (LuckDrawNumResult.data.luckDrawCount == LuckDrawNumResult.data.luckDrawSumCount) {
-                    let LuckDrawTaskResult = await this.taskRequest("get", `https://qualcomm.growthideadata.com/qualcomm-app/api/luckDraw/getLuck?userId=${this.userId}&activityId=7`)
+                    let LuckDrawTaskResult = await this.taskRequest("post", `https://qualcomm.boysup.cn/qualcomm-app/api/luckDraw/getLuck`,
+                        'userId=297212&activityId=7'
+                    )
                     if (LuckDrawTaskResult.code == 200) {
                         $.log(`账号[${this.userId}] 抽奖成功 获得[${LuckDrawTaskResult.data.name}]🎉`)
                     } else {
@@ -95,8 +103,8 @@ class Task {
         }
     }
     async updateClick(body) {
-        try {
-            let Result = await this.taskRequest("post", `https://qualcomm.growthideadata.com/qualcomm-app/api/buryPointApp/save`, body)
+        /*try {
+            let Result = await this.taskRequest("post", `https://qualcomm.boysup.cn/qualcomm-app/api/messageSubscribeApp/save`, body)
             if (Result.code == 200) {
                 $.log(`账号[${this.userId}] 上传点击成功`);
             } else {
@@ -104,11 +112,11 @@ class Task {
             }
         } catch (e) {
             console.log(e);
-        }
+        }*/
     }
     async UserInfoApi() {
         try {
-            let UserInfoResult = await this.taskRequest("get", `https://qualcomm.growthideadata.com/qualcomm-app/api/user/info?userId=${this.userId}`)
+            let UserInfoResult = await this.taskRequest("get", `https://qualcomm.boysup.cn/qualcomm-app/api/user/info?userId=${this.userId}`)
             if (UserInfoResult.code == 200) {
                 $.log(`✅账号[${this.userId}]  【昵称】[${UserInfoResult.data.nick}]  【等级】[${UserInfoResult.data.level}]  【现有积分】${UserInfoResult.data.coreCoin} 【累计获得】${UserInfoResult.data.cumulativeCoreCoin}🎉`);
                 this.openId = UserInfoResult.data.openId
@@ -123,7 +131,7 @@ class Task {
     }
     async ReadStartApi(articleId) {
         try {
-            let ReadStartApi = await this.taskRequest("post", `https://qualcomm.growthideadata.com/qualcomm-app/api/article/enterReadDaily`, `articleId=${articleId}&userId=${this.userId}`)
+            let ReadStartApi = await this.taskRequest("post", `https://qualcomm.boysup.cn/qualcomm-app/api/article/enterReadDaily`, `articleId=${articleId}&userId=${this.userId}`)
             if (ReadStartApi.code == 200) {
                 $.log(`✅账号[${this.userId}]  阅读文章开始上传成功🎉`);
 
@@ -137,7 +145,7 @@ class Task {
     }
     async ReadEndApi(articleId) {
         try {
-            let ReadEndApi = await this.taskRequest("post", `https://qualcomm.growthideadata.com/qualcomm-app/api/article/exitReadDaily`, `articleId=${articleId}&userId=${this.userId}`)
+            let ReadEndApi = await this.taskRequest("post", `https://qualcomm.boysup.cn/qualcomm-app/api/article/exitReadDaily`, `articleId=${articleId}&userId=${this.userId}`)
             if (ReadEndApi.code == 200) {
                 $.log(`✅账号[${this.userId}]  阅读文章结束上传成功🎉`);
 
@@ -150,7 +158,7 @@ class Task {
     }
     async ShareApi(articleId) {
         try {
-            let ShareResult = await this.taskRequest("post", `https://qualcomm.growthideadata.com/qualcomm-app/api/article/shareDaily`, `articleId=${articleId}&userId=${this.userId}`)
+            let ShareResult = await this.taskRequest("post", `https://qualcomm.boysup.cn/qualcomm-app/api/article/shareDaily`, `articleId=${articleId}&userId=${this.userId}`)
             if (ShareResult.code == 200) {
                 $.log(`✅账号[${this.userId}]  分享文章成功`)
             } else {
@@ -162,7 +170,7 @@ class Task {
     }
     async LikeApi(articleId) {
         try {
-            let LikeResult = await this.taskRequest("get", `https://qualcomm.growthideadata.com/qualcomm-app/api/article/like?articleId=${articleId}&userId=${this.userId}`)
+            let LikeResult = await this.taskRequest("get", `https://qualcomm.boysup.cn/qualcomm-app/api/article/like?articleId=${articleId}&userId=${this.userId}`)
             if (LikeResult.code == 200) {
                 $.log(`✅账号[${this.userId}]  点赞文章成功`)
             } else {
@@ -174,7 +182,7 @@ class Task {
     }
     async ArticleListApi() {
         try {
-            let ArticleListResult = await this.taskRequest("get", `https://qualcomm.growthideadata.com/qualcomm-app/api/home/articles?page=1&size=20&userId=${this.userId}&type=0&searchDate=&articleShowPlace=%E9%AA%81%E5%8F%8B%E8%B5%84%E8%AE%AF%E5%88%97%E8%A1%A8%E9%A1%B5`)
+            let ArticleListResult = await this.taskRequest("get", `https://qualcomm.boysup.cn/qualcomm-app/api/home/articles?page=1&size=20&userId=${this.userId}&type=0&searchDate=&articleShowPlace=%E9%AA%81%E5%8F%8B%E8%B5%84%E8%AE%AF%E5%88%97%E8%A1%A8%E9%A1%B5`)
             if (ArticleListResult.code == 200) {
                 $.log(`✅账号[${this.userId}]  获取文章${ArticleListResult.message} 准备阅读/点赞/分享🎉`);
 
@@ -188,12 +196,12 @@ class Task {
     }
     async SignInApi() {
         try {
-            let SignInListResult = await this.taskRequest("get", `https://qualcomm.growthideadata.com/qualcomm-app/api/user/signList?userId=${this.userId}`)
+            let SignInListResult = await this.taskRequest("get", `https://qualcomm.boysup.cn/qualcomm-app/api/user/signList?userId=${this.userId}`)
             if (SignInListResult.code == 200) {
                 if (SignInListResult.data.isSignToday == 1) {
                     $.log(`✅账号[${this.userId}]  今天已经签到过了`);
                 } else {
-                    let SignInResult = await this.taskRequest("get", `https://qualcomm.growthideadata.com/qualcomm-app/api/user/signIn?userId=${this.userId}`)
+                    let SignInResult = await this.taskRequest("get", `https://qualcomm.boysup.cn/qualcomm-app/api/user/signIn?userId=${this.userId}`)
                     if (SignInResult.code == 200) {
                         $.log(`✅账号[${this.userId}]  签到成功[${SignInResult.data.coreCoin}]🎉`);
                     } else {
