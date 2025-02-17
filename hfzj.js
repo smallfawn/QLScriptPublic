@@ -206,13 +206,13 @@ class UserInfo {
                     if ('posts' in result.data.list[i]) {
                         artId = result.data.list[i].posts[0].threadBasic.id
                         value = result.data.list[i].posts[0].threadBasic.author.beanId
-                        await $.wait(5000)
-                        await this.task_like(artId, value)
+                        //await $.wait(5000)
+                        //await this.task_like(artId, value)
                     } else {
                         artId = result.data.list[i].threadBasic.id
                         value = result.data.list[i].threadBasic.author.userBasic.beanId
-                        await $.wait(5000)
-                        await this.task_like(artId, value)
+                        //await $.wait(5000)
+                        //await this.task_like(artId, value)
                     }
                 }
 
