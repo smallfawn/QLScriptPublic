@@ -1,85 +1,11 @@
 /*
-* 软件名称：哈啰
-* 版本：0.0.3
-* 抓包位置：首页 福利中心 查看更多 抓包 api.hellobike.com/api?urser 请求里面的 TOKEN
-* 定时 0 8 * * *
-* 变量名称：hlToken
-* 多账号用&隔开
-* ##哈啰
-* export hlToken="23fexxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-* 奖励：积攒奖励金可换手机话费重置抵用券
+软件名称：哈啰
+版本：0.0.4
+抓包位置：首页 福利中心 查看更多 抓包 api.hellobike.com/api?urser 请求里面的 TOKEN
+定时:一天一次
+变量名：hlToken
+多账号用&隔开
+export hlToken="23fexxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+奖励：奖励金可换手机话费抵用券，便宜充话费
 */
-
-const axios = require('axios');
-const $ = new Env('哈啰签到');
-
-// 获取系统TOKEN
-let hlToken = process.env.hlToken;
-
-let tokens = [];
-
-if (hlToken && hlToken.includes('&')) {
-    tokens = hlToken.split('&');
-} else {
-    tokens.push(hlToken);
-}
-
-let signResult = [];
-let pointInfoResult = [];
-
-!(async()=>{
-    if(tokens.length === 0 || !tokens[0]){
-        $.msg('请添加哈啰hlToken在运行此脚本');
-        return;
-    }
-
-    for (let i = 0; i < tokens.length; i++) {
-        let hlToken = tokens[i];
-        // 签到接口
-        let signUrl = 'https://api.hellobike.com/api?common.welfare.signAndRecommend';
-        let signData = '{"from":"h5","systemCode":62,"platform":4,"version":"6.46.0","action":"common.welfare.signAndRecommend","token":"'+hlToken+'","pointType":1}';
-        // 查询奖励金接口
-        let pointInfoUrl = 'https://api.hellobike.com/api?user.taurus.pointInfo';
-        let pointInfoData = '{"from":"h5","systemCode":61,"platform":4,"version":"6.46.0","action":"user.taurus.pointInfo","token":"'+hlToken+'","pointType":1}';
-
-        // 签到操作
-        await axios.post(signUrl, signData)
-          .then(async function (data) {     
-              let succ = data['data']['data']['didSignToday'];
-              let reward = data['data']['data']['bountyCountToday'];
-              let msg = succ === true ? '今日签到成功 金币+'+reward : '今日未签到';
-              $.log(`账号${i+1}：${msg}`);
-              if(succ === true){
-                $.msg(`账号${i+1}：今日已签到成功 金币+${reward}`);
-              }else{
-                $.msg(`账号${i+1}：今日未签到，请检查TOKEN是否过期。`);
-              }
-          })
-          .catch(function (error) {
-            console.log('哈啰TOKEN已失效');
-          });
-
-        // 查询奖励金操作
-        await axios.post(pointInfoUrl, pointInfoData)
-          .then(async function (data) {     
-              let points = data['data']['data']['points'];
-              $.log(`账号${i+1}：可用奖励金为 ${points}`);
-              $.msg(`账号${i+1}：可用奖励金为 ${points}`);
-          })
-          .catch(function (error) {
-            console.log('查询奖励金信息失败');
-          });
-    }
-
-})()
-.catch((e) => {
-    $.logErr(e);
-})
-.finally(() => {
-    $.done();
-});
-
-
-
-// prettier-ignore
-function Env(t,e){"undefined"!=typeof process&&JSON.stringify(process.env).indexOf("GITHUB")>-1&&process.exit(0);class s{constructor(t){this.env=t}send(t,e="GET"){t="string"==typeof t?{url:t}:t;let s=this.get;return"POST"===e&&(s=this.post),new Promise((e,i)=>{s.call(this,t,(t,s,r)=>{t?i(t):e(s)})})}get(t){return this.send.call(this.env,t)}post(t){return this.send.call(this.env,t,"POST")}}return new class{constructor(t,e){this.name=t,this.http=new s(this),this.data=null,this.dataFile="box.dat",this.logs=[],this.isMute=!1,this.isNeedRewrite=!1,this.logSeparator="\n",this.startTime=(new Date).getTime(),Object.assign(this,e),this.log("",`🔔${this.name}, 开始!`)}isNode(){return"undefined"!=typeof module&&!!module.exports}isQuanX(){return"undefined"!=typeof $task}isSurge(){return"undefined"!=typeof $httpClient&&"undefined"==typeof $loon}isLoon(){return"undefined"!=typeof $loon}toObj(t,e=null){try{return JSON.parse(t)}catch{return e}}toStr(t,e=null){try{return JSON.stringify(t)}catch{return e}}getjson(t,e){let s=e;const i=this.getdata(t);if(i)try{s=JSON.parse(this.getdata(t))}catch{}return s}setjson(t,e){try{return this.setdata(JSON.stringify(t),e)}catch{return!1}}getScript(t){return new Promise(e=>{this.get({url:t},(t,s,i)=>e(i))})}runScript(t,e){return new Promise(s=>{let i=this.getdata("@chavy_boxjs_userCfgs.httpapi");i=i?i.replace(/\n/g,"").trim():i;let r=this.getdata("@chavy_boxjs_userCfgs.httpapi_timeout");r=r?1*r:20,r=e&&e.timeout?e.timeout:r;const[o,h]=i.split("@"),n={url:`http://${h}/v1/scripting/evaluate`,body:{script_text:t,mock_type:"cron",timeout:r},headers:{"X-Key":o,Accept:"*/*"}};this.post(n,(t,e,i)=>s(i))}).catch(t=>this.logErr(t))}loaddata(){if(!this.isNode())return{};{this.fs=this.fs?this.fs:require("fs"),this.path=this.path?this.path:require("path");const t=this.path.resolve(this.dataFile),e=this.path.resolve(process.cwd(),this.dataFile),s=this.fs.existsSync(t),i=!s&&this.fs.existsSync(e);if(!s&&!i)return{};{const i=s?t:e;try{return JSON.parse(this.fs.readFileSync(i))}catch(t){return{}}}}}writedata(){if(this.isNode()){this.fs=this.fs?this.fs:require("fs"),this.path=this.path?this.path:require("path");const t=this.path.resolve(this.dataFile),e=this.path.resolve(process.cwd(),this.dataFile),s=this.fs.existsSync(t),i=!s&&this.fs.existsSync(e),r=JSON.stringify(this.data);s?this.fs.writeFileSync(t,r):i?this.fs.writeFileSync(e,r):this.fs.writeFileSync(t,r)}}lodash_get(t,e,s){const i=e.replace(/\[(\d+)\]/g,".$1").split(".");let r=t;for(const t of i)if(r=Object(r)[t],void 0===r)return s;return r}lodash_set(t,e,s){return Object(t)!==t?t:(Array.isArray(e)||(e=e.toString().match(/[^.[\]]+/g)||[]),e.slice(0,-1).reduce((t,s,i)=>Object(t[s])===t[s]?t[s]:t[s]=Math.abs(e[i+1])>>0==+e[i+1]?[]:{},t)[e[e.length-1]]=s,t)}getdata(t){let e=this.getval(t);if(/^@/.test(t)){const[,s,i]=/^@(.*?)\.(.*?)$/.exec(t),r=s?this.getval(s):"";if(r)try{const t=JSON.parse(r);e=t?this.lodash_get(t,i,""):e}catch(t){e=""}}return e}setdata(t,e){let s=!1;if(/^@/.test(e)){const[,i,r]=/^@(.*?)\.(.*?)$/.exec(e),o=this.getval(i),h=i?"null"===o?null:o||"{}":"{}";try{const e=JSON.parse(h);this.lodash_set(e,r,t),s=this.setval(JSON.stringify(e),i)}catch(e){const o={};this.lodash_set(o,r,t),s=this.setval(JSON.stringify(o),i)}}else s=this.setval(t,e);return s}getval(t){return this.isSurge()||this.isLoon()?$persistentStore.read(t):this.isQuanX()?$prefs.valueForKey(t):this.isNode()?(this.data=this.loaddata(),this.data[t]):this.data&&this.data[t]||null}setval(t,e){return this.isSurge()||this.isLoon()?$persistentStore.write(t,e):this.isQuanX()?$prefs.setValueForKey(t,e):this.isNode()?(this.data=this.loaddata(),this.data[e]=t,this.writedata(),!0):this.data&&this.data[e]||null}initGotEnv(t){this.got=this.got?this.got:require("got"),this.cktough=this.cktough?this.cktough:require("tough-cookie"),this.ckjar=this.ckjar?this.ckjar:new this.cktough.CookieJar,t&&(t.headers=t.headers?t.headers:{},void 0===t.headers.Cookie&&void 0===t.cookieJar&&(t.cookieJar=this.ckjar))}get(t,e=(()=>{})){t.headers&&(delete t.headers["Content-Type"],delete t.headers["Content-Length"]),this.isSurge()||this.isLoon()?(this.isSurge()&&this.isNeedRewrite&&(t.headers=t.headers||{},Object.assign(t.headers,{"X-Surge-Skip-Scripting":!1})),$httpClient.get(t,(t,s,i)=>{!t&&s&&(s.body=i,s.statusCode=s.status),e(t,s,i)})):this.isQuanX()?(this.isNeedRewrite&&(t.opts=t.opts||{},Object.assign(t.opts,{hints:!1})),$task.fetch(t).then(t=>{const{statusCode:s,statusCode:i,headers:r,body:o}=t;e(null,{status:s,statusCode:i,headers:r,body:o},o)},t=>e(t))):this.isNode()&&(this.initGotEnv(t),this.got(t).on("redirect",(t,e)=>{try{if(t.headers["set-cookie"]){const s=t.headers["set-cookie"].map(this.cktough.Cookie.parse).toString();s&&this.ckjar.setCookieSync(s,null),e.cookieJar=this.ckjar}}catch(t){this.logErr(t)}}).then(t=>{const{statusCode:s,statusCode:i,headers:r,body:o}=t;e(null,{status:s,statusCode:i,headers:r,body:o},o)},t=>{const{message:s,response:i}=t;e(s,i,i&&i.body)}))}post(t,e=(()=>{})){if(t.body&&t.headers&&!t.headers["Content-Type"]&&(t.headers["Content-Type"]="application/x-www-form-urlencoded"),t.headers&&delete t.headers["Content-Length"],this.isSurge()||this.isLoon())this.isSurge()&&this.isNeedRewrite&&(t.headers=t.headers||{},Object.assign(t.headers,{"X-Surge-Skip-Scripting":!1})),$httpClient.post(t,(t,s,i)=>{!t&&s&&(s.body=i,s.statusCode=s.status),e(t,s,i)});else if(this.isQuanX())t.method="POST",this.isNeedRewrite&&(t.opts=t.opts||{},Object.assign(t.opts,{hints:!1})),$task.fetch(t).then(t=>{const{statusCode:s,statusCode:i,headers:r,body:o}=t;e(null,{status:s,statusCode:i,headers:r,body:o},o)},t=>e(t));else if(this.isNode()){this.initGotEnv(t);const{url:s,...i}=t;this.got.post(s,i).then(t=>{const{statusCode:s,statusCode:i,headers:r,body:o}=t;e(null,{status:s,statusCode:i,headers:r,body:o},o)},t=>{const{message:s,response:i}=t;e(s,i,i&&i.body)})}}time(t,e=null){const s=e?new Date(e):new Date;let i={"M+":s.getMonth()+1,"d+":s.getDate(),"H+":s.getHours(),"m+":s.getMinutes(),"s+":s.getSeconds(),"q+":Math.floor((s.getMonth()+3)/3),S:s.getMilliseconds()};/(y+)/.test(t)&&(t=t.replace(RegExp.$1,(s.getFullYear()+"").substr(4-RegExp.$1.length)));for(let e in i)new RegExp("("+e+")").test(t)&&(t=t.replace(RegExp.$1,1==RegExp.$1.length?i[e]:("00"+i[e]).substr((""+i[e]).length)));return t}msg(e=t,s="",i="",r){const o=t=>{if(!t)return t;if("string"==typeof t)return this.isLoon()?t:this.isQuanX()?{"open-url":t}:this.isSurge()?{url:t}:void 0;if("object"==typeof t){if(this.isLoon()){let e=t.openUrl||t.url||t["open-url"],s=t.mediaUrl||t["media-url"];return{openUrl:e,mediaUrl:s}}if(this.isQuanX()){let e=t["open-url"]||t.url||t.openUrl,s=t["media-url"]||t.mediaUrl;return{"open-url":e,"media-url":s}}if(this.isSurge()){let e=t.url||t.openUrl||t["open-url"];return{url:e}}}};if(this.isMute||(this.isSurge()||this.isLoon()?$notification.post(e,s,i,o(r)):this.isQuanX()&&$notify(e,s,i,o(r))),!this.isMuteLog){let t=["","==============📣系统通知📣=============="];t.push(e),s&&t.push(s),i&&t.push(i),console.log(t.join("\n")),this.logs=this.logs.concat(t)}}log(...t){t.length>0&&(this.logs=[...this.logs,...t]),console.log(t.join(this.logSeparator))}logErr(t,e){const s=!this.isSurge()&&!this.isQuanX()&&!this.isLoon();s?this.log("",`❗️${this.name}, 错误!`,t.stack):this.log("",`❗️${this.name}, 错误!`,t)}wait(t){return new Promise(e=>setTimeout(e,t))}done(t={}){const e=(new Date).getTime(),s=(e-this.startTime)/1e3;this.log("",`🔔${this.name}, 结束! 🕛 ${s} 秒`),this.log(),(this.isSurge()||this.isQuanX()||this.isLoon())&&$done(t)}}(t,e)}
+const _0x389411=_0x4d39;(function(_0x7b3aed,_0x2ef8a3){const _0x219594=_0x4d39,_0x5adf9=_0x7b3aed();while(!![]){try{const _0x390367=-parseInt(_0x219594(0x1e2))/0x1*(-parseInt(_0x219594(0x1e0))/0x2)+-parseInt(_0x219594(0x1ec))/0x3*(parseInt(_0x219594(0x1d8))/0x4)+-parseInt(_0x219594(0x1eb))/0x5+-parseInt(_0x219594(0x1e8))/0x6*(-parseInt(_0x219594(0x1dc))/0x7)+-parseInt(_0x219594(0x1f4))/0x8+parseInt(_0x219594(0x1db))/0x9+parseInt(_0x219594(0x1d5))/0xa;if(_0x390367===_0x2ef8a3)break;else _0x5adf9['push'](_0x5adf9['shift']());}catch(_0x480ab0){_0x5adf9['push'](_0x5adf9['shift']());}}}(_0xc102,0xce09a));const axios=require(_0x389411(0x1d2));function _0x4d39(_0x3eb44c,_0x545b67){const _0xc10201=_0xc102();return _0x4d39=function(_0x4d3914,_0x59f643){_0x4d3914=_0x4d3914-0x1d0;let _0xb06f56=_0xc10201[_0x4d3914];return _0xb06f56;},_0x4d39(_0x3eb44c,_0x545b67);}let hlToken=process[_0x389411(0x1f8)][_0x389411(0x1de)];!hlToken&&(console[_0x389411(0x1dd)](_0x389411(0x1f7)),process['exit'](0x1));let tokens=hlToken['includes']('&')?hlToken[_0x389411(0x1f0)]('&'):[hlToken];const SIGN_URL='https://api.hellobike.com/api?common.welfare.signAndRecommend',POINT_URL=_0x389411(0x1ee);async function requestPost(_0x3b1aee,_0x1d60b9,_0x277345){const _0x17f805=_0x389411;try{const _0x5989b2={'User-Agent':'Mozilla/5.0\x20(Windows\x20NT\x2010.0;\x20Mobile)\x20AppleWebKit/537.36\x20(KHTML,\x20like\x20Gecko)\x20Chrome/96.0.4664.104\x20Mobile\x20Safari/537.36','Content-Type':_0x17f805(0x1d6),'Authorization':_0x277345},_0x44d747=await axios[_0x17f805(0x1d3)](_0x3b1aee,_0x1d60b9,{'headers':_0x5989b2});return _0x44d747[_0x17f805(0x1f5)];}catch(_0xea967c){return console[_0x17f805(0x1ea)](_0x17f805(0x1f1),_0xea967c[_0x17f805(0x1d7)]?_0xea967c[_0x17f805(0x1d7)]['data']:_0xea967c[_0x17f805(0x1ef)]),null;}}async function signIn(_0x34d077,_0x1a938f){const _0x5b299b=_0x389411;console[_0x5b299b(0x1dd)](_0x5b299b(0x1d1)+(_0x1a938f+0x1)+_0x5b299b(0x1fa));const _0x5b52fc={'from':'h5','systemCode':0x3e,'platform':0x4,'version':_0x5b299b(0x1e3),'action':_0x5b299b(0x1da),'token':_0x34d077,'pointType':0x1},_0x4940a9=await requestPost(SIGN_URL,_0x5b52fc,_0x34d077);if(_0x4940a9&&_0x4940a9[_0x5b299b(0x1f5)]){const {bountyCountToday:_0xcd307a,didSignToday:_0x496aca}=_0x4940a9[_0x5b299b(0x1f5)];if(_0xcd307a)return console[_0x5b299b(0x1dd)](_0x5b299b(0x1e1)+(_0x1a938f+0x1)+_0x5b299b(0x1f6)+_0xcd307a),!![];else{if(_0x496aca)return console[_0x5b299b(0x1dd)](_0x5b299b(0x1f2)+(_0x1a938f+0x1)+_0x5b299b(0x1f3)),![];}}return console[_0x5b299b(0x1dd)](_0x5b299b(0x1d0)+(_0x1a938f+0x1)+'\x20签到失败，API\x20返回异常:',JSON['stringify'](_0x4940a9)),![];}async function getRewards(_0x5380f3,_0x1447b8){const _0x2b5d00=_0x389411;console[_0x2b5d00(0x1dd)]('💰\x20查询账号\x20'+(_0x1447b8+0x1)+_0x2b5d00(0x1e6));const _0xfb3730={'from':'h5','systemCode':0x3d,'platform':0x4,'version':_0x2b5d00(0x1e3),'action':_0x2b5d00(0x1e5),'token':_0x5380f3,'pointType':0x1},_0xf366f9=await requestPost(POINT_URL,_0xfb3730,_0x5380f3);if(_0xf366f9&&_0xf366f9[_0x2b5d00(0x1f5)]&&_0xf366f9['data'][_0x2b5d00(0x1e7)]!==undefined){const _0x1af42b=_0xf366f9[_0x2b5d00(0x1f5)][_0x2b5d00(0x1e7)];console[_0x2b5d00(0x1dd)]('🎉\x20账号\x20'+(_0x1447b8+0x1)+_0x2b5d00(0x1ed)+_0x1af42b);}else console['log'](_0x2b5d00(0x1d0)+(_0x1447b8+0x1)+_0x2b5d00(0x1e9),JSON[_0x2b5d00(0x1e4)](_0xf366f9));}function _0xc102(){const _0x252742=['points','24XHUbvN','\x20查询奖励金失败，API\x20返回异常:','error','2254910vgXnXj','3puJyNJ','\x20可用奖励金：','https://api.hellobike.com/api?user.taurus.pointInfo','message','split','❌\x20请求失败:','⚠️\x20账号\x20','\x20今天已经签到过了！','11359680EmTOcz','data','\x20签到成功！获得奖励金\x20+','❌\x20未设置环境变量\x20hlToken，请检查配置！','env','✨✨✨\x20哈啰签到脚本启动\x20✨✨✨','\x20开始签到...','❌\x20账号\x20','\x0a🚀\x20账号\x20','axios','post','\x0a🎉\x20所有账号任务执行完毕！','16508740vGrDBP','application/json','response','893852VWBewm','length','common.welfare.signAndRecommend','342450vfFeXW','2037917SANNdn','log','hlToken','random','2PYLQVJ','✅\x20账号\x20','84887arhOPN','6.46.0','stringify','user.taurus.pointInfo','\x20奖励金...'];_0xc102=function(){return _0x252742;};return _0xc102();}((async()=>{const _0x1c8492=_0x389411;console['log'](_0x1c8492(0x1f9));for(let _0x274007=0x0;_0x274007<tokens[_0x1c8492(0x1d9)];_0x274007++){let _0x562af6=tokens[_0x274007];await signIn(_0x562af6,_0x274007)&&(await new Promise(_0x8b3f08=>setTimeout(_0x8b3f08,Math[_0x1c8492(0x1df)]()*0xbb8+0x7d0)),await getRewards(_0x562af6,_0x274007));}console[_0x1c8492(0x1dd)](_0x1c8492(0x1d4));})());
