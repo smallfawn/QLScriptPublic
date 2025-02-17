@@ -187,7 +187,7 @@ async function start() {
   log(`todoList:此次版本更新为过渡版本,以后将增加米游币的任务`)
   log(`tips:更新双变量模式,两个网址获取的两个cookie用&分割`)
   log(`\n====== 当前版本：${scriptVersionNow} 📌 最新版本：${scriptVersionLatest} ======`);
-  await getNotice();
+  //await getNotice();
   let taskall;
   log("\n==========> 获取当月奖励详情 <==========\n");
   taskall = [];
