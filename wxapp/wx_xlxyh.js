@@ -11,7 +11,6 @@
  */
 
 const $ = new Env("微信小程序_骁龙骁友会");
-process.env.wx_xlxyh = 'I5Elqfeb+gGwKVEKXD95Tg==#297212'
 const notify = $.isNode() ? require('./sendNotify') : '';
 let ckName = "wx_xlxyh";
 let envSplitor = ["&", "\n"]; //多账号分隔符
