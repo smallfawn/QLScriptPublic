@@ -152,10 +152,90 @@ class Task {
     }
 
     encrypt(body) {
+        const JSEncrypt  = require("encryptlong") 
+        const JsRsaSign = require("jsrsasign")
+        
+        const PUBLIC_KEY = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCiBksv2xaOJdSWblaTQl93HI393gYHqKFs89EIFBWYSmYSV+z8XXzMO/Xyo8EeWRpAjT5TuBf0wN467aBx3nsDfJd7e3+txBS7nf+S7Nyjnxx2J5AKPWx1gVmr/OF3aWqxg+DPCB7avakhj+p0QjoJ7eMqgJl/HSX2Kfb6/O3J9wIDAQAB";
+        const PRIVATE_KEY = "MIICeAIBADANBgkqhkiG9w0BAQEFAASCAmIwggJeAgEAAoGBAKIGSy/bFo4l1JZuVpNCX3ccjf3eBgeooWzz0QgUFZhKZhJX7PxdfMw79fKjwR5ZGkCNPlO4F/TA3jrtoHHeewN8l3t7f63EFLud/5Ls3KOfHHYnkAo9bHWBWav84XdparGD4M8IHtq9qSGP6nRCOgnt4yqAmX8dJfYp9vr87cn3AgMBAAECgYEAlwzbB5Bu5LKsEFppZ/wW2ArM7YIRiQ5TACoGFEv1HfcuVaeXDmdxs02rKzwzDEHxUYDcPFyCKPGtvK5QSBgsAUUBHb6uu0fNGUccGX31NRAfLuQ8fj3W0uvkoYlpDARuokDHhWNqWzI6f8bFHkewJwpjXCO8w1WkogTLiX9Gu3ECQQDd5J4jEDS5+7KaohYRoryyX939mzsZ4RC6ufsfzTJwSlnLyYHEbm0Cs+7gbBxRrioqApBMQPIIoa5ujm1C88MNAkEAuu3htlbpR1ZL9b3wUuf3el/D3i/k9XvSChfHQ1q46Y/eck2yEDH9Kv/ZUxEl4fR8mB2MONm9oc2l+chPd9uQEwJBALcWuNU9vgPoB0tIiuUqXoDgUY+80ltcNi2c3/Uxn3jAIK/iKU0nwJMGXQiYrBVJnEjlrKL+w7cTkZZvtwATmtECQC2JV4vQvkFHj3eMzqeTpKDmBVPx/OekQzV8N2l8B0G2b20O6kqxssevzeRDcCQMJ/HyeL88o8pvy3f+yQUcsosCQQDZXV8K7Ek0R/V3dAdUzoetFSlfjCGy9QKPruz7m+iXBASxiA0R7YGfJzc8jWpuv0pxujtB/awy22K/ggLAhkZU";
+        
+        
+        const JAVA_PUBLIC_KEY = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDNQpS4ZeHRiIPFIdZgupShTHFlGOqFkT6XEqByvWqt2BvLo3a+YfzyJHOXyfX41OvbIkuIaycuxU9w7RHI1e7F3O7Io+XxncjyU3GR+ae2DEtLaG3o/rtpONF5q1jTN/Spu4GKXsjhHrP9xxMThLF6134NKAyQZfvOms0gS0zmxwIDAQAB"
+        const JAVA_PRIVATE_KEY = "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAM1ClLhl4dGIg8Uh1mC6lKFMcWUY6oWRPpcSoHK9aq3YG8ujdr5h/PIkc5fJ9fjU69siS4hrJy7FT3DtEcjV7sXc7sij5fGdyPJTcZH5p7YMS0tobej+u2k40XmrWNM39Km7gYpeyOEes/3HExOEsXrXfg0oDJBl+86azSBLTObHAgMBAAECgYA08JI5CRX4G/SYeIS5SAYjn/qzL3z1XCO/hS9ayJ3mHpH0sMFkkxNRRLOHl7BYMFpwl2TR14kwl/VIU+y9VugRK6Se/gdJ/jwGiMdVkO6tGD7s8TwLcgNjAVbwpZCq40h8dQazzyIsPxyww4AP9fQlo5x3eY9v8icw+U58fj4FcQJBAPk4PPCy54ZHMqSTl4E1z+QzZ51z07PFIbGsT/oAg9GOwFjrPjOTQDEPp3cBeAlKmWdUVAjdGYExwuCw4EkG/XkCQQDS2Cx09pwNwMWIN+u3CVneECXS3iUiRPGJkbliFczwjByk3DnBMW15wGNVtJfsM7YFOIir+hW+QfbCKSBjxTY/AkEArPam9LZ1kO/g6e+0+mwKeGpkwxYcG2v5UoIwj2XEFrBoNk4twUW1C1e99g4C7Q/lH52bJPuuM8gBZEfdoVFEoQJBALZ4CPlsVx973jeGFcPBHvoURXeZcs+WlOY2rBYbwdHHoB54zK7KZPECM7V/Zh8vnW4lP/p9owWVtsTPrM1LZicCQDhgvSmpBy0QoUI+wPS9l+YYuLc2loGoWU97RiFbgKqXBexnSg4UHfU8Ot6N4VbIWEhOZV27P0ktsI3UfjGNS6s="
+        
+        // 生成随机串
+         function generateRandomString(length) {
+            var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; // 包含所有字母和数字的字符集合
+            var result = '';
+            
+            for (var i = 0; i < length; i++) {
+                var randomIndex = Math.floor(Math.random() * chars.length); // 获取随机索引值
+                var charAtIndex = chars[randomIndex]; // 根据索引值从字符集合中选择对应的字符
+                
+                result += charAtIndex; // 将字符添加到最终结果中
+            }
+            
+            return result;
+        }
+        // 参数字典表排序
+        function sortedKeys(obj){
+            let keys = Object.keys(obj).sort();
+            let res = {}
+            keys.forEach(key=>{
+                res[key] = obj[key]
+            })
+            return res
+        }
+         function generateRsaKeyWithPKCS8() {
+            const keyPair = JsRsaSign.KEYUTIL.generateKeypair("RSA", 1024);
+            const privateKey = JsRsaSign.KEYUTIL.getPEM(keyPair.prvKeyObj, "PKCS8PRV");
+            const publicKey = JsRsaSign.KEYUTIL.getPEM(keyPair.pubKeyObj);
+            return { privateKey, publicKey };
+        }
+        const { privateKey, publicKey } = generateRsaKeyWithPKCS8()
+        
+         function objToStr(data) {
+            let str = ""
+            for (let i in data) {
+                str += `${i}=${data[i]}&`
+            }
+            str = str.slice(0, str.length - 1)
+            return str
+        }
+        // 生成签名
+         function getSign(data) {
+            const signature = new JsRsaSign.KJUR.crypto.Signature({
+                alg: "SHA1withRSA",
+            });
+            signature.init("-----BEGIN PRIVATE KEY-----" + PRIVATE_KEY + "-----END PRIVATE KEY-----");
+            let sortData = sortedKeys(data)
+            let str = objToStr(sortData)
+            signature.updateString(str);
+            return JsRsaSign.hextob64(signature.sign());
+        }
+        function getKey() {
+            const encryptor = new JSEncrypt()
+            encryptor.setPublicKey("-----BEGIN PUBLIC KEY-----" + JAVA_PUBLIC_KEY + "-----END PUBLIC KEY-----") // 设置公钥
+            return encryptor
+        }
+        
+        // 生成加密
+         function entryData(data) {
+            let encryptor = getKey();
+            let str = objToStr(data)
+            return encryptor.encryptLong(str);    // 调用封装的方法
+        }
+        
+        // 解密
+         function decrypt(data) {
+            const encryptor = new JSEncrypt()
+            encryptor.setPrivateKey(PRIVATE_KEY)
+            return encryptor.decryptLong(data)
+        }
+        return getSign(body)
         //通过抓包得到加密JS网址https://www.heyejk.com/game/js/app.87d7f243.js 代码很多 慢慢补环境即可
         //不理解为什么弄两个加密 烦死了
         //smallfawn 2024 / 3 / 23 22.11
-        const t = body
+        /*const t = body
         const { KJUR, hextob64 } = require("jsrsasign")
         global['window'] = {}
         global['navigator'] = {}
@@ -169,7 +249,7 @@ class Task {
         function de() { const e = new JSEncrypt(); return e.setPublicKey("-----BEGIN PUBLIC KEY-----" + ne + "-----END PUBLIC KEY-----"), e }
         function ce(e) { let t = ""; for (let n in e) t += `${n}=${e[n]}&`; return t = t.slice(0, t.length - 1), t }
         function he(e) { let t = de(), n = ce(e); return t.encryptLong(n) }
-        function le(e) { const t = new KJUR.crypto.Signature({ alg: "SHA1withRSA" }); t.init("-----BEGIN PRIVATE KEY-----" + te + "-----END PRIVATE KEY-----"); let n = ae(e), o = ce(n); return t.updateString(o), hextob64(t.sign()) }
+        function le(e) { const t = new KJUR.crypto.Signature({ alg: "SHA1withRSA" }); t.init("-----BEGIN PRIVATE KEY-----" + te + "-----END PRIVATE KEY-----"); let n = ae(e), o = ce(n); return t.updateString(o), hextob64(t.sign()) }*/
     }
     async doWater() {
         try {
