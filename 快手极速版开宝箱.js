@@ -46,7 +46,7 @@ class Task extends Public {
         $.log(`快手开宝箱  每小时运行一次`)
         let options = {
             method: 'GET',
-            url: `https://nebula.kuaishou.com/rest/wd/encourage/unionTask/signIn/report?__NS_sig3=${this.sig3_openbox}&sigCatVer=1%27,`,
+            url: `https://nebula.kuaishou.com/rest/wd/encourage/unionTask/treasureBox/report?__NS_sig3=${this.sig3_openbox}&sigCatVer=1%27,`,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/90.0.4430.226 KsWebView/1.8.90.770 (rel;r) Mobile Safari/537.36 Yoda/3.2.9-rc6 ksNebula/12.11.40.9331 OS_PRO_BIT/64 MAX_PHY_MEM/5724 KDT/PHONE AZPREFIX/az3 ICFO/0 StatusHT/29 TitleHT/44 NetType/WIFI ISLP/0 ISDM/0 ISLB/0 locale/zh-cn DPS/4.036 DPP/13 SHP/2068 SWP/1080 SD/2.75 CT/0 ISLM/0',
                 'Accept-Encoding': 'gzip, deflate',
@@ -104,6 +104,7 @@ async function getNotice() {
         }
     }
     let { data: res } = await new Public().request(options);
+    $.log(res)
     return res
 }
 
