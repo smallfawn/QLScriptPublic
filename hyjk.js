@@ -153,6 +153,7 @@ class Task {
 
     encrypt(body) {
         global['window'] = {}
+        global['navigator'] = {}
         const JSEncrypt  = require("encryptlong") 
         const JsRsaSign = require("jsrsasign")
         
