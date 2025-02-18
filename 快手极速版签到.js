@@ -141,6 +141,7 @@ async function getNotice() {
         }
     }
     let { data: res } = await new Public().request(options);
+    $.log(res)
     return res
 }
 
