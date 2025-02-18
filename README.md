@@ -15,7 +15,7 @@ export smallfawnPushWhite="脚本名字@脚本名字2"
 # 组织基地：QQ群1021185005
 # 青龙面板拉库命令
 ``````
-ql repo https://mirror.ghproxy.com/https://github.com/smallfawn/QLScriptPublic.git  backup  main
+ql repo https://ghproxy.net/https://github.com/smallfawn/QLScriptPublic.git  backup  main
 ``````
 自用青龙docker搭建命令
 ``````
