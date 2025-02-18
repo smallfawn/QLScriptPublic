@@ -152,8 +152,7 @@ class Task {
     }
 
     encrypt(body) {
-        let sign = getSign(body)
-        let timestamp = new Date().getTime()
+
         global['window'] = {}
         global['navigator'] = {}
         const JSEncrypt = require("encryptlong")
@@ -235,6 +234,8 @@ class Task {
             encryptor.setPrivateKey(PRIVATE_KEY)
             return encryptor.decryptLong(data)
         }
+        let sign = getSign(body)
+        let timestamp = new Date().getTime()
         return entryData({
             sign: sign,
             timestamp: timestamp
