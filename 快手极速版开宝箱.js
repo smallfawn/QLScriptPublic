@@ -1,10 +1,10 @@
 /*
 ------------------------------------------
-@Author: sm
-@Date: 2024.06.07 19:15
-@Description: 测试
+@ cron: 5 * * * *
+@Author: smallfawn
+
 ------------------------------------------
-#Notice:
+#Notice: 每小时运行一次 ⚠️
 CK 名字 kuaishou_speed_openbox
 值: COOKIE#开宝箱sig3 多账号&连接
 ⚠️【免责声明】
@@ -43,7 +43,7 @@ class Task extends Public {
     }
 
     async openbox() {
-        $.log(`快手开宝箱`)
+        $.log(`快手开宝箱  每小时运行一次`)
         let options = {
             method: 'GET',
             url: `https://nebula.kuaishou.com/rest/wd/encourage/unionTask/signIn/report?__NS_sig3=${this.sig3_openbox}&sigCatVer=1%27,`,
