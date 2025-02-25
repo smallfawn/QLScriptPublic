@@ -105,8 +105,11 @@ class Task extends Public {
 
 
 
-        console.log(this.index);
+        
 
+    }
+    async run() {
+        await this.getcode()
     }
 }
 
