@@ -4,7 +4,7 @@
 @Date: 2024.06.07 19:15
 @Description: 测试
 ------------------------------------------
-#Notice:   只适用于购买了luflytoken的  购买联系860562056
+#Notice:   只适用于购买了luflytoken的  购买联系QQ860562056
 变量luflytoken 填写luflytoken
 变量wxbnmdwxid 填写wxbnmdwxid  多账号&分割或者换行
 ⚠️【免责声明】

@@ -5,7 +5,7 @@
 @Description: 康师傅
 cron: 12 12 * * *
 ------------------------------------------
-#Notice:   只适用于购买了luflytoken的  购买联系860562056
+#Notice:   只适用于购买了luflytoken的  购买联系QQ860562056
 变量luflytoken 填写luflytoken
 变量wxkangshifuwxid 填写wxkangshifuwxid  多账号&分割或者换行
 
