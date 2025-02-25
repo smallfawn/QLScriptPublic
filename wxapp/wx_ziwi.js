@@ -3,9 +3,9 @@
  * 积分换 猫粮狗粮
  * 变量名wxziwiwxid  值为lufly登录授权的微信id 用于获取微信CODE 来刷新CK
  * 变量名luflytoken  谨慎使用加密本 防止偷取TOKEN
- * 变量名:ZIWIAUTH
  * 
- * 变量值:https://ziwi.gzcrm.cn/json-rpc? Headers中的authorization 去掉Bearer 去掉Bearer 去掉Bearer
+ * 
+ * 
  * 多账号& 或新增变量
  * scriptVersionNow = "0.0.1";
  */
@@ -19,33 +19,25 @@ let userIdx = 0;
 let userList = [];
 let appid = 'wxb26a710e583b05dc'
 let wxcenter = 'http://w.smallfawn.top:5789'
-let msg = ""
 class Task {
     constructor(str) {
         this.index = ++userIdx;
-        this.ck = str.split(strSplitor)[0]; //单账号多变量分隔符
+        this.wxid = str.split(strSplitor) //单账号多变量分隔符
         this.ckStatus = true;
         //定义在这里的headers会被get请求删掉content-type 而不会重置
         this.artList = []
+        this.ck = ''
     }
     async main() {
-        if (process.env['wxziwiwxid']) {
-            await this.getCode()
-        }
-        await this.task_sign()
-        await this.act_list();
-        if (this.artList.length > 0) {
-            for (let act of this.artList) {
-                await this.task_like(act)
-                await this.task_share(act)
-            }
-        }
+
+        await this.getCode()
+
     }
     async getCode() {
         let { body: result } = await $.httpRequest({
             method: 'post', headers: {
                 'Content-Type': 'application/json'
-            }, url: wxcenter + '/api/getcode', body: JSON.stringify({ "luflyKey": process.env['luflytoken'], "wxid": "" + process.env['wxziwiwxid'], "appid": "wxb26a710e583b05dc" })
+            }, url: wxcenter + '/api/getcode', body: JSON.stringify({ "luflyKey": process.env['luflytoken'], "wxid": "" + this.wxid, "appid": "wxb26a710e583b05dc" })
         })
         if (result) {
             console.log(result)
@@ -65,7 +57,15 @@ class Task {
             if ('result' in result) {
                 if ('jwt' in result.result) {
                     console.log(`刷新CK成功`)
-                    return this.ck = result.result.jwt
+                    this.ck = result.result.jwt
+                    await this.task_sign()
+                    await this.act_list();
+                    if (this.artList.length > 0) {
+                        for (let act of this.artList) {
+                            await this.task_like(act)
+                            await this.task_share(act)
+                        }
+                    }
                 }
             }
 

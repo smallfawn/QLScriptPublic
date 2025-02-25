@@ -28,7 +28,6 @@ const notify = $.isNode() ? require("../sendNotify") : "";
 const axios = require("axios");
 const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.31(0x18001e31) NetType/WIFI Language/zh_CN miniProgram"
 let luflytoken = process.env.luflytoken || ""
-let wxkangshifuwxid = process.env.wxkangshifuwxid || ""
 let wxcenter = 'http://w.smallfawn.top:5789'
 let appid = 'wx54f3e6a00f7973a7'
 class Public {
@@ -42,7 +41,7 @@ class Task extends Public {
         super();
         this.index = $.userIdx++
         let user = env.split(strSplitor);
-        this.name = user[0];
+        this.wxid = user[0];
         this.passwd = user[1];
     }
 
@@ -53,7 +52,7 @@ class Task extends Public {
                 'Content-Type': 'application/json'
             },
             method: 'POST',
-            data: { "luflyKey": "" + luflytoken, "wxid": "" + wxkangshifuwxid, "appid": ""+appid }
+            data: { "luflyKey": "" + luflytoken, "wxid": "" + this.wxid, "appid": "" + appid }
         }
         let { data: result } = await this.request(options);
         if (result.status) {
@@ -108,7 +107,7 @@ class Task extends Public {
 
 
     }
-    async run(){
+    async run() {
         await this.getcode()
     }
 }

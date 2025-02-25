@@ -4,7 +4,9 @@
 @Date: 2024.06.07 19:15
 @Description: 测试
 ------------------------------------------
-#Notice:
+#Notice:   只适用于购买了luflytoken的  购买联系860562056
+变量luflytoken 填写luflytoken
+变量wxbnmdwxid 填写wxbnmdwxid  多账号&分割或者换行
 ⚠️【免责声明】
 ------------------------------------------
 1、此脚本仅用于学习研究，不保证其合法性、准确性、有效性，请根据情况自行判断，本人对此不承担任何保证责任。
@@ -17,13 +19,17 @@
 */
 
 const $ = new Env("巴奴毛肚小程序");
-let ckName = `testA`;
+let ckName = `wxbnmdwxid`;
 const strSplitor = "#";
 const envSplitor = ["&", "\n"];
-const notify = $.isNode() ? require("../sendNotify") : "";
+const crypto = require("crypto-js");
+const notify = $.isNode() ? require("./sendNotify") : "";
 const axios = require("axios");
 const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.31(0x18001e31) NetType/WIFI Language/zh_CN miniProgram"
-
+const key = "bfc5e947cd84c7ced1ee48d28fb3e90f";
+let luflytoken = process.env.luflytoken || ""
+let wxcenter = 'http://w.smallfawn.top:5789'
+let appid = 'wx71373698c47f9a9f'
 class Public {
   async request(options) {
     return await axios.request(options);
@@ -34,17 +40,158 @@ class Task extends Public {
 
     super();
     this.index = $.userIdx++
-    let user = env.split("#");
-    this.name = user[0];
-    this.passwd = user[1];
+    let user = env.split(strSplitor);
+    this.wxid = user[0];
   }
+  getUUID(_0x4b4b65 = 16, _0x14813d = 36) {
+    const _0x181bd6 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
+    const _0x295ca7 = [];
+    let _0x4713fe = 0;
+    if (_0x4b4b65) {
+      for (_0x4713fe = 0; _0x4713fe < _0x4b4b65; _0x4713fe++) {
+        _0x295ca7[_0x4713fe] = _0x181bd6[0 | Math.random() * _0x14813d];
+      }
+    } else {
+      let _0x540406;
+      for (_0x295ca7[8] = _0x295ca7[13] = _0x295ca7[18] = _0x295ca7[23] = "-", _0x295ca7[14] = "4", _0x4713fe = 0; _0x4713fe < 36; _0x4713fe++) {
+        if (!_0x295ca7[_0x4713fe]) {
+          _0x540406 = 0 | 16 * Math.random();
+          _0x295ca7[_0x4713fe] = _0x181bd6[19 === _0x4713fe ? 3 & _0x540406 | 8 : _0x540406];
+        }
+      }
+    }
+    return _0x295ca7.join("");
+  }
+  getHeaders(options, _0x32d686, authorization) {
+    const keyOptions = {
+      app_key: "KlZ4LqOF",
+      app_secret: "HoBJTYXdwn"
+    };
+    const _0x3aaf0a = {
+      t: Math.floor(new Date().getTime() / 1000),
+      n: this.getUUID(),
+      ...keyOptions
+    };
+    const _0x419328 = Object.values(_0x3aaf0a).join("");
+
+    const sign = this.stringToLowerCase(this.stringToLowerCase(_0x419328)).split("").reverse().join("");
+    const header = {
+      'Connection': 'keep-alive',
+      'content-type': 'application/json',
+      'uuid': options.uuid,
+      'platform_version_code': 'iOS 16.6',
+      'authorization': authorization, //
+      'tenancy_id': 'banu',
+      'app_key': 'KlZ4LqOF',
+      'code': 'f22b68d1c74c3a66aa7a1b199bcd4e20', // 
+      'platform_version_name': 'iPhone 11<iPhone12,1>',
+      'platform_version_weapp': '8.0.50',
+      't': _0x3aaf0a.t,
+      'n': _0x3aaf0a.n,
+      'platform_version_sdk': '3.5.8',
+      'sign': sign,
+      'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.50(0x1800323d) NetType/4G Language/zh_CN',
+      'Referer': 'https://servicewechat.com/wx71373698c47f9a9f/474/page-frame.html'
+    }
+
+    if (_0x32d686) {
+      const _0xa2075e = new URLSearchParams({
+        ...options,
+        enc_data: _0x32d686
+      }).toString();
+      const code = this.stringToLowerCase(this.stringToLowerCase(_0xa2075e)).split("").reverse().join("");
+      header.code = code;
+    }
+    return header;
+  }
+  stringToLowerCase(str) {
+    return crypto.MD5(str).toString().toLowerCase();
+  }
+  decrypt(_0x3c73c4) {
+    const _0x3218f0 = crypto.lib.WordArray.random(16).toString();
+    const _0x30b65e = JSON.stringify(_0x3c73c4);
+    const _0x429ee1 = crypto.AES.encrypt(_0x30b65e, crypto.enc.Utf8.parse(key), {
+      iv: crypto.enc.Utf8.parse(_0x3218f0),
+      mode: crypto.mode.CBC
+    }).toString();
+    return crypto.enc.Base64.stringify(crypto.enc.Utf8.parse(JSON.stringify({
+      iv: _0x3218f0,
+      encrypted_data: _0x429ee1
+    })));
+  }
+  async getcode() {
+    let options = {
+      url: `${wxcenter}/api/getcode`,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      method: 'POST',
+      data: { "luflyKey": "" + luflytoken, "wxid": "" + this.wxid, "appid": "" + appid }
+    }
+    let { data: result } = await this.request(options);
+    if (result.status) {
+      let code = result.data
+      $.log(`账号[${this.wxid}] 获取code成功[${code}]`);
+      let { member_id: memberId, openid: authorization } = await this.login(code)
+      const headerObj = {};
+      const data = {
+        member_id: memberId
+      };
+      try {
+        headerObj.uuid = this.getUUID();
+        const res = await axios.get("https://cloud.banu.cn/api/sign-in/days", {
+          params: data,
+          headers: this.getHeaders(headerObj, false, authorization)
+        });
+        if (res.data.data.is_sign_in) {
+          $.log(`账号[${this.wxid}] 重复签到`);
+        } else {
+          const decryptData = this.decrypt(data);
+          const res = await axios.post("https://cloud.banu.cn/api/sign-in", {
+            enc_data: decryptData
+          }, {
+            headers: this.getHeaders(headerObj, decryptData, authorization)
+          });
+          $.log("签到：" + res.data.message);
+        }
+        const info = await axios.get("https://cloud.banu.cn/api/member/statistic", {
+          params: data,
+          headers: this.getHeaders(headerObj, false, authorization)
+        });
+        const result = "\nMember_id:" + memberId + "\n用户名:" + info.data.data.name + "\n总积分:" + info.data.data.points;
+      } catch (err) {
+
+        console.log("签到失败：" + err + " | 签到时间：" + Date.now());
+      }
+    } else {
+      console.log(result);
+    }
 
 
+  }
+  async login(code) {
+    let url = 'https://cloud.banu.cn/api/wx/weapp/auth';
+    let data = {
+      'app_id': 'wx71373698c47f9a9f',
+      'code': code
+    }
+    const headerObj = {};
+    headerObj.uuid = this.getUUID();
+    let headers = this.getHeaders(headerObj, false, "");
+
+    let { data: res } = await this.request({
+      url,
+      method: "POST",
+      headers,
+      data
+    })
+    return res.data;
+  }
   async run() {
 
+    await this.getcode()
 
 
-    console.log(this.index);
 
   }
 }
