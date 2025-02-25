@@ -7,7 +7,7 @@ cron: 12 12 * * *
 ------------------------------------------
 #Notice:   只适用于购买了luflytoken的  购买联系860562056
 变量luflytoken 填写luflytoken
-变量wxkangshifuwxid 填写wxkangshifuwxid 多账号&分割或者换行
+变量wxkangshifuwxid 填写wxkangshifuwxid  多账号&分割或者换行
 
 ⚠️【免责声明】
 ------------------------------------------
@@ -24,12 +24,13 @@ const $ = new Env("康师傅");
 let ckName = `wxkangshifuwxid`;
 const strSplitor = "#";
 const envSplitor = ["&", "\n"];
-const notify = $.isNode() ? require("../sendNotify") : "";
+const notify = $.isNode() ? require("./sendNotify") : "";
 const axios = require("axios");
 const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.31(0x18001e31) NetType/WIFI Language/zh_CN miniProgram"
 let luflytoken = process.env.luflytoken || ""
 let wxkangshifuwxid = process.env.wxkangshifuwxid || ""
 let wxcenter = 'http://w.smallfawn.top:5789'
+let appid = 'wx54f3e6a00f7973a7'
 class Public {
     async request(options) {
         return await axios.request(options);
@@ -52,7 +53,7 @@ class Task extends Public {
                 'Content-Type': 'application/json'
             },
             method: 'POST',
-            data: { "luflyKey": "" + luflytoken, "wxid": "" + wxkangshifuwxid, "appid": "wxb26a710e583b05dc" }
+            data: { "luflyKey": "" + luflytoken, "wxid": "" + wxkangshifuwxid, "appid": ""+appid }
         }
         let { data: result } = await this.request(options);
         if (result.status) {
@@ -105,10 +106,9 @@ class Task extends Public {
 
 
 
-        
 
     }
-    async run() {
+    async run(){
         await this.getcode()
     }
 }
