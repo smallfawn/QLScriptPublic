@@ -557,7 +557,7 @@ function _0x2fbb6b(_0x5a60f2) {
       {
         if (!this.notifyFlag) return;
         if (!this.notifyStr.length) return;
-        var _0x29aa8f = require("./sendNotify");
+        var _0x29aa8f = require("../sendNotify");
         this.log("\n============== 推送 ==============");
         await _0x29aa8f.sendNotify(this.name, this.notifyStr.join("\n"));
       }

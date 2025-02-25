@@ -352,7 +352,7 @@ function _0x14a79b(_0x4038d3, _0x4c648e) {
         let _0x3d3a83 = this.name + " 运行通知\n\n" + this.notifyStr;
         if (_0x3065e9.isNode()) {
           {
-            var _0x3a245e = require("./sendNotify");
+            var _0x3a245e = require("../sendNotify");
             console.log("\n============== 推送 ==============");
             await _0x3a245e.sendNotify(this.name, _0x3d3a83);
           }

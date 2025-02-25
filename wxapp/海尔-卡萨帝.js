@@ -433,7 +433,7 @@ function Env(_0x145f6d, _0x2ad434) {
       if (!this.notifyStr) return;
       let _0x49b71e = this.name + " 运行通知\n\n" + this.notifyStr;
       if ($.isNode()) {
-        var _0x15c32f = require("./sendNotify");
+        var _0x15c32f = require("../sendNotify");
         console.log("\n============== 推送 ==============");
         await _0x15c32f.sendNotify(this.name, _0x49b71e);
       } else this.msg(_0x49b71e);
