@@ -7,7 +7,7 @@ cron: 12 12 * * *
 ------------------------------------------
 #Notice:   只适用于购买了luflytoken的  购买联系860562056
 变量luflytoken 填写luflytoken
-变量wxkangshifuwxid 填写wxkangshifuwxid
+变量wxkangshifuwxid 填写wxkangshifuwxid 多账号&分割或者换行
 
 ⚠️【免责声明】
 ------------------------------------------
@@ -40,7 +40,7 @@ class Task extends Public {
 
         super();
         this.index = $.userIdx++
-        let user = env.split("#");
+        let user = env.split(strSplitor);
         this.name = user[0];
         this.passwd = user[1];
     }
