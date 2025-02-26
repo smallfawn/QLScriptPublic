@@ -86,7 +86,7 @@ class UserInfo {
             //console.log(result);
             if (result["errcode"] == 0) {
                 console.log(`✅${options.fn}成功🎉`);
-                msg += `✅${options.fn}成功🎉\n`;
+                msg += `✅${options.fn}成功🎉\n`+JSON.stringify(result);
             } else {
                 console.log(`❌${options.fn}失败`);
                 msg += `❌${options.fn}失败\n`;
@@ -151,7 +151,8 @@ class UserInfo {
             //result = JSON.parse(result);
             //console.log(result);
             console.log(`✅${options.fn}成功🎉`);
-            msg += `✅${options.fn}成功🎉\n`;
+            msg += `✅${options.fn}成功🎉\n` + JSON.stringify(result);
+            console.log(JSON.stringify(result));
             /*if (result["errcode"] == 0) {
                 console.log(`✅${options.fn}成功🎉`);
                 msg += `✅${options.fn}成功🎉\n`;
