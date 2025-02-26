@@ -3,31 +3,37 @@
  * Show:每天运行一次
  * @author:https://github.com/smallfawn/QLScriptPublic
  * 变量名:wx_midea
- * 变量值:https://mvip.midea.cn/next/mucuserinfo/getmucuserinfo headers中的COOKIE
+ * 变量值:https://mvip.midea.cn/next/mucuserinfo/getmucuserinfo headers中的COOKIE  只写uid=xxxx;sukey=yyyy;#headers 中 ucAccessToken的值
+ * 具体示例   uid=xxxx;sukey=yyyy;#7895566asa  多账号&分开 或者换行
  * scriptVersionNow = "0.0.1";
  */
 
 const $ = new Env("微信小程序 - 美的会员");
 const notify = $.isNode() ? require('../sendNotify') : '';
 let ckName = "wx_midea";
-let envSplitor = ["@", "\n"]; //多账号分隔符
-let strSplitor = "&"; //多变量分隔符
+let envSplitor = ["&", "\n"]; //多账号分隔符
+let strSplitor = "#"; //多变量分隔符
 let userIdx = 0;
 let userList = [];
+let msg = "";
 class UserInfo {
     constructor(str) {
         this.index = ++userIdx;
         this.ck = str.split(strSplitor)[0]; //单账号多变量分隔符
         this.ckStatus = true;
+        this.at = str.split(strSplitor)[1];
     }
     async main() {
         $.msg($.name, "", `开始第${this.index}个账号`)
         //await this.user_info();
         await $.wait(3000)
-        await this.signIn()
-        if (this.ckStatus) {
-            //await this.signIn()
+        if (!this.ckStatus) {
+            $.msg($.name, "", `❌第${this.index}个账号失效`);
+            return;
         }
+        await this.signIn()
+        await this.signIn2()
+
     }
     async user_info() {
         try {
@@ -46,14 +52,16 @@ class UserInfo {
                     "Referer": "https://servicewechat.com/wx03925a39ca94b161/409/page-frame.html"
                 },
             }
-            let result  = await httpRequest(options);
+            let result = await httpRequest(options);
             //console.log(options);
             //console.log(result);
             if (result["errcode"] == 0) {
                 console.log(`✅${options.fn}成功 [${result.data.userinfo.Mobile}] 当前积分[${result.data.userinfo.VipGrow}]🎉`);
+                msg += `✅${options.fn}成功 [${result.data.userinfo.Mobile}] 当前积分[${result.data.userinfo.VipGrow}]🎉\n`;
                 this.ckStatus = true;
             } else {
                 console.log(`❌${options.fn}失败`);
+                msg += `❌${options.fn}失败\n`;
                 this.ckStatus = false;
                 console.log(JSON.stringify(result));
             }
@@ -72,16 +80,86 @@ class UserInfo {
                     "cookie": this.ck,
                 },
             }
-            let result  = await httpRequest(options);
+            let result = await httpRequest(options);
             //console.log(options);
             //result = JSON.parse(result);
             //console.log(result);
             if (result["errcode"] == 0) {
                 console.log(`✅${options.fn}成功🎉`);
+                msg += `✅${options.fn}成功🎉\n`;
             } else {
                 console.log(`❌${options.fn}失败`);
+                msg += `❌${options.fn}失败\n`;
                 console.log(JSON.stringify(result));
             }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async signIn2() {
+        try {
+            let options = {
+                fn: "签到2",
+                method: "post",
+                url: `https://mvip.midea.cn/mscp_mscp/api/cms_api/activity-center-im-service/im-svr/im/game/page/sign`,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0.6723.103 Mobile Safari/537.36 XWEB/1300333 MMWEBSDK/20240404 MMWEBID/2585 MicroMessenger/8.0.49.2600(0x2800315A) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 miniProgram/wx03925a39ca94b161',
+                    'Accept': 'application/json, text/plain, */*',
+                    'Accept-Encoding': 'gzip, deflate, br, zstd',
+                    'Content-Type': 'application/json',
+                    'sec-ch-ua-platform': '"Android"',
+                    'sec-ch-ua': '"Chromium";v="130", "Android WebView";v="130", "Not?A_Brand";v="99"',
+                    'ucAccessToken': '' + this.at,
+                    'sec-ch-ua-mobile': '?1',
+                    'intercept': '1',
+                    'apiKey': '3660663068894a0d9fea574c2673f3c0',
+                    'Origin': 'https://mvip.midea.cn',
+                    'X-Requested-With': 'com.tencent.mm',
+                    'Sec-Fetch-Site': 'same-origin',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Dest': 'empty',
+                    'Referer': 'https://mvip.midea.cn/mscp_weixin/apps/h5-pro-wx-interaction-marketing/',
+                    'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+                },
+                body: JSON.stringify({
+                    "headParams": {
+                        "language": "CN",
+                        "originSystem": "MCSP",
+                        "timeZone": "",
+                        "userCode": "",
+                        "tenantCode": "",
+                        "userKey": "TEST_",
+                        "transactionId": ""
+                    },
+                    "pagination": null,
+                    "restParams": {
+                        "gameId": 22,
+                        "actvId": "401671388248692763",
+                        "rootCode": "MDHY",
+                        "appCode": "MDHY_XCX",
+                        "imUserId": "",
+                        "uid": "",
+                        "openId": "",
+                        "unionId": ""
+                    }
+                })
+            }
+
+            let result = await httpRequest(options);
+            //console.log(options);
+            //result = JSON.parse(result);
+            //console.log(result);
+            console.log(`✅${options.fn}成功🎉`);
+            msg += `✅${options.fn}成功🎉\n`;
+            /*if (result["errcode"] == 0) {
+                console.log(`✅${options.fn}成功🎉`);
+                msg += `✅${options.fn}成功🎉\n`;
+            } else {
+                console.log(`❌${options.fn}失败`);
+                msg += `❌${options.fn}失败\n`;
+                console.log(JSON.stringify(result));
+            }*/
         } catch (e) {
             console.log(e);
         }
@@ -89,9 +167,9 @@ class UserInfo {
 }
 
 async function start() {
-const tasks = userList.map(user => user.main());
-await Promise.all(tasks);
-
+    const tasks = userList.map(user => user.main());
+    await Promise.all(tasks);
+    notify.sendNotify($.name, msg);
     /*let taskall = [];
     for (let user of userList) {
         if (user.ckStatus) {
