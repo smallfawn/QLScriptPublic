@@ -6,7 +6,7 @@
 ------------------------------------------
 #Notice: 每小时运行一次 ⚠️
 CK 名字 kuaishou_speed_openbox
-值: COOKIE#开宝箱sig3 多账号&连接
+值: COOKIE  多账号&连接
 ⚠️【免责声明】
 ------------------------------------------
 1、此脚本仅用于学习研究，不保证其合法性、准确性、有效性，请根据情况自行判断，本人对此不承担任何保证责任。
@@ -39,12 +39,41 @@ class Task extends Public {
         this.index = $.userIdx++
         let user = env.split("#");
         this.cookkie = user[0];
-        this.sig3_openbox = user[1]
-        console.log()
+        
+        
     }
+    async getSig(l, data) {
+        let url = 'http://yi100.top:5666/s3'
+        try {
+            let options = {
+                url,
+                headers: {
+                    Cookie: this.cookkie
+                },
+                method: "POST",
+                data: {
+                    l, data
+                }
 
+            }
+            let { data: res } = await this.request(options);
+            if (res) {
+                if (res.s3) {
+                    return res.s3
+                }
+            } else {
+                console.log(res)
+
+                return false
+            }
+        } catch (e) {
+            console.log(e)
+        }
+    }
     async openbox() {
-        let data = JSON.stringify({});
+        let data = {}
+        let sig = await this.getSig(68, data)
+
 
 
 
@@ -53,7 +82,7 @@ class Task extends Public {
 
         let options = {
             method: 'POST',
-            url: `https://nebula.kuaishou.com/rest/wd/encourage/unionTask/treasureBox/report?__NS_sig3=${this.sig3_openbox}&sigCatVer=1`,
+            url: `https://nebula.kuaishou.com/rest/wd/encourage/unionTask/treasureBox/report?__NS_sig3=${sig}&sigCatVer=1`,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/90.0.4430.226 KsWebView/1.8.90.770 (rel;r) Mobile Safari/537.36 Yoda/3.2.9-rc6 ksNebula/12.11.40.9331 OS_PRO_BIT/64 MAX_PHY_MEM/5724 KDT/PHONE AZPREFIX/az3 ICFO/0 StatusHT/29 TitleHT/44 NetType/WIFI ISLP/0 ISDM/0 ISLB/0 locale/zh-cn DPS/4.036 DPP/13 SHP/2068 SWP/1080 SD/2.75 CT/0 ISLM/0',
                 'Accept-Encoding': 'gzip, deflate',
