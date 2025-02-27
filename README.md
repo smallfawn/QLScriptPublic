@@ -1,12 +1,4 @@
 # QLScriptpublic
-# JD 京东账密登录协议版本已发布 DOCKER一键部署 对接青龙 对接BOT
-购买地址
-http://shop.smallfawn.top/
-
-# 定制脚本 20起步  看难度定价 支持一些滑块 设备指纹之类的
-# 联系QQ 860562056  一天只接3单
-# 排单网站目前还没做出来
-
 
 本仓库魔改通知  smallfawnPushWhite白名单 smallfawnPushBlack黑名单 二选一
 ``````
