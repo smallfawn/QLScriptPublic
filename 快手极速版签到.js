@@ -41,8 +41,9 @@ class Task extends Public {
         this.cookkie = user[0];
 
     }
-    async getSig(l, data) {
-        let url = 'http://yi100.top:5666/s3'
+    async getSig68(query = {}, data = null, method = "get", type = "json") {
+
+        let url = 'http://yi100.top:5666/sig68'
         try {
             let options = {
                 url,
@@ -51,7 +52,7 @@ class Task extends Public {
                 },
                 method: "POST",
                 data: {
-                    l, data
+                    query, data, method, type
                 }
 
             }
@@ -59,14 +60,47 @@ class Task extends Public {
             if (res) {
                 if (res.s3) {
                     return res.s3
+                } else {
+                    return false
                 }
             } else {
-                console.log(res)
 
                 return false
             }
         } catch (e) {
             console.log(e)
+            return false
+        }
+    }
+    async getSig56(query = {}, data = null, method = "get", type = "json") {
+
+        let url = 'http://yi100.top:5666/sig56'
+        try {
+            let options = {
+                url,
+                headers: {
+                    Cookie: this.cookkie
+                },
+                method: "POST",
+                data: {
+                    query, data, method, type
+                }
+
+            }
+            let { data: res } = await this.request(options);
+            if (res) {
+                if (res.s3) {
+                    return res.s3
+                } else {
+                    return false
+                }
+            } else {
+
+                return false
+            }
+        } catch (e) {
+            console.log(e)
+            return false
         }
     }
 
@@ -127,6 +161,7 @@ class Task extends Public {
         };
         let { data: res } = await this.request(options);
         if (res) {
+
             if (res.data.tasks[0].taskStatus == 'COMPLETING_TASK') {
                 $.log(`快手未打卡`)
                 let taskId = res.data.tasks[0].taskId
@@ -141,8 +176,10 @@ class Task extends Public {
     }
     async signIn() {
 
-        let sig = await this.getSig(68)
+
+        let sig = await this.getSig68({}, {}, 'get', 'json')
         $.log(`快手签到`)
+        if (!sig) return $.log(`获取sig失败`);
         let options = {
             method: 'GET',
             url: `https://nebula.kuaishou.com/rest/wd/encourage/unionTask/signIn/report?__NS_sig3=${sig}&sigCatVer=1`,
@@ -175,7 +212,8 @@ class Task extends Public {
             "subBizId": subBizId,
             "taskId": taskId
         };
-        let sig = await this.getSig(56, data);
+        let sig = await this.getSig56({}, data, 'post', 'json')
+        if (!sig) return $.log(`获取sig失败`);
         let options = {
             method: 'POST',
             url: 'https://encourage.kuaishou.com/rest/wd/zt/task/report?__NS_sig3=' + sig,
