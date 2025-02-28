@@ -7,6 +7,10 @@
 #Notice:
 CK 名字 kuaishou_speed
 值: COOKIE 多账号&连接
+打卡领奖品只适用于选择25元现金红包
+若选择其他奖品请自行修改109，110行的参数
+参数subBizId在https://encourage.kuaishou.com/rest/ug-regular/hugeSignIn/home可查找到
+参数taskId在https://encourage.kuaishou.com/rest/wd/zt/task/list/all可找到
 ⚠️【免责声明】
 ------------------------------------------
 1、此脚本仅用于学习研究，不保证其合法性、准确性、有效性，请根据情况自行判断，本人对此不承担任何保证责任。
