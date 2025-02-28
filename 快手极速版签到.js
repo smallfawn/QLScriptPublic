@@ -69,6 +69,74 @@ class Task extends Public {
             console.log(e)
         }
     }
+
+
+    async getSignInMoneyInfo() {
+        let options = {
+            method: 'GET',
+            url: 'https://encourage.kuaishou.com/rest/ug-regular/hugeSignIn/home?source=todotask&idfa=&oaid=9e4bb0e5bc326fb1',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/90.0.4430.226 KsWebView/1.8.90.770 (rel;r) Mobile Safari/537.36 Yoda/3.2.9-rc6 ksNebula/12.11.40.9331 OS_PRO_BIT/64 MAX_PHY_MEM/5724 KDT/PHONE AZPREFIX/az3 ICFO/0 StatusHT/29 TitleHT/44 NetType/WIFI ISLP/0 ISDM/0 ISLB/0 locale/zh-cn DPS/4.036 DPP/13 SHP/2068 SWP/1080 SD/2.75 CT/0 ISLM/0',
+                'Accept-Encoding': 'gzip, deflate',
+                'ktrace-str': '3|My40NTgzNzM3MTc4NDU3Mzc4LjI1OTc1NjExLjE3NDA3MTEzNzc0MjMuMTAwMQ==|My40NTgzNzM3MTc4NDU3Mzc4Ljg4ODY0NTQ5LjE3NDA3MTEzNzc0MjMuMTAwMA==|0|usergrowth-activity-huge-sign-in|webservice|true|src:Js,seqn:7124,rsi:ac92c597-6456-4a74-92f3-5f9747aa44f5,path:/huge-sign-in,rpi:c198403627',
+                'content-type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                'X-Requested-With': 'com.kuaishou.nebula',
+                'Sec-Fetch-Site': 'same-origin',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Dest': 'empty',
+                'Referer': 'https://encourage.kuaishou.com/huge-sign-in?layoutType=4&source=todotask',
+                'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+                'Cookie': '' + this.cookkie
+            }
+
+        };
+        let { data: res } = await this.request(options);
+        if (res) {
+            $.log(`账号【${this.index}】 当前奖励【${res.data.productView.productName}】 【${res.data.productView.productSubTitle}】`)
+            let bizId = res.data.task.subbizId
+            let taskToken = res.data.task.hugeSignInTaskToken
+            await this.getSignInMoneyTaskInfo(bizId, taskToken)
+        }
+    }
+    async getSignInMoneyTaskInfo(bizId, taskToken) {
+        let data = JSON.stringify({
+            "subBizId": bizId,
+            "idfa": "",
+            "oaid": "9e4bb0e5bc326fb1",
+            "userFeatureParam": taskToken
+        });
+
+        let options = {
+            method: 'POST',
+            url: 'https://encourage.kuaishou.com/rest/wd/zt/task/list/all',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/90.0.4430.226 KsWebView/1.8.90.770 (rel;r) Mobile Safari/537.36 Yoda/3.2.9-rc6 ksNebula/12.11.40.9331 OS_PRO_BIT/64 MAX_PHY_MEM/5724 KDT/PHONE AZPREFIX/az3 ICFO/0 StatusHT/29 TitleHT/44 NetType/WIFI ISLP/0 ISDM/0 ISLB/0 locale/zh-cn DPS/4.036 DPP/13 SHP/2068 SWP/1080 SD/2.75 CT/0 ISLM/0',
+                'Accept-Encoding': 'gzip, deflate',
+                'Content-Type': 'application/json',
+                'ktrace-str': '3|My40NTgzNzM3MTc4NDU3Mzc4Ljk3Njc1OTI4LjE3NDA3MTEzNzc2OTcuMTAwMw==|My40NTgzNzM3MTc4NDU3Mzc4LjYzMTQxNTc5LjE3NDA3MTEzNzc2OTcuMTAwMg==|0|usergrowth-activity-huge-sign-in|webservice|true|src:Js,seqn:7124,rsi:ac92c597-6456-4a74-92f3-5f9747aa44f5,path:/huge-sign-in/home,rpi:c198403627',
+                'Origin': 'https://encourage.kuaishou.com',
+                'X-Requested-With': 'com.kuaishou.nebula',
+                'Sec-Fetch-Site': 'same-origin',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Dest': 'empty',
+                'Referer': 'https://encourage.kuaishou.com/huge-sign-in/home?layoutType=4&source=todotask',
+                'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+                'Cookie': '' + this.cookkie
+            },
+            data: data
+        };
+        let { data: res } = await this.request(options);
+        if (res) {
+            if (res.data.tasks[0].taskStatus == 'COMPLETING_TASK') {
+                $.log(`快手未打卡`)
+                await this.signInMoney()
+            }
+            if (res.data.tasks[0].taskStatus == 'TASK_COMPLETED') {
+                $.log(`快手已打卡`)
+                return
+            }
+        }
+    }
     async signInMoney() {
 
         let sig = await this.getSig(68)
@@ -139,7 +207,7 @@ class Task extends Public {
 
 
         await this.signIn()
-        await this.signInMoney()
+        await this.getSignInMoneyInfo()
 
     }
 }
