@@ -151,7 +151,7 @@ class Task extends Public {
             "subBizId": subBizId,
             "taskId": taskId
         };
-        let sig = await this.getSig56({}, data, 'post', 'json', this.cookkie)
+        let sig = await getSig56({}, data, 'post', 'json', this.cookkie)
         if (!sig) return $.log(`获取sig失败`);
         let options = {
             method: 'POST',
