@@ -39,8 +39,8 @@ class Task extends Public {
         this.index = $.userIdx++
         let user = env.split("#");
         this.cookkie = user[0];
-        
-        
+
+
     }
     async getSig(l, data) {
         let url = 'http://yi100.top:5666/s3'
@@ -112,7 +112,8 @@ class Task extends Public {
 
     async run() {
 
-
+        $.log(`随机延迟5-10分钟`)
+        await $.wait(Math.floor(Math.random() * 600000) + 300000)
         await this.openbox()
 
 
