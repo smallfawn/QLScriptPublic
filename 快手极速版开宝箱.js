@@ -42,8 +42,9 @@ class Task extends Public {
 
 
     }
-    async getSig(l, data) {
-        let url = 'http://yi100.top:5666/s3'
+    async getSig68(query = {}, data = null, method = "get", type = "json") {
+
+        let url = 'http://yi100.top:5666/s68'
         try {
             let options = {
                 url,
@@ -52,7 +53,7 @@ class Task extends Public {
                 },
                 method: "POST",
                 data: {
-                    l, data
+                    query, data, method, type
                 }
 
             }
@@ -60,20 +61,51 @@ class Task extends Public {
             if (res) {
                 if (res.s3) {
                     return res.s3
+                } else {
+                    return false
                 }
             } else {
-                console.log(res)
 
                 return false
             }
         } catch (e) {
-            console.log(e)
+            return false
+        }
+    }
+    async getSig56(query = {}, data = null, method = "get", type = "json") {
+
+        let url = 'http://yi100.top:5666/s56'
+        try {
+            let options = {
+                url,
+                headers: {
+                    Cookie: this.cookkie
+                },
+                method: "POST",
+                data: {
+                    query, data, method, type
+                }
+
+            }
+            let { data: res } = await this.request(options);
+            if (res) {
+                if (res.s3) {
+                    return res.s3
+                } else {
+                    return false
+                }
+            } else {
+
+                return false
+            }
+        } catch (e) {
+            return false
         }
     }
     async openbox() {
         let data = {}
-        let sig = await this.getSig(68, data)
-
+        let sig = await this.getSig68({}, data, 'post', 'json')
+        if(!sig) return $.log(`获取Sig失败`)
 
 
 
