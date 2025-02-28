@@ -7,10 +7,6 @@
 #Notice:
 CK 名字 kuaishou_speed
 值: COOKIE 多账号&连接
-打卡领奖品只适用于选择25元现金红包
-若选择其他奖品请自行修改109，110行的参数
-参数subBizId在https://encourage.kuaishou.com/rest/ug-regular/hugeSignIn/home可查找到
-参数taskId在https://encourage.kuaishou.com/rest/wd/zt/task/list/all可找到
 ⚠️【免责声明】
 ------------------------------------------
 1、此脚本仅用于学习研究，不保证其合法性、准确性、有效性，请根据情况自行判断，本人对此不承担任何保证责任。
@@ -133,7 +129,9 @@ class Task extends Public {
         if (res) {
             if (res.data.tasks[0].taskStatus == 'COMPLETING_TASK') {
                 $.log(`快手未打卡`)
-                await this.signInMoney()
+                let taskId = res.data.tasks[0].taskId
+                let subBizId = res.data.tasks[0].subBizId
+                await this.signInMoney(taskId, subBizId)
             }
             if (res.data.tasks[0].taskStatus == 'TASK_COMPLETED') {
                 $.log(`快手已打卡`)
@@ -141,10 +139,10 @@ class Task extends Public {
             }
         }
     }
-    async signInMoney() {
+    async signIn() {
 
         let sig = await this.getSig(68)
-        $.log(`快手打卡`)
+        $.log(`快手签到`)
         let options = {
             method: 'GET',
             url: `https://nebula.kuaishou.com/rest/wd/encourage/unionTask/signIn/report?__NS_sig3=${sig}&sigCatVer=1`,
@@ -170,12 +168,12 @@ class Task extends Public {
         }
 
     }
-    async signIn() {
-        $.log(`外部签到`)
+    async signInMoney(taskId, subBizId) {
+        $.log(`打卡`)
         let data = {
             "reportCount": 1,
-            "subBizId": 6426,
-            "taskId": 26021
+            "subBizId": subBizId,
+            "taskId": taskId
         };
         let sig = await this.getSig(56, data);
         let options = {
