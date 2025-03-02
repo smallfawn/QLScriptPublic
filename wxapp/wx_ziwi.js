@@ -12,7 +12,7 @@
 
 const $ = new Env("微信小程序ZIWI+");
 const notify = $.isNode() ? require('../sendNotify') : '';
-let ckName = "ZIWIAUTH";
+let ckName = "wxziwiwxid";
 let envSplitor = ["&", "\n"]; //多账号分隔符
 let strSplitor = "#"; //多变量分隔符
 let userIdx = 0;
@@ -37,7 +37,7 @@ class Task {
         let { body: result } = await $.httpRequest({
             method: 'post', headers: {
                 'Content-Type': 'application/json'
-            }, url: wxcenter + '/api/getcode', body: JSON.stringify({ "luflyKey": process.env['luflytoken'], "wxid": "" + this.wxid, "appid": "wxb26a710e583b05dc" })
+            }, url: wxcenter + '/api/getcode', body: JSON.stringify({ "luflyKey": process.env['luflytoken'], "wxid": "" + this.wxid, "appid": appid })
         })
         if (result) {
             console.log(result)
@@ -52,7 +52,7 @@ class Task {
     }
     async getJwtByCode(code) {
 
-        let result = await this.taskRequest('post', 'https://ziwi.gzcrm.cn/json-rpc?__method=WechatMiniProgramCodeToSession', { "id": "", "jsonrpc": "2.0", "method": "WechatMiniProgramCodeToSession", "params": { "appId": "wxb26a710e583b05dc", "code": "" + code, "launchOptions": { "path": "pages/index/index", "query": {}, "referrerInfo": {}, "apiCategory": "default" } } })
+        let result = await this.taskRequest('post', 'https://ziwi.gzcrm.cn/json-rpc?__method=WechatMiniProgramCodeToSession', { "id": "", "jsonrpc": "2.0", "method": "WechatMiniProgramCodeToSession", "params": { "appId": appid, "code": "" + code, "launchOptions": { "path": "pages/index/index", "query": {}, "referrerInfo": {}, "apiCategory": "default" } } })
         if (result) {
             if ('result' in result) {
                 if ('jwt' in result.result) {
