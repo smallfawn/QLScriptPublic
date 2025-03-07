@@ -10,8 +10,8 @@ cron: 12 12 * * *
 变量名称：dewu
 变量值：https://app.dewu.com/ 请求头x-auth-token的值（去掉Bearer） #Cookie duToken的值
 多账号&或换行符分隔
-dewuUserAgent 变量：请求头User-Agent的值
-dewuSK 变量：请求头SK的值
+dewuUserAgent 变量：请求头User-Agent的值 此值无需多变量
+dewuSK 变量：请求头SK的值 此值无需多变量
 ⚠️【免责声明】
 ------------------------------------------
 1、此脚本仅用于学习研究，不保证其合法性、准确性、有效性，请根据情况自行判断，本人对此不承担任何保证责任。
