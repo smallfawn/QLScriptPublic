@@ -6,7 +6,10 @@
  * 变量值: https://tuan.api.ybm100.com/ 请求头Headers中的token  多账号& 或换行 或新建同名变量
  * scriptVersionNow = "0.0.1";
  */
-
+global['window'] = {}
+global['navigator'] = {}
+const JSEncrypt = require("encryptlong")
+const JsRsaSign = require("jsrsasign")
 const $ = new Env("荷叶健康小程序-果园[免费领水果]");
 const notify = $.isNode() ? require('./sendNotify') : '';
 let ckName = "heyeHealth";
@@ -153,10 +156,7 @@ class Task {
 
     encrypt(body) {
 
-        global['window'] = {}
-        global['navigator'] = {}
-        const JSEncrypt = require("encryptlong")
-        const JsRsaSign = require("jsrsasign")
+
 
         const PUBLIC_KEY = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCiBksv2xaOJdSWblaTQl93HI393gYHqKFs89EIFBWYSmYSV+z8XXzMO/Xyo8EeWRpAjT5TuBf0wN467aBx3nsDfJd7e3+txBS7nf+S7Nyjnxx2J5AKPWx1gVmr/OF3aWqxg+DPCB7avakhj+p0QjoJ7eMqgJl/HSX2Kfb6/O3J9wIDAQAB";
         const PRIVATE_KEY = "MIICeAIBADANBgkqhkiG9w0BAQEFAASCAmIwggJeAgEAAoGBAKIGSy/bFo4l1JZuVpNCX3ccjf3eBgeooWzz0QgUFZhKZhJX7PxdfMw79fKjwR5ZGkCNPlO4F/TA3jrtoHHeewN8l3t7f63EFLud/5Ls3KOfHHYnkAo9bHWBWav84XdparGD4M8IHtq9qSGP6nRCOgnt4yqAmX8dJfYp9vr87cn3AgMBAAECgYEAlwzbB5Bu5LKsEFppZ/wW2ArM7YIRiQ5TACoGFEv1HfcuVaeXDmdxs02rKzwzDEHxUYDcPFyCKPGtvK5QSBgsAUUBHb6uu0fNGUccGX31NRAfLuQ8fj3W0uvkoYlpDARuokDHhWNqWzI6f8bFHkewJwpjXCO8w1WkogTLiX9Gu3ECQQDd5J4jEDS5+7KaohYRoryyX939mzsZ4RC6ufsfzTJwSlnLyYHEbm0Cs+7gbBxRrioqApBMQPIIoa5ujm1C88MNAkEAuu3htlbpR1ZL9b3wUuf3el/D3i/k9XvSChfHQ1q46Y/eck2yEDH9Kv/ZUxEl4fR8mB2MONm9oc2l+chPd9uQEwJBALcWuNU9vgPoB0tIiuUqXoDgUY+80ltcNi2c3/Uxn3jAIK/iKU0nwJMGXQiYrBVJnEjlrKL+w7cTkZZvtwATmtECQC2JV4vQvkFHj3eMzqeTpKDmBVPx/OekQzV8N2l8B0G2b20O6kqxssevzeRDcCQMJ/HyeL88o8pvy3f+yQUcsosCQQDZXV8K7Ek0R/V3dAdUzoetFSlfjCGy9QKPruz7m+iXBASxiA0R7YGfJzc8jWpuv0pxujtB/awy22K/ggLAhkZU";
