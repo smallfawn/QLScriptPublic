@@ -4,7 +4,7 @@ const $ = new Env("得物每日任务");
 @Author: sm
 @Date: 2024.06.07 19:15
 @Description: 得物每日抽奖
-cron: 12 12 * * *
+cron: 9 10 * * *
 ------------------------------------------
 #Notice: 依赖 crypto-js axios 
 变量名称：dewu
