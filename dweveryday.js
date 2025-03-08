@@ -1,12 +1,12 @@
 /*
 ------------------------------------------
-const $ = new Env("得物APP每日任务");
+const $ = new Env("得物每日任务");
 @Author: sm
 @Date: 2024.06.07 19:15
-@Description: 得物每日抽奖 心愿海洋
+@Description: 得物每日抽奖
 cron: 9 10 * * *
 ------------------------------------------
-#Notice: 依赖 crypto-js axios 
+#Notice: 依赖 crypto-js axios jsencrypt
 变量名称：dewu
 变量值：https://app.dewu.com/ 请求头x-auth-token的值（去掉Bearer） #Cookie duToken的值
 多账号&或换行符分隔
