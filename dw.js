@@ -6,6 +6,10 @@ const $ = new Env("得物每日任务");
 @Description: 得物每日抽奖 心愿海洋 海洋夺宝 摇一摇 0元抽 上上签 盲盒   种树等
 cron: 9 10,14,19 * * *
 ------------------------------------------
+尽量把dewuUserAgent 和 dewuSK 填写在配置文件中 否则可能会报错 
+export dewuUserAgent="AAA"
+export dewuSK="BBB"
+
 #Notice: 依赖 crypto-js axios jsencrypt
 变量名称：dewu
 变量值：https://app.dewu.com/ 请求头x-auth-token的值（去掉Bearer） #Cookie duToken的值  多账号&或换行符分隔
