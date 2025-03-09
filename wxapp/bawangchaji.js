@@ -36,8 +36,8 @@ class _0x4c79d9 {
     this.name = "";
     this.valid = false;
     const _0x16f1db = {
-        "limit": 0
-      },
+      "limit": 0
+    },
       _0x41e123 = {
         "Connection": "keep-alive"
       },
@@ -89,7 +89,7 @@ class _0x4c79d9 {
           this.log("[" + _0x1692ef + "]请求超时(" + _0x1952e1 / 1000 + "秒)，重试第" + _0x43077e + "次");
         } else {
           {
-            if (_0x57c026.includes(_0x5a4ec4?.["name"])) this.log("[" + _0x1692ef + "]请求超时(" + _0x5a4ec4.code + ")，重试第" + _0x43077e + "次");else {
+            if (_0x57c026.includes(_0x5a4ec4?.["name"])) this.log("[" + _0x1692ef + "]请求超时(" + _0x5a4ec4.code + ")，重试第" + _0x43077e + "次"); else {
               if (_0x15a3b6.includes(_0x5a4ec4?.["code"])) {
                 this.log("[" + _0x1692ef + "]请求错误(" + _0x5a4ec4.code + ")，重试第" + _0x43077e + "次");
               } else {
@@ -119,7 +119,7 @@ class _0x4c79d9 {
     } = _0x2d2118;
     if (_0x204398) try {
       _0x204398 = JSON.parse(_0x204398);
-    } catch {}
+    } catch { }
     const _0x21a81f = {
       "statusCode": _0x15e772,
       "headers": _0x2501a2,
@@ -160,8 +160,8 @@ class _0x5026b8 extends _0x4c79d9 {
     let _0x24397b = false;
     try {
       const _0x496d1a = {
-          "appid": _0x50be96
-        },
+        "appid": _0x50be96
+      },
         _0x18d4d1 = {
           "fn": "personal_info",
           "method": "get",
@@ -169,9 +169,9 @@ class _0x5026b8 extends _0x4c79d9 {
           "searchParams": _0x496d1a
         };
       let {
-          result: _0x19b336,
-          statusCode: _0xdca021
-        } = await this.request(_0x18d4d1),
+        result: _0x19b336,
+        statusCode: _0xdca021
+      } = await this.request(_0x18d4d1),
         _0x1de7e8 = _0x22822c.get(_0x19b336, "code", _0xdca021);
       if (_0x1de7e8 == 0) {
         {
@@ -197,8 +197,8 @@ class _0x5026b8 extends _0x4c79d9 {
     try {
       {
         const _0x4f8226 = {
-            "appid": _0x50be96
-          },
+          "appid": _0x50be96
+        },
           _0x5bc0c4 = {
             "fn": "sign_detail",
             "method": "post",
@@ -206,17 +206,17 @@ class _0x5026b8 extends _0x4c79d9 {
             "json": _0x4f8226
           };
         let {
-            result: _0xdbe43a,
-            statusCode: _0x8c7f96
-          } = await this.request(_0x5bc0c4),
+          result: _0xdbe43a,
+          statusCode: _0x8c7f96
+        } = await this.request(_0x5bc0c4),
           _0x57fa7a = _0x22822c.get(_0xdbe43a, "code", _0x8c7f96);
         if (_0x57fa7a == 0) {
           {
             let {
-                continuityTotal: _0x2f384b,
-                signInDateList: _0x5e7d20,
-                activityId: _0x403c0d
-              } = _0xdbe43a?.["data"],
+              continuityTotal: _0x2f384b,
+              signInDateList: _0x5e7d20,
+              activityId: _0x403c0d
+            } = _0xdbe43a?.["data"],
               _0x5928f0 = false,
               _0x20dde1 = _0x22822c.time("yyyy-MM-dd");
             _0x5e7d20?.["includes"](_0x20dde1) && (_0x5928f0 = true);
@@ -235,11 +235,11 @@ class _0x5026b8 extends _0x4c79d9 {
   async ["signIn"](_0xc779dc, _0x4c2bd6 = {}) {
     try {
       const _0x36f663 = {
-          "activityId": _0xc779dc,
-          "mobilePhone": this.name,
-          "userName": this.userName,
-          "appid": _0x50be96
-        },
+        "activityId": _0xc779dc,
+        "mobilePhone": this.name,
+        "userName": this.userName,
+        "appid": _0x50be96
+      },
         _0x4568f1 = {
           "fn": "signIn",
           "method": "post",
@@ -247,9 +247,9 @@ class _0x5026b8 extends _0x4c79d9 {
           "json": _0x36f663
         };
       let {
-          result: _0x3d114b,
-          statusCode: _0x48d383
-        } = await this.request(_0x4568f1),
+        result: _0x3d114b,
+        statusCode: _0x48d383
+      } = await this.request(_0x4568f1),
         _0x568177 = _0x22822c.get(_0x3d114b, "code", _0x48d383);
       if (_0x568177 == 0) {
         {
@@ -269,9 +269,9 @@ class _0x5026b8 extends _0x4c79d9 {
   async ["userSignStatistics"](_0x4bab26 = {}) {
     try {
       const _0x3e6e34 = {
-          "activityId": "947079313798000641",
-          "appid": _0x50be96
-        },
+        "activityId": "947079313798000641",
+        "appid": _0x50be96
+      },
         _0x13122a = {
           "fn": "userSignStatistics",
           "method": "post",
@@ -279,16 +279,16 @@ class _0x5026b8 extends _0x4c79d9 {
           "json": _0x3e6e34
         };
       let {
-          result: _0x594c54,
-          statusCode: _0x27479a
-        } = await this.request(_0x13122a),
+        result: _0x594c54,
+        statusCode: _0x27479a
+      } = await this.request(_0x13122a),
         _0x20ca00 = _0x22822c.get(_0x594c54, "code", _0x27479a);
       if (_0x20ca00 == 0) {
         {
           let {
-              signDays: _0x585f14,
-              signStatus: _0x22aedb
-            } = _0x594c54?.["data"],
+            signDays: _0x585f14,
+            signStatus: _0x22aedb
+          } = _0x594c54?.["data"],
             _0x4fd81b = _0x22aedb == 1;
           this.log("新版签到今天" + (_0x4fd81b ? "已" : "未") + "签到, 已连续签到" + _0x585f14 + "天");
           !_0x4fd81b && (await this.takePartInSign());
@@ -304,9 +304,9 @@ class _0x5026b8 extends _0x4c79d9 {
   async ["takePartInSign"](_0x48efd6 = {}) {
     try {
       const _0x44b325 = {
-          "activityId": "947079313798000641",
-          "appid": _0x50be96
-        },
+        "activityId": "947079313798000641",
+        "appid": _0x50be96
+      },
         _0x2733ab = {
           "fn": "takePartInSign",
           "method": "post",
@@ -314,9 +314,9 @@ class _0x5026b8 extends _0x4c79d9 {
           "json": _0x44b325
         };
       let {
-          result: _0x285c82,
-          statusCode: _0x148e52
-        } = await this.request(_0x2733ab),
+        result: _0x285c82,
+        statusCode: _0x148e52
+      } = await this.request(_0x2733ab),
         _0x4f6bec = _0x22822c.get(_0x285c82, "code", _0x148e52);
       if (_0x4f6bec == 0) {
         {
@@ -336,8 +336,8 @@ class _0x5026b8 extends _0x4c79d9 {
   async ["points_info"](_0x11c245 = {}) {
     try {
       const _0x4418a9 = {
-          "appid": _0x50be96
-        },
+        "appid": _0x50be96
+      },
         _0x4a3968 = {
           "fn": "points_info",
           "method": "post",
@@ -345,9 +345,9 @@ class _0x5026b8 extends _0x4c79d9 {
           "json": _0x4418a9
         };
       let {
-          result: _0x333894,
-          statusCode: _0x41c61b
-        } = await this.request(_0x4a3968),
+        result: _0x333894,
+        statusCode: _0x41c61b
+      } = await this.request(_0x4a3968),
         _0x4ac555 = _0x22822c.get(_0x333894, "code", _0x41c61b);
       if (_0x4ac555 == 0) {
         let {
@@ -529,7 +529,7 @@ function _0x2fbb6b(_0x5a60f2) {
           const _0x3608c4 = {
             "notify": true
           };
-          this.log("未找到变量，请检查变量" + _0x25b427.map(_0x357aa2 => "[" + _0x357aa2 + "]").join("或"), _0x3608c4);
+          console.log("未找到变量，请检查变量" + _0x25b427.map(_0x357aa2 => "[" + _0x357aa2 + "]").join("或"), _0x3608c4);
           return false;
         }
         this.log("共找到" + this.userCount + "个账号");
@@ -604,7 +604,7 @@ function _0x2fbb6b(_0x5a60f2) {
       let _0x16b674 = "";
       for (let _0xc4493c of _0x16140f) {
         {
-          if (_0xc4493c == "x") _0x16b674 += _0x213ac1.charAt(Math.floor(Math.random() * _0x213ac1.length));else {
+          if (_0xc4493c == "x") _0x16b674 += _0x213ac1.charAt(Math.floor(Math.random() * _0x213ac1.length)); else {
             _0xc4493c == "X" ? _0x16b674 += _0x213ac1.charAt(Math.floor(Math.random() * _0x213ac1.length)).toUpperCase() : _0x16b674 += _0xc4493c;
           }
         }
@@ -668,7 +668,7 @@ function _0x2fbb6b(_0x5a60f2) {
         _0x852c0e = _0x5833a2.ahead || this.default_wait_ahead;
       if (typeof _0xe30940 == "string" && _0xe30940.includes(":")) {
         {
-          if (_0xe30940.includes("-")) _0xe30940 = new Date(_0xe30940).getTime();else {
+          if (_0xe30940.includes("-")) _0xe30940 = new Date(_0xe30940).getTime(); else {
             let _0x4bd7fc = this.time("yyyy-MM-dd ");
             _0xe30940 = new Date(_0x4bd7fc + _0xe30940).getTime();
           }
