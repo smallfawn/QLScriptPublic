@@ -8,11 +8,15 @@ cron: 9 10,14 * * *
 ------------------------------------------
 #Notice: 依赖 crypto-js axios jsencrypt
 变量名称：dewu
-变量值：https://app.dewu.com/ 请求头x-auth-token的值（去掉Bearer） #Cookie duToken的值
-多账号&或换行符分隔
-dewuUserAgent 变量：请求头User-Agent的值 此值无需多变量
-dewuSK 变量：请求头SK的值 此值无需多变量
-⚠️【免责声明】
+变量值：https://app.dewu.com/ 请求头x-auth-token的值（去掉Bearer） #Cookie duToken的值  多账号&或换行符分隔
+例如       eyJxxxxxx#3e70axxxx39a4ce54b423331cbf5fxxxbb|15882362958|17465454869|77690575757575868687678ea1f8b|1-0|5a57677ca34
+
+dewuUserAgent 变量：请求头User-Agent的值 此值无需多变量 （自己去得物森林随便找个这样的就行）
+例如       Mozilla/5.0 (Linux; Android 10; XXXXX Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.99 Mobile Safari/537.36/duapp/5.43.0(android;10)
+
+dewuSK 变量：请求头SK的值 此值无需多变量   
+例如      9OuZQYmxxxxxxxxxxxxbCxxxxxxxxxxD2h1y
+⚠️【免责声明】 
 ------------------------------------------
 1、此脚本仅用于学习研究，不保证其合法性、准确性、有效性，请根据情况自行判断，本人对此不承担任何保证责任。
 2、由于此脚本仅用于学习研究，您必须在下载后 24 小时内将所有内容从您的计算机或手机或任何存储设备中完全删除，若违反规定引起任何事件本人对此均不负责。
