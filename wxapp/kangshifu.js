@@ -127,7 +127,7 @@ class Task extends Public {
 
 })()
     .catch((e) => console.log(e))
-    .finally(async () => await $.done());
+    .finally( () =>  $.done());
 
 async function getNotice() {
     let options = {
