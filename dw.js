@@ -11,7 +11,7 @@ cron: 9 10,14,19 * * *
 变量值：https://app.dewu.com/ 请求头x-auth-token的值（去掉Bearer） #Cookie duToken的值  多账号&或换行符分隔
 例如       eyJxxxxxx#3e70axxxx39a4ce54b423331cbf5fxxxbb|15882362958|17465454869|77690575757575868687678ea1f8b|1-0|5a57677ca34
 
-dewuUserAgent 变量：请求头User-Agent的值 此值无需多变量 （自己去得物森林随便找个这样的就行）
+dewuUserAgent 变量：请求头User-Agent的值 此值无需多变量 （自己去得物星愿森林 点击浇水 抓 https://app.dewu.com/hacking-tree/v1/tree/watering 中的Useragent 和SK）
 例如       Mozilla/5.0 (Linux; Android 10; XXXXX Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.99 Mobile Safari/537.36/duapp/5.43.0(android;10)
 
 dewuSK 变量：请求头SK的值 此值无需多变量   
