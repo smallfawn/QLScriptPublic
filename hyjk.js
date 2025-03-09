@@ -8,7 +8,7 @@
  */
 global['window'] = {}
 global['navigator'] = {}
-const JSEncrypt = require("encryptlong")
+const { JSEncrypt } = require("encryptlong")
 const JsRsaSign = require("jsrsasign")
 const $ = new Env("荷叶健康小程序-果园[免费领水果]");
 const notify = $.isNode() ? require('./sendNotify') : '';
