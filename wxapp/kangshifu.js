@@ -168,8 +168,8 @@ function Env(t, s) {
                 if (Object.prototype.toString.call(item) === '[object Object]') {
                     item = JSON.stringify(item)
                 }
-                if(Object.prototype.toString.call(arg) === '[object Array]'){
-                    item = item.join(this.logSeparator)
+                if (Object.prototype.toString.call(arg) === '[object Array]') {
+                    item = JSON.stringify(item)
                 }
             }
             let message = this.notifyStr.join(this.logSeparator);

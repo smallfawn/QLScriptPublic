@@ -107,7 +107,7 @@ function Env(t, s) {
                     item = JSON.stringify(item)
                 }
                 if (Object.prototype.toString.call(arg) === '[object Array]') {
-                    item = item.join(this.logSeparator)
+                    item = JSON.stringify(item)
                 }
             }
             let message = this.notifyStr.join(this.logSeparator);
