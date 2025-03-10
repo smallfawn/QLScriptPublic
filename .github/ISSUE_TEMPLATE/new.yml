@@ -1,14 +1,23 @@
 name: 新功能提议
-title: "[功能提议] " # 默认标题前缀
-labels: feature request
-assignees: "" # 如果不指定负责人，可以留空
+title: "[功能提议] "  # 默认标题前缀，用户可以修改
+labels: ["feature request"]  # 标签必须是字符串数组
+assignees: ""  # 如果不指定负责人，可以留空
 
----
+body:
+  - type: input
+    id: 功能名字
+    attributes:
+      label: 功能名字
+      description: 请尽量填写 APP 还是网页还是小程序
+      placeholder: 例如：APP
+    validations:
+      required: true
 
-**功能名字**
-<!-- 请尽量填写 APP还是网页还是小程序 -->
-APP
-
-**需要添加的功能内容**
-<!-- 请在这里详细描述新功能的实现方法 -->
-我希望添加一个新功能，能够在APP主界面直接显示用户最近的活动记录，方便用户快速回顾和管理。
+  - type: textarea
+    id: 功能描述
+    attributes:
+      label: 需要添加的功能内容
+      description: 请在这里详细描述新功能的实现方法
+      placeholder: 例如：我希望添加一个新功能，能够在APP主界面直接显示用户最近的活动记录，方便用户快速回顾和管理。
+    validations:
+      required: true
