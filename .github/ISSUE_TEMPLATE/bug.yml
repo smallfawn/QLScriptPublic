@@ -1,4 +1,4 @@
-name: 返回脚本BUG
+name: 反馈脚本BUG
 description: 在使用 脚本 的过程中遇到了错误
 title: "[Bug]: "
 labels: ["bug?"]
@@ -8,7 +8,6 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## 感谢您愿意填写错误回报！
         ## 以下是一些注意事项，请务必阅读让我们能够更容易处理
         ### ❗ | 确定没有相同问题的ISSUE已被提出.
         ### 🌎| 请准确填写环境信息
@@ -16,13 +15,6 @@ body:
         ## 如果您不知道如何有效、精准地表述，我们建议您先阅读《提问的智慧》
         链接: [《提问的智慧》](https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/main/README-zh_CN.md)
         ---
-  - type: checkboxes
-    id: terms
-    attributes:
-      label: 请确保您已阅读以上注意事项，并勾选下方的确认框。
-      options:
-        - label: 我已知晓并同意，此处仅用于汇报程序中存在的问题。若这个 Issue 是关于其他非程序本身问题，则我的 Issue 可能会被无条件自动关闭或/并锁定。（这些问题应当在 Discussion 板块提出。）
-          required: true
 
   # Input | Expected result
   - type: textarea

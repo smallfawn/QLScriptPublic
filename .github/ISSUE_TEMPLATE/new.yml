@@ -1,9 +1,7 @@
 name: 新功能提议
-title: "[功能提议] "  # 默认标题前缀，用户可以修改
-labels: ["feature request"]  # 标签必须是字符串数组
-description : |
-  ### 📝 | 描述新功能的实现方法和用户场景。
-  ### ✅
+title: "[功能提议] " # 默认标题前缀，用户可以修改
+labels: ["feature request"] # 标签必须是字符串数组
+description: 描述新功能的实现方法和用户场景。
 
 body:
   - type: input
