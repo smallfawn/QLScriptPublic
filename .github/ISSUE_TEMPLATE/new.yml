@@ -1,7 +1,6 @@
 name: 新功能提议
 title: "[功能提议] "  # 默认标题前缀，用户可以修改
 labels: ["feature request"]  # 标签必须是字符串数组
-assignees: ""  # 如果不指定负责人，可以留空
 
 body:
   - type: input
