@@ -5,7 +5,7 @@ assignees: ""  # 如果不指定负责人，可以留空
 
 body:
   - type: input
-    id: 功能名字
+    id: function_name
     attributes:
       label: 功能名字
       description: 请尽量填写 APP 还是网页还是小程序
@@ -14,7 +14,7 @@ body:
       required: true
 
   - type: textarea
-    id: 功能描述
+    id: function_description
     attributes:
       label: 需要添加的功能内容
       description: 请在这里详细描述新功能的实现方法
