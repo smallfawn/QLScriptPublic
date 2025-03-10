@@ -1,6 +1,6 @@
 name: 反馈脚本BUG
 description: 在使用 脚本 的过程中遇到了错误
-title: "[Bug]: "
+title: "[Bug反馈]: "
 labels: ["bug?"]
 
 body:
