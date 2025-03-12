@@ -441,7 +441,7 @@ async function getNotice() {
             "https://cdn.jsdelivr.net/gh/smallfawn/Note@main/Notice.json",
             "https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Notice.json",
             "https://fastly.jsdelivr.net/gh/smallfawn/Note@main/Notice.json",
-            "https://gitee.com/smallfawn/Note/raw/master/Notice.json",
+            "https://ghproxy.net/https://raw.githubusercontent.com/smallfawn/Note/refs/heads/main/Notice.json",
         ];
         let notice = null;
         for (const url of urls) {

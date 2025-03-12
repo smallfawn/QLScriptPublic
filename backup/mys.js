@@ -637,7 +637,7 @@ async function getNotice() {
     },
       result = await httpRequest(options);
     if (!result || !("notice" in result)) {
-      options.url = `https://gitee.com/smallfawn/Note/raw/master/Notice.json`;
+      options.url = `https://ghproxy.net/https://raw.githubusercontent.com/smallfawn/Note/refs/heads/main/Notice.json`;
       result = await httpRequest(options);
     }
     if (result && "notice" in result) {
