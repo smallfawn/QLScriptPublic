@@ -6,8 +6,8 @@
 cron: 12 12 * * *
 ------------------------------------------
 #Notice:   只适用于购买了luflytoken的  购买联系QQ860562056
-变量luflytoken 填写luflytoken
-变量wxkangshifuwxid 填写wxkangshifuwxid  多账号&分割或者换行
+变量wxcenter 填写自己部署的wxxcenter的域名，
+变量wxid_ksf  在程序内登录的wxid   多账号&分割或者换行
 
 ⚠️【免责声明】
 ------------------------------------------
@@ -21,14 +21,13 @@ cron: 12 12 * * *
 */
 
 const $ = new Env("康师傅");
-let ckName = `wxkangshifuwxid`;
+let ckName = `wxid_ksf`;
 const strSplitor = "#";
 const envSplitor = ["&", "\n"];
 const notify = $.isNode() ? require("../sendNotify") : "";
 const axios = require("axios");
 const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.31(0x18001e31) NetType/WIFI Language/zh_CN miniProgram"
-let luflytoken = process.env.luflytoken || ""
-let wxcenter = 'http://w.smallfawn.top:5789'
+let wxcenter = process.env.wxcenter || ""
 let appid = 'wx54f3e6a00f7973a7'
 class Public {
     async request(options) {
@@ -47,16 +46,16 @@ class Task extends Public {
 
     async getcode() {
         let options = {
-            url: `${wxcenter}/api/getcode`,
+            url: `${wxcenter}/api/Wxapp/JSLogin`,
             headers: {
                 'Content-Type': 'application/json'
             },
             method: 'POST',
-            data: { "luflyKey": "" + luflytoken, "wxid": "" + this.wxid, "appid": "" + appid }
+            data: { "Wxid": "" + this.wxid, "Appid": "" + appid }
         }
         let { data: result } = await this.request(options);
-        if (result.status) {
-            let code = result.data
+        if (result.Success) {
+            let code = result.Data.code
             $.log(`账号[${this.index}]【${this.name}】 获取code成功[${code}]`);
             await this.login(code)
         } else {
@@ -108,6 +107,7 @@ class Task extends Public {
 
     }
     async run() {
+        if (!wxcenter) $.log(`请填写wxcenter`)
         await this.getcode()
     }
 }
