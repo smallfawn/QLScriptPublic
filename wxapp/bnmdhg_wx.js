@@ -5,8 +5,8 @@
 @Description: 测试
 ------------------------------------------
 #Notice:   只适用于购买了luflytoken的  购买联系QQ860562056
-变量luflytoken 填写luflytoken
-变量wxbnmdwxid 填写wxbnmdwxid  多账号&分割或者换行
+变量wxid_bnmd 填写wxid_bnmd  多账号&分割或者换行
+wxcenter 填写wxcenter 
 ⚠️【免责声明】
 ------------------------------------------
 1、此脚本仅用于学习研究，不保证其合法性、准确性、有效性，请根据情况自行判断，本人对此不承担任何保证责任。
@@ -19,7 +19,7 @@
 */
 
 const $ = new Env("巴奴毛肚小程序");
-let ckName = `wxbnmdwxid`;
+let ckName = `wxid_bnmd`;
 const strSplitor = "#";
 const envSplitor = ["&", "\n"];
 const crypto = require("crypto-js");
@@ -27,8 +27,7 @@ const notify = $.isNode() ? require("../sendNotify") : "";
 const axios = require("axios");
 const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.31(0x18001e31) NetType/WIFI Language/zh_CN miniProgram"
 const key = "bfc5e947cd84c7ced1ee48d28fb3e90f";
-let luflytoken = process.env.luflytoken || ""
-let wxcenter = 'http://w.smallfawn.top:5789'
+let wxcenter = process.env.wxcenter || ""
 let appid = 'wx71373698c47f9a9f'
 class Public {
   async request(options) {
@@ -120,17 +119,23 @@ class Task extends Public {
     })));
   }
   async getcode() {
+
     let options = {
-      url: `${wxcenter}/api/getcode`,
+      url: `${wxcenter}/api/Wxapp/JSLogin`,
       headers: {
         'Content-Type': 'application/json'
       },
       method: 'POST',
-      data: { "luflyKey": "" + luflytoken, "wxid": "" + this.wxid, "appid": "" + appid }
+      data: { "Wxid": "" + this.wxid, "Appid": "" + appid }
     }
     let { data: result } = await this.request(options);
-    if (result.status) {
-      let code = result.data
+
+
+
+
+    if (result.Success) {
+      let code = result.Data.code
+      $.log(`账号[${this.index}]【${this.name}】 获取code成功[${code}]`);
       $.log(`账号[${this.wxid}] 获取code成功[${code}]`);
       let { member_id: memberId, openid: authorization } = await this.login(code)
       const headerObj = {};
@@ -159,13 +164,17 @@ class Task extends Public {
           headers: this.getHeaders(headerObj, false, authorization)
         });
         const result = "\nMember_id:" + memberId + "\n用户名:" + info.data.data.name + "\n总积分:" + info.data.data.points;
+        $.log(result);
+
       } catch (err) {
 
-        console.log("签到失败：" + err + " | 签到时间：" + Date.now());
+        $.log("签到失败：" + err + " | 签到时间：" + Date.now());
       }
     } else {
       console.log(result);
     }
+
+
 
 
   }
@@ -188,6 +197,7 @@ class Task extends Public {
     return res.data;
   }
   async run() {
+    if (!wxcenter) return $.log(`请填写wxcenter`)
 
     await this.getcode()
 
@@ -211,7 +221,7 @@ class Task extends Public {
 
 })()
   .catch((e) => console.log(e))
-  .finally(() =>  $.done());
+  .finally(() => $.done());
 
 async function getNotice() {
   let options = {
@@ -229,147 +239,147 @@ async function getNotice() {
 // prettier-ignore
 function Env(t, s) {
   return new (class {
-      constructor(t, s) {
-          this.userIdx = 1;
-          this.userList = [];
-          this.userCount = 0;
-          this.name = t;
-          this.notifyStr = [];
-          this.logSeparator = "\n";
-          this.startTime = new Date().getTime();
-          Object.assign(this, s);
-          this.log(`\ud83d\udd14${this.name},\u5f00\u59cb!`);
-      }
-      checkEnv(ckName) {
-          let userCookie = (this.isNode() ? process.env[ckName] : "") || "";
-          this.userList = userCookie.split(envSplitor.find((o) => userCookie.includes(o)) || "&").filter((n) => n);
-          this.userCount = this.userList.length;
-          this.log(`共找到${this.userCount}个账号`);
-      }
-      async sendMsg() {
-        this.log("==============📣Center 通知📣==============")
-        for (let i = 0; i < this.notifyStr.length; i++) {
-            if (Object.prototype.toString.call(this.notifyStr[i]) === '[object Object]' ||
-                Object.prototype.toString.call(this.notifyStr[i]) === '[object Array]') {
-                this.notifyStr[i] = JSON.stringify(this.notifyStr[i]);
-            }
-        }
-
-        let message = this.notifyStr.join(this.logSeparator);
-        if (this.isNode()) {
-            await notify.sendNotify(this.name, message);
-        } else {
-        }
+    constructor(t, s) {
+      this.userIdx = 1;
+      this.userList = [];
+      this.userCount = 0;
+      this.name = t;
+      this.notifyStr = [];
+      this.logSeparator = "\n";
+      this.startTime = new Date().getTime();
+      Object.assign(this, s);
+      this.log(`\ud83d\udd14${this.name},\u5f00\u59cb!`);
     }
-      isNode() {
-          return "undefined" != typeof module && !!module.exports;
+    checkEnv(ckName) {
+      let userCookie = (this.isNode() ? process.env[ckName] : "") || "";
+      this.userList = userCookie.split(envSplitor.find((o) => userCookie.includes(o)) || "&").filter((n) => n);
+      this.userCount = this.userList.length;
+      this.log(`共找到${this.userCount}个账号`);
+    }
+    async sendMsg() {
+      this.log("==============📣Center 通知📣==============")
+      for (let i = 0; i < this.notifyStr.length; i++) {
+        if (Object.prototype.toString.call(this.notifyStr[i]) === '[object Object]' ||
+          Object.prototype.toString.call(this.notifyStr[i]) === '[object Array]') {
+          this.notifyStr[i] = JSON.stringify(this.notifyStr[i]);
+        }
       }
 
-      queryStr(options) {
-          return Object.entries(options)
-              .map(
-                  ([key, value]) =>
-                      `${key}=${typeof value === "object" ? JSON.stringify(value) : value
-                      }`
-              )
-              .join("&");
+      let message = this.notifyStr.join(this.logSeparator);
+      if (this.isNode()) {
+        await notify.sendNotify(this.name, message);
+      } else {
       }
-      getURLParams(url) {
-          const params = {};
-          const queryString = url.split("?")[1];
-          if (queryString) {
-              const paramPairs = queryString.split("&");
-              paramPairs.forEach((pair) => {
-                  const [key, value] = pair.split("=");
-                  params[key] = value;
-              });
-          }
-          return params;
-      }
-      isJSONString(str) {
-          try {
-              return JSON.parse(str) && typeof JSON.parse(str) === "object";
-          } catch (e) {
-              return false;
-          }
-      }
-      isJson(obj) {
-          var isjson =
-              typeof obj == "object" &&
-              Object.prototype.toString.call(obj).toLowerCase() ==
-              "[object object]" &&
-              !obj.length;
-          return isjson;
-      }
+    }
+    isNode() {
+      return "undefined" != typeof module && !!module.exports;
+    }
 
-      randomNumber(length) {
-          const characters = "0123456789";
-          return Array.from(
-              { length },
-              () => characters[Math.floor(Math.random() * characters.length)]
-          ).join("");
+    queryStr(options) {
+      return Object.entries(options)
+        .map(
+          ([key, value]) =>
+            `${key}=${typeof value === "object" ? JSON.stringify(value) : value
+            }`
+        )
+        .join("&");
+    }
+    getURLParams(url) {
+      const params = {};
+      const queryString = url.split("?")[1];
+      if (queryString) {
+        const paramPairs = queryString.split("&");
+        paramPairs.forEach((pair) => {
+          const [key, value] = pair.split("=");
+          params[key] = value;
+        });
       }
-      randomString(length) {
-          const characters = "abcdefghijklmnopqrstuvwxyz0123456789";
-          return Array.from(
-              { length },
-              () => characters[Math.floor(Math.random() * characters.length)]
-          ).join("");
+      return params;
+    }
+    isJSONString(str) {
+      try {
+        return JSON.parse(str) && typeof JSON.parse(str) === "object";
+      } catch (e) {
+        return false;
       }
-      uuid() {
-          return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-              /[xy]/g,
-              function (c) {
-                  var r = (Math.random() * 16) | 0,
-                      v = c == "x" ? r : (r & 0x3) | 0x8;
-                  return v.toString(16);
-              }
-          );
-      }
-      time(t) {
-          let s = {
-              "M+": new Date().getMonth() + 1,
-              "d+": new Date().getDate(),
-              "H+": new Date().getHours(),
-              "m+": new Date().getMinutes(),
-              "s+": new Date().getSeconds(),
-              "q+": Math.floor((new Date().getMonth() + 3) / 3),
-              S: new Date().getMilliseconds(),
-          };
-          /(y+)/.test(t) &&
-              (t = t.replace(
-                  RegExp.$1,
-                  (new Date().getFullYear() + "").substr(4 - RegExp.$1.length)
-              ));
-          for (let e in s) {
-              new RegExp("(" + e + ")").test(t) &&
-                  (t = t.replace(
-                      RegExp.$1,
-                      1 == RegExp.$1.length
-                          ? s[e]
-                          : ("00" + s[e]).substr(("" + s[e]).length)
-                  ));
-          }
-          return t;
-      }
+    }
+    isJson(obj) {
+      var isjson =
+        typeof obj == "object" &&
+        Object.prototype.toString.call(obj).toLowerCase() ==
+        "[object object]" &&
+        !obj.length;
+      return isjson;
+    }
 
-      log(content) {
-          this.notifyStr.push(content)
-          console.log(content)
+    randomNumber(length) {
+      const characters = "0123456789";
+      return Array.from(
+        { length },
+        () => characters[Math.floor(Math.random() * characters.length)]
+      ).join("");
+    }
+    randomString(length) {
+      const characters = "abcdefghijklmnopqrstuvwxyz0123456789";
+      return Array.from(
+        { length },
+        () => characters[Math.floor(Math.random() * characters.length)]
+      ).join("");
+    }
+    uuid() {
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+        /[xy]/g,
+        function (c) {
+          var r = (Math.random() * 16) | 0,
+            v = c == "x" ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        }
+      );
+    }
+    time(t) {
+      let s = {
+        "M+": new Date().getMonth() + 1,
+        "d+": new Date().getDate(),
+        "H+": new Date().getHours(),
+        "m+": new Date().getMinutes(),
+        "s+": new Date().getSeconds(),
+        "q+": Math.floor((new Date().getMonth() + 3) / 3),
+        S: new Date().getMilliseconds(),
+      };
+      /(y+)/.test(t) &&
+        (t = t.replace(
+          RegExp.$1,
+          (new Date().getFullYear() + "").substr(4 - RegExp.$1.length)
+        ));
+      for (let e in s) {
+        new RegExp("(" + e + ")").test(t) &&
+          (t = t.replace(
+            RegExp.$1,
+            1 == RegExp.$1.length
+              ? s[e]
+              : ("00" + s[e]).substr(("" + s[e]).length)
+          ));
       }
-      wait(t) {
-          return new Promise((s) => setTimeout(s, t));
+      return t;
+    }
+
+    log(content) {
+      this.notifyStr.push(content)
+      console.log(content)
+    }
+    wait(t) {
+      return new Promise((s) => setTimeout(s, t));
+    }
+    async done(t = {}) {
+      await this.sendMsg();
+      const s = new Date().getTime(),
+        e = (s - this.startTime) / 1e3;
+      this.log(
+        `\ud83d\udd14${this.name},\u7ed3\u675f!\ud83d\udd5b ${e}\u79d2`
+      );
+      if (this.isNode()) {
+        process.exit(1);
       }
-      async done(t = {}) {
-          await this.sendMsg();
-          const s = new Date().getTime(),
-              e = (s - this.startTime) / 1e3;
-          this.log(
-              `\ud83d\udd14${this.name},\u7ed3\u675f!\ud83d\udd5b ${e}\u79d2`
-          );
-          if (this.isNode()) {
-              process.exit(1);
-          }
-      }
+    }
   })(t, s);
 }
