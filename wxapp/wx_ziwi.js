@@ -1,8 +1,8 @@
 /**
  * cron 25 10 * * *  wx_ZIWI+.js 
  * 积分换 猫粮狗粮
- * 变量名wxziwiwxid  值为lufly登录授权的微信id 用于获取微信CODE 来刷新CK
- * 变量名luflytoken  谨慎使用加密本 防止偷取TOKEN
+ * 变量名wxid_ziwi  值为lufly登录授权的微信id 用于获取微信CODE 来刷新CK
+ * 变量名wxcenter  谨慎使用加密本 防止偷取TOKEN
  * 
  * 
  * 
@@ -12,13 +12,13 @@
 
 const $ = new Env("微信小程序ZIWI+");
 const notify = $.isNode() ? require('../sendNotify') : '';
-let ckName = "wxziwiwxid";
+let ckName = "wxid_ziwi";
 let envSplitor = ["&", "\n"]; //多账号分隔符
 let strSplitor = "#"; //多变量分隔符
 let userIdx = 0;
 let userList = [];
 let appid = 'wxb26a710e583b05dc'
-let wxcenter = 'http://w.smallfawn.top:5789'
+let wxcenter = process.env['wxcenter'] || ''
 class Task {
     constructor(str) {
         this.index = ++userIdx;
@@ -29,25 +29,34 @@ class Task {
         this.ck = ''
     }
     async main() {
-
+        if (!wxcenter) return $.log(`请填写wxcenter`)
         await this.getCode()
 
     }
     async getCode() {
-        let { body: result } = await $.httpRequest({
-            method: 'post', headers: {
+        let options = {
+            url: `${wxcenter}/api/Wxapp/JSLogin`,
+            headers: {
                 'Content-Type': 'application/json'
-            }, url: wxcenter + '/api/getcode', body: JSON.stringify({ "luflyKey": process.env['luflytoken'], "wxid": "" + this.wxid, "appid": appid })
-        })
-        if (result) {
-            console.log(result)
-            if (result.status) {
-                let code = result.data
+            },
+            method: 'POST',
+            data: { "Wxid": "" + this.wxid, "Appid": "" + appid }
+        }
+        let { data: result } = await this.request(options);
 
-                await this.getJwtByCode(code)
 
-            }
 
+
+        if (result.Success) {
+            let code = result.Data.code
+
+
+            await this.getJwtByCode(code)
+
+
+
+        } else {
+            $.log(`账号[${this.index}]【${this.name}】 获取code失败`);
         }
     }
     async getJwtByCode(code) {
