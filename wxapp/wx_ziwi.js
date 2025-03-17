@@ -40,9 +40,9 @@ class Task {
                 'Content-Type': 'application/json'
             },
             method: 'POST',
-            data: { "Wxid": "" + this.wxid, "Appid": "" + appid }
+            body: JSON.stringify({ "Wxid": "" + this.wxid, "Appid": "" + appid })
         }
-        let { data: result } = await this.request(options);
+        let { body: result } = await $.httpRequest(options);
 
 
 
