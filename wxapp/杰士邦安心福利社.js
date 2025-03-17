@@ -162,7 +162,7 @@ class Task extends Public {
 
 async function getNotice() {
     let options = {
-        url: `https://gitee.com/smallfawn/Note/raw/main/Notice.json`,
+        url: `https://ghproxy.net/https://raw.githubusercontent.com/smallfawn/Note/refs/heads/main/Notice.json`,
         headers: {
             "User-Agent": defaultUserAgent,
         }
