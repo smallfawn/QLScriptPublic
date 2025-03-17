@@ -135,7 +135,6 @@ class Task extends Public {
 
     if (result.Success) {
       let code = result.Data.code
-      $.log(`账号[${this.index}]【${this.name}】 获取code成功[${code}]`);
       $.log(`账号[${this.wxid}] 获取code成功[${code}]`);
       let { member_id: memberId, openid: authorization } = await this.login(code)
       const headerObj = {};
