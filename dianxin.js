@@ -1,4 +1,12 @@
-//变量名chinaTelecomAccount
+// 非青龙下在文件开头添加账号配置,
+//process.env.chinaTelecomAccount = `
+//13454545457#123456
+//13454545457#456789
+//`.trim();
+
+//变量格式: 手机号#服务密码
+//多号创建多个变量或者换行、&隔开
+
 
 (function (_0x1398c0) {
     process.env.NODE_OPTIONS = "--max-old-space-size=4096 --openssl-legacy-provider";
@@ -521,7 +529,7 @@
               "ckvalue": _0x1cb2f1,
               "fn": "login",
               "method": "get",
-              "url": "https://wapside.189.cn:9001/jt-sign/ssoHomLogin",
+              "url": "https://wappark.189.cn/jt-sign/ssoHomLogin",
               "searchParams": _0xc6d6af
             };
           let {
@@ -566,7 +574,7 @@
             const _0x4a2e01 = {
               "fn": "getrs",
               "method": "get",
-              "url": "https://wapside.189.cn:9001" + _0x34e10d
+              "url": "https://wappark.189.cn" + _0x34e10d
             };
             _0x5711e3 = 8;
             let {
@@ -615,7 +623,7 @@
                 "ckvalue": _0x2f5510,
                 "fn": "userCoinInfo",
                 "method": "post",
-                "url": "https://wapside.189.cn:9001/jt-sign/api/home/userCoinInfo",
+                "url": "https://wappark.189.cn/jt-sign/api/home/userCoinInfo",
                 "json": {
                   "para": this.encrypt_para(_0xf92b01)
                 }
@@ -669,7 +677,7 @@
               "ckvalue": _0x5b8aeb,
               "fn": "userStatusInfo",
               "method": "post",
-              "url": "https://wapside.189.cn:9001/jt-sign/api/home/userStatusInfo",
+              "url": "https://wappark.189.cn/jt-sign/api/home/userStatusInfo",
               "json": {
                 "para": this.encrypt_para(_0x31d8c6)
               }
@@ -732,7 +740,7 @@
                 "ckvalue": _0x4b17f,
                 "fn": "continueSignDays",
                 "method": "post",
-                "url": "https://wapside.189.cn:9001/jt-sign/webSign/continueSignDays",
+                "url": "https://wappark.189.cn/jt-sign/webSign/continueSignDays",
                 "json": {
                   "para": this.encrypt_para(_0x219e1a)
                 }
@@ -787,7 +795,7 @@
                   "ckvalue": _0x3c00be,
                   "fn": "continueSignRecords",
                   "method": "post",
-                  "url": "https://wapside.189.cn:9001/jt-sign/webSign/continueSignRecords",
+                  "url": "https://wappark.189.cn/jt-sign/webSign/continueSignRecords",
                   "json": {
                     "para": this.encrypt_para(_0x5df56a)
                   }
@@ -839,7 +847,7 @@
               "ckvalue": _0x31122f,
               "fn": "doSign",
               "method": "post",
-              "url": "https://wapside.189.cn:9001/jt-sign/webSign/sign",
+              "url": "https://wappark.189.cn/jt-sign/webSign/sign",
               "json": {
                 "encode": this.encode_aes(JSON.stringify(_0x218f39))
               }
@@ -894,7 +902,7 @@
               "ckvalue": _0x10e174,
               "fn": "exchangePrize",
               "method": "post",
-              "url": "https://wapside.189.cn:9001/jt-sign/webSign/exchangePrize",
+              "url": "https://wappark.189.cn/jt-sign/webSign/exchangePrize",
               "json": {
                 "para": this.encrypt_para(_0x1f9f9e)
               }
@@ -951,7 +959,7 @@
               "ckvalue": _0xe6f98c,
               "fn": "homepage",
               "method": "post",
-              "url": "https://wapside.189.cn:9001/jt-sign/webSign/homepage",
+              "url": "https://wappark.189.cn/jt-sign/webSign/homepage",
               "json": {
                 "para": this.encrypt_para(_0x389651)
               }
@@ -1028,7 +1036,7 @@
                 "ckvalue": _0x3afcd1,
                 "fn": "receiveReward",
                 "method": "post",
-                "url": "https://wapside.189.cn:9001/jt-sign/paradise/receiveReward",
+                "url": "https://wappark.189.cn/jt-sign/paradise/receiveReward",
                 "json": {
                   "para": this.encrypt_para(_0x10b838)
                 }
@@ -1065,7 +1073,7 @@
                   "ckvalue": _0x5ae01e,
                   "fn": "openMsg",
                   "method": "post",
-                  "url": "https://wapside.189.cn:9001/jt-sign/paradise/openMsg",
+                  "url": "https://wappark.189.cn/jt-sign/paradise/openMsg",
                   "json": {
                     "para": this.encrypt_para(_0x1febad)
                   }
@@ -1105,7 +1113,7 @@
                 "ckvalue": _0x58a2f0,
                 "fn": "polymerize",
                 "method": "post",
-                "url": "https://wapside.189.cn:9001/jt-sign/webSign/polymerize",
+                "url": "https://wappark.189.cn/jt-sign/webSign/polymerize",
                 "json": {
                   "para": this.encrypt_para(_0x5ea9e4)
                 }
@@ -1141,7 +1149,7 @@
               "ckvalue": _0x5086d1,
               "fn": "food",
               "method": "post",
-              "url": "https://wapside.189.cn:9001/jt-sign/paradise/food",
+              "url": "https://wappark.189.cn/jt-sign/paradise/food",
               "json": {
                 "para": this.encrypt_para(_0x28fe9f)
               }
@@ -1189,7 +1197,7 @@
               "ckvalue": _0x360373,
               "fn": "getParadiseInfo",
               "method": "post",
-              "url": "https://wapside.189.cn:9001/jt-sign/paradise/getParadiseInfo",
+              "url": "https://wappark.189.cn/jt-sign/paradise/getParadiseInfo",
               "json": {
                 "para": this.encrypt_para(_0x46eba0)
               }
@@ -1226,7 +1234,7 @@
                     "ckvalue": _0x360373,
                     "fn": "getParadiseInfo",
                     "method": "post",
-                    "url": "https://wapside.189.cn:9001/jt-sign/paradise/getParadiseInfo",
+                    "url": "https://wappark.189.cn/jt-sign/paradise/getParadiseInfo",
                     "json": {
                       "para": this.encrypt_para(_0x46eba0)
                     }
@@ -1275,7 +1283,7 @@
                 "ckvalue": _0x32ef46,
                 "fn": "getLevelRightsList",
                 "method": "post",
-                "url": "https://wapside.189.cn:9001/jt-sign/paradise/getLevelRightsList",
+                "url": "https://wappark.189.cn/jt-sign/paradise/getLevelRightsList",
                 "json": {
                   "para": this.encrypt_para(_0x5562b1)
                 }
@@ -1328,7 +1336,7 @@
                 "ckvalue": _0x32aac3,
                 "fn": "getConversionRights",
                 "method": "post",
-                "url": "https://wapside.189.cn:9001/jt-sign/paradise/getConversionRights",
+                "url": "https://wappark.189.cn/jt-sign/paradise/getConversionRights",
                 "json": {
                   "para": this.encrypt_para(_0x1d34e2)
                 }
@@ -1375,7 +1383,7 @@
                 "ckvalue": _0x394922,
                 "fn": "conversionRights",
                 "method": "post",
-                "url": "https://wapside.189.cn:9001/jt-sign/paradise/conversionRights",
+                "url": "https://wappark.189.cn/jt-sign/paradise/conversionRights",
                 "json": {
                   "para": this.encrypt_para(_0x83522b)
                 }
@@ -1938,7 +1946,7 @@
                 "ckvalue": _0x48a96e,
                 "fn": "month_jml_lotteryRevice",
                 "method": "post",
-                "url": "https://wapside.189.cn:9001/jt-sign/lottery/lotteryRevice",
+                "url": "https://wappark.189.cn/jt-sign/lottery/lotteryRevice",
                 "json": {
                   "para": this.encrypt_para(_0x21bcee)
                 }
