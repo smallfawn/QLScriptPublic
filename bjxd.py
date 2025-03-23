@@ -11,7 +11,6 @@ cron: 25 6 * * *
     BJXD_ANSWER: str - 预设答案 (可选, ABCD 中的一个)
     HUNYUAN_API_KEY: str - 腾讯混元AI APIKey (可选)
 
-cron: 25 6 * * *
 """
 
 import os
