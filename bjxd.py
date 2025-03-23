@@ -1,8 +1,10 @@
 """
 北京现代 APP 自动任务脚本
 功能：自动完成签到、浏览文章、每日答题等任务
+
 DOG==> :QQ  2979873337 努力中（🤩）  禁止使用  此人是探子 任何人见了避而远之 买脚本不付款 纯骗脚本 见到此人请避雷
 环境变量：
+    BJXD_DEVICE  安卓写android 苹果IOS写iOS
     BJXD: str - 北京现代 APP api token (多个账号用英文逗号分隔，建议每个账号一个变量)
     BJXD1/BJXD2/BJXD3: str - 北京现代 APP api token (每个账号一个变量)
     BJXD_ANSWER: str - 预设答案 (可选, ABCD 中的一个)
@@ -86,7 +88,7 @@ class BeiJingHyundai:
             Dict[str, Any]: API响应数据
         """
         url = f"{self.BASE_URL}{endpoint}"
-        headers = {"token": self.token, "device": "android"}
+        headers = {"token": self.token, "device": os.getenv("BJXD_DEVICE", "android")}
         if "headers" not in kwargs:
             kwargs["headers"] = headers
         else:
