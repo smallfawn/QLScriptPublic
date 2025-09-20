@@ -12,51 +12,8 @@ const env_name = 'yybpc' //环境变量名字
 const env = process.env[env_name] || '' 
 const Notify = 1
 const debug = 0
-let scriptVersionNow = "1.0.0";
+let scriptVersionNow = "1.0.1";
 let msg = "";
-// ==================================异步顺序==============================================================================
-!(async () => {
-    //await getNotice();  //远程通知
-    //await getVersion("yang7758258/ohhh154@main/yybpc.js");
-    await main();//主函数
-    await SendMsg(msg); //发送通知
-
-})()
-    .catch((e) => $.logErr(e))
-    .finally(() => $.done());
-//==================================脚本入口函数main()==============================================================
-
-async function main() {
-    if (env == '') {
-        //没有设置变量,直接退出
-        console.log(`没有填写变量,请查看脚本说明: ${env_name}`)
-        return
-    }
-    let user_ck = env.split('\n')
-    DoubleLog(`\n========= 共找到 ${user_ck.length} 个账号 =========`);
-    let index = 1 //用来给账号标记序号, 从1开始
-    for (let ck of user_ck) {
-        if (!ck) continue //跳过空行
-        let ck_info = ck.split('&')
-        let Authorization = ck_info[0] 
-        //let uid = ck_info[0]
-        //let deviceCode = ck_info[2]
-        let user = {
-            index: index,
-            Authorization, 
-            //uid,
-            //deviceCode,
-        }
-        index = index + 1 //每次用完序号+1
-        //开始账号任务
-        let Run = new run();
-        await Run.userTask(user)
-        //每个账号之间等1~5秒随机时间
-        let rnd_time = Math.floor(Math.random() * 4000) + 1000
-        console.log(`随机等待${rnd_time / 1000}秒...`)
-        await $.wait(rnd_time)
-    }
-}
 // ======================================开始任务=========================================
 class run {
     constructor(user) {
@@ -78,12 +35,14 @@ async  userTask(user) {
                 url: `https://webapi.qmai.cn/web/cmk-center/sign/takePartInSign`,
                 headers: {
                     "qm-from": "wechat",
+                    "qm-from-type": "catering",
                     "qm-user-token": user.Authorization,
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 MicroMessenger/7.0.20.1781(0x6700143B) NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF WindowsWechat(0x63090a13) XWEB/9129',
                 },
                 data:{
-                    "activityId": "983701274523176960",
-                    "appid": "wx3423ef0c7b7f19af"
+                    "activityId": "1123977036026589185",
+                    "appid": "wx3423ef0c7b7f19af",
+                    "version": "2"
                   }
             }
             //
@@ -92,15 +51,18 @@ async  userTask(user) {
             if (result?.status == true) {
                 //打印签到结果
                 DoubleLog(`🕊账号[${user.index}] 签到成功🎉`);
-            }if(result?.data.sign == "false") {
-                DoubleLog(`🕊账号[${user.index}] 签到失败:原因未知🚫`)
-            }if (result?.status == false) {
-                DoubleLog(`🕊账号[${user.index}] 签到失败:${result.message}🚫`)
+            }else if(result?.data?.sign === "false") {
+                DoubleLog(`🕊账号[${user.index}] 签到失败:原因未知🚫`);
+            }else if (result?.status === false) {
+                DoubleLog(`🕊账号[${user.index}] 签到失败:${result.message}🚫`);
+            }else{
+                DoubleLog(`🕊账号[${user.index}] 签到结果异常: `, JSON.stringify(result));
             }
             
             
         } catch (e) {
-           console.log(e);
+           //console.log(e);
+            console.log(`🛑账号[${user.index}] 签到异常:`, e.message || e);
         }
     }
 //积分
@@ -135,6 +97,51 @@ async  account(user) {
     }
 }
 }
+//==================================脚本入口函数main()==============================================================
+
+async function main() {
+    if (env == '') {
+        //没有设置变量,直接退出
+        console.log(`没有填写变量,请查看脚本说明: ${env_name}`)
+        return
+    }
+    let user_ck = env.split('\n')
+    DoubleLog(`\n========= 共找到 ${user_ck.length} 个账号 =========`);
+    let index = 1 //用来给账号标记序号, 从1开始
+    for (let ck of user_ck) {
+        if (!ck) continue //跳过空行
+        let ck_info = ck.split('&')
+        let Authorization = ck_info[0] 
+        //let uid = ck_info[0]
+        //let deviceCode = ck_info[2]
+        let user = {
+            index: index,
+            Authorization, 
+            //uid,
+            //deviceCode,
+        }
+        index = index + 1 //每次用完序号+1
+        //开始账号任务
+        let Run = new run();
+        await Run.userTask(user)
+        //每个账号之间等1~5秒随机时间
+        let rnd_time = Math.floor(Math.random() * 4000) + 1000
+        console.log(`随机等待${rnd_time / 1000}秒...`)
+        await $.wait(rnd_time)
+    }
+}
+
+// ==================================异步顺序==============================================================================
+!(async () => {
+    //await getNotice();  //远程通知
+    //await getVersion("yang7758258/ohhh154@main/yybpc.js");
+    await main();//主函数
+    await SendMsg(msg); //发送通知
+
+})()
+    .catch((e) => $.logErr(e))
+    .finally(() => $.done());
+
 /**
  * =========================================================发送消息=============================================
  */
