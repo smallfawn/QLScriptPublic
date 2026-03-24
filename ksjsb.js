@@ -29,6 +29,38 @@ const REQUIRED_COOKIE_KEYS = [
     "rdid",
     "kuaishou.api_st",
 ];
+const PHONE_MODEL_MAP = {
+    MI: [
+        "8 Lite",
+        "9 Pro",
+        "10 Ultra",
+        "11T",
+        "12X",
+        "Note 10",
+        "Mix 4",
+        "CC9",
+        "Pad 5",
+    ],
+    Huawei: ["P50 Pro", "Mate 40", "Nova 9", "P40 Lite", "MatePad 11", "Enjoy 20e"],
+    OPPO: ["Reno 6", "Find X3", "A95", "K9", "Reno 5 Lite", "A74 5G"],
+    Vivo: ["X70 Pro", "Y53s", "V21", "S10", "Y20", "X60 Lite"],
+    Samsung: ["Galaxy S21", "A52 5G", "M32", "F62", "Z Flip3", "Note 20 Ultra"],
+    OnePlus: ["9R", "Nord 2", "8T", "9 Pro", "Nord CE"],
+    Realme: ["8 Pro", "GT Neo", "X7 Max", "C25", "Narzo 30"],
+    Xiaomi: ["11 Lite", "Redmi Note 10", "Poco X3", "Black Shark 4", "Mi 11i"],
+    Nokia: ["G50", "X100", "C20", "5.4", "8.3 5G"],
+    Sony: ["Xperia 1 III", "Xperia 5 II", "Xperia 10 III", "Xperia Pro"],
+};
+const PHONE_MODEL_BRANDS = Object.keys(PHONE_MODEL_MAP);
+const crypto = require("crypto");
+
+function generateRandomPhoneModel() {
+    const brand =
+        PHONE_MODEL_BRANDS[Math.floor(Math.random() * PHONE_MODEL_BRANDS.length)];
+    const modelList = PHONE_MODEL_MAP[brand] || [];
+    const model = modelList[Math.floor(Math.random() * modelList.length)] || "8 Lite";
+    return `${brand} ${model} Build/QKQ1.190910.002`;
+}
 
 function readEnvString(name, fallback = "") {
     const value = process.env[name];
@@ -126,7 +158,12 @@ function splitIntoChunks(list, chunkSize) {
 }
 
 function shuffleList(list) {
-    return [...list].sort(() => Math.random() - 0.5);
+    const shuffled = Array.isArray(list) ? [...list] : [];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
 }
 let signApiUrls = [];
 let banUserId = [];
@@ -499,6 +536,8 @@ class Task {
         this.osVersion = "";
         this.uQaTag =
             "16385#33333333338888888888#cmWns:-1#swRs:99#swLdgl:-0#ecPp:-9#cmNt:-1#cmHs:-1";
+        this.deviceModel = generateRandomPhoneModel();
+        this.cookieMap = null;
     }
 
     // 新增：检查是否达到最大金币限制
@@ -512,71 +551,16 @@ class Task {
     }
 
     randomUserAgent() {
-        function generatePhoneModel() {
-            const brands = [
-                "MI",
-                "Huawei",
-                "OPPO",
-                "Vivo",
-                "Samsung",
-                "OnePlus",
-                "Realme",
-                "Xiaomi",
-                "Nokia",
-                "Sony",
-            ];
-            const models = {
-                MI: [
-                    "8 Lite",
-                    "9 Pro",
-                    "10 Ultra",
-                    "11T",
-                    "12X",
-                    "Note 10",
-                    "Mix 4",
-                    "CC9",
-                    "Pad 5",
-                ],
-                Huawei: [
-                    "P50 Pro",
-                    "Mate 40",
-                    "Nova 9",
-                    "P40 Lite",
-                    "MatePad 11",
-                    "Enjoy 20e",
-                ],
-                OPPO: ["Reno 6", "Find X3", "A95", "K9", "Reno 5 Lite", "A74 5G"],
-                Vivo: ["X70 Pro", "Y53s", "V21", "S10", "Y20", "X60 Lite"],
-                Samsung: [
-                    "Galaxy S21",
-                    "A52 5G",
-                    "M32",
-                    "F62",
-                    "Z Flip3",
-                    "Note 20 Ultra",
-                ],
-                OnePlus: ["9R", "Nord 2", "8T", "9 Pro", "Nord CE"],
-                Realme: ["8 Pro", "GT Neo", "X7 Max", "C25", "Narzo 30"],
-                Xiaomi: [
-                    "11 Lite",
-                    "Redmi Note 10",
-                    "Poco X3",
-                    "Black Shark 4",
-                    "Mi 11i",
-                ],
-                Nokia: ["G50", "X100", "C20", "5.4", "8.3 5G"],
-                Sony: ["Xperia 1 III", "Xperia 5 II", "Xperia 10 III", "Xperia Pro"],
-            };
-            const brand = brands[Math.floor(Math.random() * brands.length)];
-            const modelList = models[brand];
-            const model = modelList[Math.floor(Math.random() * modelList.length)];
-            return `${brand} ${model} Build/QKQ1.190910.002`;
-        }
-        return generatePhoneModel();
+        return this.deviceModel;
+    }
+
+    getAndroidWebViewUA() {
+        return `Mozilla/5.0 (Linux; Android ${this.osVersion}; ${this.randomUserAgent()}; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.99 Mobile Safari/537.36 Yoda/3.2.16-rc21 ksNebula/13.9.10.10684 OS_PRO_BIT/64 MAX_PHY_MEM/5724 KDT/PHONE AZPREFIX/az3 ICFO/0 StatusHT/29 TitleHT/44 NetType/WIFI ISLP/0 ISDM/0 ISLB/0 locale/zh-cn SHP/2068 SWP/1080 SD/2.75 CT/0 ISLM/0`;
     }
 
     checkCookieVariables() {
         const cookieObj = parseCookieString(this.ck, { encodeValues: true });
+        this.cookieMap = cookieObj;
         if (Object.keys(cookieObj).length > 0) {
             this.ck = buildCookieString(cookieObj);
         }
@@ -596,7 +580,7 @@ class Task {
     }
 
     getCookieValue(name, fallback = "") {
-        const cookieObj = parseCookieString(this.ck);
+        const cookieObj = this.cookieMap || parseCookieString(this.ck);
         return cookieObj[name] || fallback;
     }
 
@@ -893,13 +877,14 @@ class Task {
             return;
         }
 
-        const config = this.adConfigs[adType];
+        const baseConfig = this.adConfigs[adType];
+        let runConfig = baseConfig;
 
         // 如果是look任务，先检查是否在冷却中
         if (adType === "look") {
             const coolingStatus = await this.checkLookTaskCooling();
             if (coolingStatus.cooling) {
-                $.log(`⏸️  ${config.name}任务正在冷却中: ${coolingStatus.reason}`);
+                $.log(`⏸️  ${baseConfig.name}任务正在冷却中: ${coolingStatus.reason}`);
                 this.lookTaskCooling = true;
                 this.lookTaskCoolingReason = coolingStatus.reason;
                 return;
@@ -912,21 +897,28 @@ class Task {
                     this.lookTaskTriggered = true;
                 }
             }
+
+            if (this.currentAdConfig && this.currentAdConfig.type === "look2") {
+                runConfig = this.currentAdConfig;
+            }
         }
 
-        $.log(`${config.emoji} 开始执行${config.name}任务(${config.count}个)`);
+        this.currentAdConfig = runConfig;
+        $.log(
+            `${runConfig.emoji} 开始执行${runConfig.name}任务(${runConfig.count}个)`
+        );
         let successCount = 0;
 
-        for (let i = 1; i <= config.count; i++) {
+        for (let i = 1; i <= runConfig.count; i++) {
             if (this.shouldStop) {
-                $.log(`⏹️  ${config.name}任务已停止: ${this.stopReason}`);
+                $.log(`⏹️  ${runConfig.name}任务已停止: ${this.stopReason}`);
                 break;
             }
 
-            $.log(`账号[${this.index}] 第${i}次请求 [${config.name}]`);
-            this.currentAdConfig = config;
+            $.log(`账号[${this.index}] 第${i}次请求 [${runConfig.name}]`);
+            this.currentAdConfig = runConfig;
 
-            const result = await this.executeSingleAd(adType);
+            const result = await this.executeSingleAd(runConfig.type);
 
             // 修改：处理重试情况
             if (result === "retry") {
@@ -942,8 +934,8 @@ class Task {
                 successCount++;
 
                 // 修改：广告追加次数限制为4次
-                if (this.isAdAddEnabled && this.adConfigs[adType].isAdadd) {
-                    $.log(`✅  ${config.name} 开启追加模式`);
+                if (this.isAdAddEnabled && runConfig.isAdadd) {
+                    $.log(`✅  ${runConfig.name} 开启追加模式`);
                     this.adaddnum++;
                 } else {
                     this.adaddnum = 0;
@@ -954,11 +946,11 @@ class Task {
                     break;
                 }
 
-                if (adType === "look" && i % 10 === 0 && i < config.count) {
+                if (adType === "look" && i % 10 === 0 && i < runConfig.count) {
                     const restTime = Math.floor(Math.random() * (90 - 60) + 60);
                     $.log(`⏰ 已完成${i}次看广告，休息${restTime}秒`);
                     await $.wait(restTime * 1000);
-                } else if (i < config.count) {
+                } else if (i < runConfig.count) {
                     const waitTime =
                         adType === "look" ? Math.floor(Math.random() * (8 - 6) + 6) : 10;
                     await $.wait(waitTime * 1000);
@@ -966,7 +958,9 @@ class Task {
             }
         }
 
-        $.log(`✅ ${config.name}任务完成，成功${successCount}/${config.count}个`);
+        $.log(
+            `✅ ${runConfig.name}任务完成，成功${successCount}/${runConfig.count}个`
+        );
     }
     async exchangeCoinsInfo() {
         //$.log(`开始兑换金币`);
@@ -977,8 +971,7 @@ class Task {
             httpsAgent: this.socks5,
             proxy: false,
             headers: {
-                "User-Agent": `Mozilla/5.0 (Linux; Android ${this.osVersion
-                    }; ${this.randomUserAgent()}; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.99 Mobile Safari/537.36 Yoda/3.2.16-rc21 ksNebula/13.9.10.10684 OS_PRO_BIT/64 MAX_PHY_MEM/5724 KDT/PHONE AZPREFIX/az3 ICFO/0 StatusHT/29 TitleHT/44 NetType/WIFI ISLP/0 ISDM/0 ISLB/0 locale/zh-cn SHP/2068 SWP/1080 SD/2.75 CT/0 ISLM/0`,
+                "User-Agent": this.getAndroidWebViewUA(),
                 "content-type": "application/json",
                 Referer: "https://www.kuaishou.com/",
                 Cookie: this.ck,
@@ -1001,8 +994,7 @@ class Task {
             httpsAgent: this.socks5,
             proxy: false,
             headers: {
-                "User-Agent": `Mozilla/5.0 (Linux; Android ${this.osVersion
-                    }; ${this.randomUserAgent()}; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.99 Mobile Safari/537.36 Yoda/3.2.16-rc21 ksNebula/13.9.10.10684 OS_PRO_BIT/64 MAX_PHY_MEM/5724 KDT/PHONE AZPREFIX/az3 ICFO/0 StatusHT/29 TitleHT/44 NetType/WIFI ISLP/0 ISDM/0 ISLB/0 locale/zh-cn SHP/2068 SWP/1080 SD/2.75 CT/0 ISLM/0`,
+                "User-Agent": this.getAndroidWebViewUA(),
                 "content-type": "application/json",
                 Referer: "https://www.kuaishou.com/",
                 Cookie: this.ck,
@@ -1025,8 +1017,7 @@ class Task {
             httpsAgent: this.socks5,
             proxy: false,
             headers: {
-                "User-Agent": `Mozilla/5.0 (Linux; Android ${this.osVersion
-                    }; ${this.randomUserAgent()}; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.99 Mobile Safari/537.36 Yoda/3.2.16-rc21 ksNebula/13.9.10.10684 OS_PRO_BIT/64 MAX_PHY_MEM/5724 KDT/PHONE AZPREFIX/az3 ICFO/0 StatusHT/29 TitleHT/44 NetType/WIFI ISLP/0 ISDM/0 ISLB/0 locale/zh-cn SHP/2068 SWP/1080 SD/2.75 CT/0 ISLM/0`,
+                "User-Agent": this.getAndroidWebViewUA(),
                 "content-type": "application/json",
                 Referer: "https://www.kuaishou.com/",
                 Cookie: this.ck,
@@ -1089,8 +1080,7 @@ class Task {
                     `https://nebula.kuaishou.com/rest/wd/usergrowth/encourage/matrix/resource/action?` +
                     sig68,
                 headers: {
-                    "User-Agent": `Mozilla/5.0 (Linux; Android ${this.osVersion
-                        }; ${this.randomUserAgent()}; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.99 Mobile Safari/537.36 Yoda/3.2.16-rc21 ksNebula/13.9.10.10684 OS_PRO_BIT/64 MAX_PHY_MEM/5724 KDT/PHONE AZPREFIX/az3 ICFO/0 StatusHT/29 TitleHT/44 NetType/WIFI ISLP/0 ISDM/0 ISLB/0 locale/zh-cn SHP/2068 SWP/1080 SD/2.75 CT/0 ISLM/0`,
+                    "User-Agent": this.getAndroidWebViewUA(),
                     "Content-Type": "application/json",
                     Cookie: this.ck,
                 },
@@ -1552,7 +1542,6 @@ class Task {
     }
     // 加密数据方法
     encryptData(data, keyText = "2025smallfawn") {
-        const crypto = require("crypto");
         const algorithm = "aes-256-cbc";
 
         // 固定密钥和IV
@@ -1567,7 +1556,6 @@ class Task {
     }
 
     MD5(str) {
-        const crypto = require("crypto");
         return crypto.createHash("md5").update(str).digest("hex");
     }
 
@@ -1728,8 +1716,7 @@ class Task {
                 method: "POST",
                 url: url + sig56_1,
                 headers: {
-                    "User-Agent": `Mozilla/5.0 (Linux; Android ${this.osVersion
-                        }; ${this.randomUserAgent()}; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.99 Mobile Safari/537.36 Yoda/3.2.16-rc21 ksNebula/13.9.10.10684 OS_PRO_BIT/64 MAX_PHY_MEM/5724 KDT/PHONE AZPREFIX/az3 ICFO/0 StatusHT/29 TitleHT/44 NetType/WIFI ISLP/0 ISDM/0 ISLB/0 locale/zh-cn SHP/2068 SWP/1080 SD/2.75 CT/0 ISLM/0`,
+                    "User-Agent": this.getAndroidWebViewUA(),
                     "Content-Type": "application/json",
                     Cookie: this.ck,
                 },
@@ -2473,7 +2460,7 @@ class Task {
             requestSceneType = 7;
         }
 
-        if (this.currentAdConfig.name == "search") {
+        if (this.currentAdConfig.type === "search") {
             adExtInfo = "";
         }
         //直播neoInfos
