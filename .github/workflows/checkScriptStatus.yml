@@ -1,0 +1,142 @@
+#目的是给非backup目录下的触发提交的文件，给相应markdown表格的标签打成绿色,记录更新时间等等:待AI实现
+name: Update README Table
+
+on:
+  push:
+    branches:
+      - main # 如果你的主分支是 master，请将其改为 master
+    paths:
+      - '**/*.js' # 只有在修改或新增 JS 文件时才触发
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # 必须赋予写入权限，以便工作流可以推送更改到仓库
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # 必须拉取历史记录以便使用 git diff 查找更改的文件
+
+      - name: 配置 Python 环境
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: 运行更新脚本
+        env:
+          TZ: Asia/Shanghai # 确保时间是北京时间
+        run: |
+          # 创建并执行 Python 处理脚本
+          cat << 'EOF' > update_readme.py
+          import os
+          import re
+          import datetime
+          import subprocess
+
+          # 1. 获取本次提交更改的 JS 文件列表
+          try:
+              diff_cmd = ['git', 'diff', '--name-only', 'HEAD~1', 'HEAD']
+              result = subprocess.run(diff_cmd, capture_output=True, text=True, check=True)
+              changed_files = result.stdout.splitlines()
+          except subprocess.CalledProcessError:
+              print("无法获取差异文件，跳过...")
+              changed_files = []
+
+          js_files = [f for f in changed_files if f.endswith('.js') and os.path.exists(f)]
+
+          if not js_files:
+              print("没有 JS 文件发生更改。")
+              exit(0)
+
+          # 2. 提取文件中的脚本名称 (匹配 new Env("XXX"))
+          now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+          updates = {}
+          for f in js_files:
+              with open(f, 'r', encoding='utf-8') as file:
+                  content = file.read()
+                  match = re.search(r'new\s+Env\s*\(\s*["\']([^"\']+)["\']\s*\)', content)
+                  if match:
+                      script_name = match.group(1)
+                      updates[script_name] = now
+
+          if not updates:
+              print("修改的文件中未找到 new Env 声明。")
+              exit(0)
+
+          # 3. 读取并修改 README.md 中的表格
+          readme_path = 'README.md'
+          with open(readme_path, 'r', encoding='utf-8') as file:
+              lines = file.readlines()
+
+          new_lines = []
+          in_table = False
+          updated_scripts_set = set()
+
+          for line in lines:
+              # 定位表格头部
+              if '|' in line and '脚本名称' in line and '更新时间' in line:
+                  in_table = True
+                  new_lines.append(line)
+                  continue
+                  
+              if in_table:
+                  # 如果遇到空行或非表格格式，说明表格结束
+                  if not line.strip() or not line.strip().startswith('|'):
+                      in_table = False
+                      # 将新增的脚本（表格中之前没有的）追加在表格末尾
+                      for script, time in updates.items():
+                          if script not in updated_scripts_set:
+                              new_lines.append(f"| {script} | {time} | ✅ |\n")
+                              updated_scripts_set.add(script)
+                      new_lines.append(line)
+                      continue
+                      
+                  # 忽略 Markdown 表格分割线 (例如 |:---|:---:|:---:|)
+                  if re.match(r'^\s*\|?[\s\:\-]+\|[\s\:\-]+\|[\s\:\-]+\|?\s*$', line):
+                      new_lines.append(line)
+                      continue
+                      
+                  # 处理现有的表格数据行
+                  parts = [p.strip() for p in line.split('|')]
+                  if len(parts) >= 4: # | 1:脚本名称 | 2:更新时间 | 3:当前状态 |
+                      script_name = parts[1]
+                      if script_name in updates:
+                          parts[2] = updates[script_name]
+                          parts[3] = "✅"
+                          line = f"| {parts[1]} | {parts[2]} | {parts[3]} |\n"
+                          updated_scripts_set.add(script_name)
+                          
+              new_lines.append(line)
+
+          # 兜底：如果 README 以表格结尾（后面没有空行）
+          if in_table:
+              for script, time in updates.items():
+                  if script not in updated_scripts_set:
+                      new_lines.append(f"| {script} | {time} | ✅ |\n")
+                      updated_scripts_set.add(script)
+
+          with open(readme_path, 'w', encoding='utf-8') as file:
+              file.writelines(new_lines)
+              
+          print(f"成功更新了以下脚本的状态: {list(updated_scripts_set)}")
+          EOF
+
+          python update_readme.py
+
+      - name: 提交并推送到仓库
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add README.md
+          
+          # 检查是否有文件更改，如果有则提交。
+          # [skip ci] 非常重要！它能防止 Action 无限循环触发自身。
+          if ! git diff --staged --quiet; then
+            git commit -m "docs: 自动更新脚本列表状态 [skip ci]"
+            git push
+          else
+            echo "README.md 无变化，不需要提交。"
+          fi

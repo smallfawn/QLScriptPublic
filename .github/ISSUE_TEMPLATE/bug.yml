@@ -1,0 +1,45 @@
+name: 反馈脚本BUG
+description: 在使用 脚本 的过程中遇到了错误
+title: "[Bug反馈]: "
+labels: ["bug?"]
+
+body:
+  # User's README and agreement
+  - type: markdown
+    attributes:
+      value: |
+        ## 以下是一些注意事项，请务必阅读让我们能够更容易处理
+        ### ❗ | 确定没有相同问题的ISSUE已被提出.
+        ### 🌎| 请准确填写环境信息
+        ### ❔ | 提供出现问题完整日志内容。请自行删除日志内存在的个人信息及敏感内容。
+        ## 如果您不知道如何有效、精准地表述，我们建议您先阅读《提问的智慧》
+        链接: [《提问的智慧》](https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/main/README-zh_CN.md)
+        ---
+
+  # Input | Expected result
+  - type: textarea
+    id: expected
+    attributes:
+      label: 脚本名字
+    validations:
+      required: true
+
+  # Input | Actual result
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际的结果是什么？ 期望的结果是什么？
+    validations:
+      required: true
+  # Optional | Logging
+  - type: textarea
+    id: logging
+    attributes:
+      label: 日志记录（可选）
+      render: javascript
+
+  # Optional | Reproduce code
+  - type: textarea
+    id: reproduce-code
+    attributes:
+      label: 简单的复现代码/链接（可选）

@@ -1,0 +1,23 @@
+name: 新功能提议
+title: "[功能提议] " # 默认标题前缀，用户可以修改
+labels: ["enhancement?"] # 标签必须是字符串数组
+description: 描述新功能的实现方法和用户场景。
+
+body:
+  - type: input
+    id: function_name
+    attributes:
+      label: 功能名字
+      description: 请说明新功能适用的平台，例如 APP、网页或小程序。
+      placeholder: 例如：APP
+    validations:
+      required: true
+
+  - type: textarea
+    id: function_description
+    attributes:
+      label: 需要添加的功能内容
+      description: 请详细描述新功能的实现方法和用户场景。
+      placeholder: 例如：我希望添加一个新功能，能够在APP主界面直接显示用户最近的活动记录，方便用户快速回顾和管理。
+    validations:
+      required: true
