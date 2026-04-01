@@ -1,4 +1,5 @@
 #51代理每日签到
+#new Env("51代理自动签到")
 import requests
 from bs4 import BeautifulSoup
 import time
