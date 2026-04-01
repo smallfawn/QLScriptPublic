@@ -7,6 +7,7 @@ on:
       - main # 如果你的主分支是 master，请将其改为 master
     paths:
       - '**/*.js' # 只有在修改或新增 JS 文件时才触发
+      - '**/*.py' # 只有在修改或新增 JS 文件时才触发
 
 jobs:
   update-readme:
