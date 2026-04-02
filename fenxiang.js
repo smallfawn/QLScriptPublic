@@ -26,7 +26,7 @@ class Task {
         this.token = str.split(strSplitor)[2]; //单账号多变量分隔符
         this.oaid = str.split(strSplitor)[3]; //单账号多变量分隔符
         this.ckStatus = true;
-        this.taskList=[]
+        this.taskList = []
 
     }
     async main() {
@@ -35,7 +35,7 @@ class Task {
         await this.special_finish()
         await this.task_list()
         //console.log(this.taskList)
-        for(let i of this.taskList){
+        for (let i of this.taskList) {
             await $.wait(5000)
             await this.task_finish(i.id)
         }
@@ -91,7 +91,7 @@ class Task {
             console.log(result);
         }
     }
-        async task_list() {
+    async task_list() {
         let result = await this.taskRequest("post", 'https://fenxiang-lottery-api.fenxianglife.com/fenxiang-lottery/home/data/V2', JSON.stringify({
             "plateform": "android",
             "version": "5.4.3"
@@ -143,14 +143,14 @@ class Task {
             oaid: this.oaid,
         }
         const c = "\u7c89\u8c61\u597d\u725b\u903ca8c19d8267527ea4c7d2f011acf7766f"
-        let s = method === "get" ?   void 0:JSON.parse(body)
+        let s = method === "get" ? void 0 : JSON.parse(body)
         let e = void 0 === s ? {} : s
-        g.sign = v(re(e) + re(g)  + c)
+        g.sign = v(re(e) + re(g) + c)
         let headers = {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.99 Mobile Safari/537.36 AgentWeb/5.0.0  UCBrowser/11.6.4.950',
-             'Accept': 'application/json, text/plain, */*',
-    'Accept-Encoding': 'gzip, deflate',
-    'Content-Type': 'application/json',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Encoding': 'gzip, deflate',
+            'Content-Type': 'application/json',
             'origin': 'https://m.fenxianglife.com',
             'sec-fetch-dest': 'empty',
             'x-requested-with': 'com.n_add.android',
@@ -158,7 +158,7 @@ class Task {
             'sec-fetch-mode': 'cors',
             'referer': 'https://m.fenxianglife.com/h5-lottery/index.html?hideBack=1&sourceType=lottery_tab&token=030e7e9158af06dea2b3d0175a471ada&AppToken=96e06ae9f3cab6784de443015b8d9ad8&uid=515226607&v=5.4.3&did=njia992631e6-b9b2-4383-b67c-86b5d0fe818a&level=1&platform=android&timestamp=1717426249&channel=xiaomi&traFromId=23192687628924991393323633117947',
             'accept-language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-            "Content-Type":"application/json"
+            "Content-Type": "application/json"
         }
         Object.assign(headers, g)
         //console.log(headers)
@@ -166,7 +166,7 @@ class Task {
             url: url,
             method: method,
             headers: headers,
-            body:body
+            body: body
         }
         let { body: result } = await $.httpRequest(reqeuestOptions)
         return result
