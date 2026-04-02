@@ -35,82 +35,117 @@ jobs:
           import datetime
           import subprocess
 
-          # 1. 获取更改的文件列表
+          # 1. 获取更改的文件列表（最近一次提交）
           try:
+              # 获取当前提交与上一次提交之间的差异文件
               diff_cmd = ['git', 'diff', '--name-only', 'HEAD~1', 'HEAD']
+              result = subprocess.run(diff_cmd, capture_output=True, text=True, check=True)
+              changed_files = result.stdout.splitlines()
+          except subprocess.CalledProcessError:
+              # 如果没有上一次提交（例如第一次提交），则检查所有文件
+              diff_cmd = ['git', 'diff', '--name-only', '--cached']
               result = subprocess.run(diff_cmd, capture_output=True, text=True, check=True)
               changed_files = result.stdout.splitlines()
           except Exception:
               changed_files = []
 
+          # 筛选出 .js 或 .py 且实际存在的文件
           target_files = [f for f in changed_files if (f.endswith('.js') or f.endswith('.py')) and os.path.exists(f)]
           if not target_files:
-              print("No relevant file changes.")
+              print("没有检测到相关脚本文件的变更，退出。")
               exit(0)
 
-          # 2. 提取 Env 名称
+          # 2. 从变更文件中提取 Env 名称
           now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
           updates = {}
           for f in target_files:
               with open(f, 'r', encoding='utf-8') as file:
                   content = file.read()
+                  # 匹配 Env("名称") 或 Env('名称')
                   match = re.search(r'Env\s*\(\s*["\']([^"\']+)["\']\s*\)', content)
                   if match:
                       updates[match.group(1)] = now
 
           if not updates:
-              print("No Env tags found in changed files.")
+              print("变更的脚本文件中未找到 Env 标签，退出。")
               exit(0)
 
-          # 3. 修改 README
+          # 3. 修改 README.md 中的表格
           readme_path = 'README.md'
           with open(readme_path, 'r', encoding='utf-8') as f:
               full_text = f.read()
 
-          # --- 核心修复：定义明确的锚点 ---
-          start_tag = ""
-          end_tag = ""
+          # 定义锚点标记（请确保 README.md 中已添加这两个注释）
+          start_tag = "<!-- README_TABLE_START -->"
+          end_tag   = "<!-- README_TABLE_END -->"
 
           if start_tag not in full_text or end_tag not in full_text:
-              print("Error: Anchor tags not found in README.md")
+              print("错误：在 README.md 中未找到锚点标记！")
+              print("请添加以下两行注释包裹表格区域：")
+              print(f"{start_tag}")
+              print(f"{end_tag}")
               exit(1)
 
+          # 分割文本
           pre_part, temp = full_text.split(start_tag)
           table_section, post_part = temp.split(end_tag)
 
-          # 处理旧表格内容
+          # 解析现有表格
           lines = table_section.strip().split('\n')
-          new_table_lines = []
-          updated_names = set()
+          header = []
+          separator = []
+          body_lines = []
+          mode = 'header'
 
           for line in lines:
-              if line.strip().startswith('|') and '---' not in line and '脚本名称' not in line:
-                  parts = [p.strip() for p in line.split('|')]
-                  if len(parts) >= 4:
-                      name = parts[1]
-                      if name in updates:
-                          line = f"| {name} | {updates[name]} | ✅ |"
-                          updated_names.add(name)
-                  if line.strip():
-                      new_table_lines.append(line)
+              line_stripped = line.strip()
+              if not line_stripped.startswith('|'):
+                  continue
+              if '脚本名称' in line_stripped:
+                  header.append(line)
+                  mode = 'separator'
+              elif '---' in line_stripped and mode == 'separator':
+                  separator.append(line)
+                  mode = 'body'
+              else:
+                  if mode == 'body':
+                      body_lines.append(line)
 
-          # 添加新脚本
-          for name, time in updates.items():
-              if name not in updated_names:
-                  new_table_lines.append(f"| {name} | {time} | ✅ |")
+          if not header or not separator:
+              print("错误：README 表格格式无效，缺少表头或分隔行。")
+              exit(1)
 
-          # 组装
-          header = ["| 脚本名称 | 最后一次更新时间 | 当前状态 |", "| :--- | :----: | :----: |"]
-          final_table = "\n".join(header + new_table_lines)
+          # 更新已有行，并记录已存在的脚本名称
+          existing_names = set()
+          new_body_lines = []
+          for line in body_lines:
+              parts = [p.strip() for p in line.split('|')]
+              if len(parts) >= 4:
+                  name = parts[1]
+                  existing_names.add(name)
+                  if name in updates:
+                      line = f"| {name} | {updates[name]} | ✅ |"
+              new_body_lines.append(line)
+
+          # 添加新增的脚本
+          for name, tm in updates.items():
+              if name not in existing_names:
+                  new_body_lines.append(f"| {name} | {tm} | ✅ |")
+
+          # 重新组合完整表格
+          final_table = "\n".join(header + separator + new_body_lines)
           final_content = f"{pre_part}{start_tag}\n{final_table}\n{end_tag}{post_part}"
 
+          # 写回 README.md
           with open(readme_path, 'w', encoding='utf-8') as f:
               f.write(final_content)
+
+          print("README.md 表格更新成功。")
           EOF
 
           python update_readme.py
 
-      - name: 提交并推送
+      - name: 提交并推送变更
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
@@ -119,5 +154,5 @@ jobs:
             git commit -m "docs: 自动更新脚本状态 [skip ci]"
             git push
           else
-            echo "Nothing to commit"
+            echo "README.md 无变更，无需提交。"
           fi
