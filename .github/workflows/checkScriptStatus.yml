@@ -65,16 +65,13 @@ jobs:
           with open(readme_path, 'r', encoding='utf-8') as f:
               full_text = f.read()
 
+          # 设置正确的标记
           start_tag = ""
           end_tag = ""
 
-          # 如果找不到标记，回退到原始追加模式（或者你可以选择报错）
           if start_tag not in full_text or end_tag not in full_text:
-              print("未发现表格锚点，新内容将追加到末尾。")
-              with open(readme_path, 'a', encoding='utf-8') as f:
-                  for s, t in updates.items():
-                      f.write(f"| {s} | {t} | ✅ |\n")
-              exit(0)
+              print("未发现表格锚点，请确保 README.md 中包含了 和 ")
+              exit(1) # 找不到锚点直接报错退出，避免破坏文件
 
           # 核心逻辑：拆分文件 -> 处理表格区 -> 重新拼接
           pre_part, temp = full_text.split(start_tag)
@@ -85,6 +82,7 @@ jobs:
           updated_names = set()
 
           for line in lines:
+              # 过滤掉旧的表头，稍后统一添加
               if line.strip().startswith('|') and '---' not in line and '脚本名称' not in line:
                   parts = [p.strip() for p in line.split('|')]
                   if len(parts) >= 4:
@@ -92,16 +90,22 @@ jobs:
                       if name in updates:
                           line = f"| {name} | {updates[name]} | ✅ |"
                           updated_names.add(name)
-              if line.strip():
-                  new_table_lines.append(line)
+                  if line.strip():
+                      new_table_lines.append(line)
 
           # 把剩余完全没在表格里出现过的新脚本加进去
           for name, time in updates.items():
               if name not in updated_names:
                   new_table_lines.append(f"| {name} | {time} | ✅ |")
 
+          # 补回表头（确保表头在最前面）
+          table_header = [
+              "| 脚本名称 | 最后一次更新时间 | 当前状态 |",
+              "| :--- | :----: | :----: |"
+          ]
+          new_table_lines = table_header + new_table_lines
+
           # 重新组装整个文件
-          # 确保表头在最前面
           final_table = "\n".join(new_table_lines)
           final_content = f"{pre_part}{start_tag}\n{final_table}\n{end_tag}{post_part}"
 
@@ -110,7 +114,6 @@ jobs:
           EOF
 
           python update_readme.py
-
       - name: 提交并推送
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
