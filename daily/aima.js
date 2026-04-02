@@ -1,13 +1,13 @@
 /*
 爱玛会员俱乐部 - 自动签到脚本（2026年2月修复版）
 ✅ 修复点：使用域名替代失效IP，更新活动ID为100001180
-✅ 支持环境：Node.js / Quantumult X
+✅ 支持环境：Node.js 
 ✅ 变量名：aima
 ✅ 变量值：access-token（支持多账号，用 & 或换行分隔）
 */
-
-let $ = new Env("爱玛会员俱乐部");
-const axios = require('axios').default;
+const { Env } = require("../tools/env")
+const $ = new Env("爱玛会员俱乐部");
+const axios = require('axios')
 
 // ================== 配置区 ==================
 const ACTIVITY_ID = "100001180"; // 2026年2月活动ID
@@ -17,7 +17,7 @@ const USER_AGENT = "Mozilla/5.0 (Linux; Android 15; 23013RK75C Build/AQ3A.250226
 
 // ================== 工具函数 ==================
 function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
@@ -34,7 +34,7 @@ async function signIn(token, index) {
   try {
     const timestamp = Date.now();
     const traceLogId = generateUUID();
-    
+
     // 构造通用请求头
     const headers = {
       "App-Id": APP_ID,
@@ -88,16 +88,11 @@ async function signIn(token, index) {
 // ================== 主函数 ==================
 !(async () => {
   console.log(`\n🔔 爱玛会员俱乐部, 开始!`);
-  
+
   // 获取 access-token（支持多账号）
   let tokens = [];
   if ($.isNode()) {
     const env = process.env.aima;
-    if (env) {
-      tokens = env.split(/&|\n/).filter(t => t.trim());
-    }
-  } else if ($.isQuanX()) {
-    const env = $persistentStore.read("aima");
     if (env) {
       tokens = env.split(/&|\n/).filter(t => t.trim());
     }
@@ -122,27 +117,6 @@ async function signIn(token, index) {
   // 发送通知
   await $.sendMsg($.logs.join("\n"));
 })()
-.catch((e) => console.log(e))
-.finally(() => $.done());
+  .catch((e) => console.log(e))
+  .finally(() => $.done());
 
-// ================== 兼容层 ==================
-function Env(name) {
-  this.name = name;
-  this.logs = [];
-  this.log = (msg) => this.logs.push(msg);
-  this.isNode = () => typeof process !== "undefined" && !process.env.QX_MODE;
-  this.isQuanX = () => typeof $task !== "undefined";
-  
-  this.sendMsg = async (msg) => {
-    if (this.isNode()) {
-      // 此处可集成企业微信/Server酱等通知
-      console.log("企业微信发送通知消息成功🎉。");
-    } else if (this.isQuanX()) {
-      $notify(this.name, "", msg);
-    }
-  };
-  
-  this.done = () => {
-    if (this.isQuanX()) $done();
-  };
-}
