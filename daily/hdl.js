@@ -29,7 +29,6 @@ const { Env } = require("../tools/env")
 const $ = new Env("海底捞");
 let ckName = `hdl`;
 const strSplitor = "#";
-process.env[ckName] = ""
 const axios = require("axios");
 const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.31(0x18001e31) NetType/WIFI Language/zh_CN miniProgram"
 

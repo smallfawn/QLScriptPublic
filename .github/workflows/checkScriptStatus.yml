@@ -3,7 +3,7 @@ name: Update README Table
 on:
   push:
     branches:
-      - main  # 确认你的主分支名是 main 而不是 master
+      - main
     paths:
       - '**/*.js'
       - '**/*.py'
@@ -35,7 +35,7 @@ jobs:
           import datetime
           import subprocess
 
-          # 1. 获取更改的文件列表（增加对 .py 的支持）
+          # 1. 获取更改的文件列表
           try:
               diff_cmd = ['git', 'diff', '--name-only', 'HEAD~1', 'HEAD']
               result = subprocess.run(diff_cmd, capture_output=True, text=True, check=True)
@@ -43,66 +43,70 @@ jobs:
           except Exception:
               changed_files = []
 
-          # 同时匹配 js 和 py 文件
           target_files = [f for f in changed_files if (f.endswith('.js') or f.endswith('.py')) and os.path.exists(f)]
-
           if not target_files:
-              print("没有符合条件的脚本文件发生更改。")
               exit(0)
 
-          # 2. 提取文件中的脚本名称
+          # 2. 提取 Env 名称
           now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
           updates = {}
           for f in target_files:
               with open(f, 'r', encoding='utf-8') as file:
                   content = file.read()
-                  # 匹配 new Env("XXX") 或 Env('XXX')
                   match = re.search(r'Env\s*\(\s*["\']([^"\']+)["\']\s*\)', content)
                   if match:
-                      script_name = match.group(1)
-                      updates[script_name] = now
+                      updates[match.group(1)] = now
 
           if not updates:
-              print("修改的文件中未找到 Env 声明。")
               exit(0)
 
-          # 3. 修改 README.md
+          # 3. 智能修改内容
           readme_path = 'README.md'
-          if not os.path.exists(readme_path):
-              print("未找到 README.md")
-              exit(1)
+          with open(readme_path, 'r', encoding='utf-8') as f:
+              full_text = f.read()
 
-          with open(readme_path, 'r', encoding='utf-8') as file:
-              lines = file.readlines()
+          start_tag = ""
+          end_tag = ""
 
-          new_lines = []
-          updated_scripts_set = set()
-          
-          # 处理表格
+          # 如果找不到标记，回退到原始追加模式（或者你可以选择报错）
+          if start_tag not in full_text or end_tag not in full_text:
+              print("未发现表格锚点，新内容将追加到末尾。")
+              with open(readme_path, 'a', encoding='utf-8') as f:
+                  for s, t in updates.items():
+                      f.write(f"| {s} | {t} | ✅ |\n")
+              exit(0)
+
+          # 核心逻辑：拆分文件 -> 处理表格区 -> 重新拼接
+          pre_part, temp = full_text.split(start_tag)
+          table_section, post_part = temp.split(end_tag)
+
+          lines = table_section.strip().split('\n')
+          new_table_lines = []
+          updated_names = set()
+
           for line in lines:
-              processed = False
-              # 匹配表格行，并提取脚本名
-              if line.strip().startswith('|'):
+              if line.strip().startswith('|') and '---' not in line and '脚本名称' not in line:
                   parts = [p.strip() for p in line.split('|')]
                   if len(parts) >= 4:
-                      script_name = parts[1]
-                      if script_name in updates:
-                          parts[2] = updates[script_name] # 更新时间
-                          parts[3] = "✅"                 # 状态
-                          line = f"| {parts[1]} | {parts[2]} | {parts[3]} |\n"
-                          updated_scripts_set.add(script_name)
-                          processed = True
-              new_lines.append(line)
+                      name = parts[1]
+                      if name in updates:
+                          line = f"| {name} | {updates[name]} | ✅ |"
+                          updated_names.add(name)
+              if line.strip():
+                  new_table_lines.append(line)
 
-          # 如果是新脚本，追加到末尾
-          for script, time in updates.items():
-              if script not in updated_scripts_set:
-                  new_lines.append(f"| {script} | {time} | ✅ |\n")
+          # 把剩余完全没在表格里出现过的新脚本加进去
+          for name, time in updates.items():
+              if name not in updated_names:
+                  new_table_lines.append(f"| {name} | {time} | ✅ |")
 
-          with open(readme_path, 'w', encoding='utf-8') as file:
-              file.writelines(new_lines)
-          
-          print(f"成功更新: {list(updates.keys())}")
+          # 重新组装整个文件
+          # 确保表头在最前面
+          final_table = "\n".join(new_table_lines)
+          final_content = f"{pre_part}{start_tag}\n{final_table}\n{end_tag}{post_part}"
+
+          with open(readme_path, 'w', encoding='utf-8') as f:
+              f.write(final_content)
           EOF
 
           python update_readme.py
