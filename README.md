@@ -1,15 +1,18 @@
 # QLScriptpublic
 
-| 脚本名称     | 最后一次更新时间 | 当前状态 |
-| :---        |     :----:      | :----:  |
-| 海底捞签到      | Title           | ✅      |
-| 夸客网盘签到   | Text            | ✅      |
+### 脚本功能列表
 
-
-
+| 脚本名称 | 最后一次更新时间 | 当前状态 |
+| :--- | :----: | :----: |
+| 海底捞签到 | 2026-04-02 09:00:00 | ✅ |
+| 夸客网盘签到 | 2026-04-02 09:00:00 | ✅ |
 # 青龙面板拉库命令
-``````
-ql repo https://ghproxy.net/https://github.com/smallfawn/QLScriptPublic.git  backup  main
+
+`ql repo https://github.com/smallfawn/QLScriptPublic.git backup main`
+
+## 免责声明
+
+这里的脚本只是自己学习 js 的一个实践 仅用于测试和学习研究，禁止用于商业用途...
 
 这里的脚本只是自己学习 js 的一个实践 仅用于测试和学习研究，禁止用于商业用途，不能保证其合法性，准确性，完整性和有效性，请根据情况自行判断.
 
