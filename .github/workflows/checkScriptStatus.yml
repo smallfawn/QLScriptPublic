@@ -45,6 +45,7 @@ jobs:
 
           target_files = [f for f in changed_files if (f.endswith('.js') or f.endswith('.py')) and os.path.exists(f)]
           if not target_files:
+              print("没有 JS 或 PY 文件变动。")
               exit(0)
 
           # 2. 提取 Env 名称
@@ -53,36 +54,43 @@ jobs:
           for f in target_files:
               with open(f, 'r', encoding='utf-8') as file:
                   content = file.read()
+                  # 匹配 Env('名称') 或 Env("名称")
                   match = re.search(r'Env\s*\(\s*["\']([^"\']+)["\']\s*\)', content)
                   if match:
                       updates[match.group(1)] = now
 
           if not updates:
+              print("未在变动文件中发现 Env 标签。")
               exit(0)
 
           # 3. 智能修改内容
           readme_path = 'README.md'
+          if not os.path.exists(readme_path):
+              print("README.md 不存在！")
+              exit(1)
+
           with open(readme_path, 'r', encoding='utf-8') as f:
               full_text = f.read()
 
-          # 设置正确的标记
+          # --- 关键修复点：定义明确的锚点 ---
           start_tag = ""
           end_tag = ""
 
           if start_tag not in full_text or end_tag not in full_text:
-              print("未发现表格锚点，请确保 README.md 中包含了 和 ")
-              exit(1) # 找不到锚点直接报错退出，避免破坏文件
+              print(f"错误: README.md 中找不到锚点 {start_tag} 或 {end_tag}")
+              exit(1)
 
-          # 核心逻辑：拆分文件 -> 处理表格区 -> 重新拼接
+          # 核心逻辑：拆分文件
           pre_part, temp = full_text.split(start_tag)
           table_section, post_part = temp.split(end_tag)
 
+          # 处理旧表格行
           lines = table_section.strip().split('\n')
           new_table_lines = []
           updated_names = set()
 
           for line in lines:
-              # 过滤掉旧的表头，稍后统一添加
+              # 只处理表格行，跳过表头和分隔线
               if line.strip().startswith('|') and '---' not in line and '脚本名称' not in line:
                   parts = [p.strip() for p in line.split('|')]
                   if len(parts) >= 4:
@@ -93,28 +101,26 @@ jobs:
                   if line.strip():
                       new_table_lines.append(line)
 
-          # 把剩余完全没在表格里出现过的新脚本加进去
+          # 添加全新的脚本到表格末尾
           for name, time in updates.items():
               if name not in updated_names:
                   new_table_lines.append(f"| {name} | {time} | ✅ |")
 
-          # 补回表头（确保表头在最前面）
-          table_header = [
+          # 重新拼装表格（带上固定的表头）
+          final_table = [
               "| 脚本名称 | 最后一次更新时间 | 当前状态 |",
               "| :--- | :----: | :----: |"
-          ]
-          new_table_lines = table_header + new_table_lines
+          ] + new_table_lines
 
           # 重新组装整个文件
-          final_table = "\n".join(new_table_lines)
-          final_content = f"{pre_part}{start_tag}\n{final_table}\n{end_tag}{post_part}"
+          formatted_table = "\n".join(final_table)
+          final_content = f"{pre_part}{start_tag}\n{formatted_table}\n{end_tag}{post_part}"
 
           with open(readme_path, 'w', encoding='utf-8') as f:
               f.write(final_content)
           EOF
 
-          python update_readme.py
-      - name: 提交并推送
+          python update_readme.py      - name: 提交并推送
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
