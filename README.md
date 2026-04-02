@@ -1,5 +1,3 @@
-# QLScriptpublic
-
 ### 脚本功能列表
 
 | 脚本名称 | 最后一次更新时间 | 当前状态 |
@@ -9,6 +7,7 @@
 | 阿里云盘签到 | 2026-04-02 08:56:23 | ✅ |
 | 爱玛会员俱乐部 | 2026-04-02 09:08:43 | ✅ |
 | 快手极速版 | 2026-04-02 09:08:43 | ✅ |
+
 # 青龙面板拉库命令
 
 `ql repo https://github.com/smallfawn/QLScriptPublic.git backup main`

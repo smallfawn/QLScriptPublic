@@ -45,7 +45,7 @@ jobs:
 
           target_files = [f for f in changed_files if (f.endswith('.js') or f.endswith('.py')) and os.path.exists(f)]
           if not target_files:
-              print("没有目标文件变动。")
+              print("No relevant file changes.")
               exit(0)
 
           # 2. 提取 Env 名称
@@ -59,28 +59,26 @@ jobs:
                       updates[match.group(1)] = now
 
           if not updates:
-              print("未发现 Env 标签更新。")
+              print("No Env tags found in changed files.")
               exit(0)
 
           # 3. 修改 README
           readme_path = 'README.md'
-          if not os.path.exists(readme_path):
-              exit(1)
-
           with open(readme_path, 'r', encoding='utf-8') as f:
               full_text = f.read()
 
-          # --- 这里已经为你填好了标记，请不要再改回空字符串 ---
+          # --- 核心修复：定义明确的锚点 ---
           start_tag = ""
           end_tag = ""
 
           if start_tag not in full_text or end_tag not in full_text:
-              print("错误：README.md 中缺少锚点标记！")
+              print("Error: Anchor tags not found in README.md")
               exit(1)
 
           pre_part, temp = full_text.split(start_tag)
           table_section, post_part = temp.split(end_tag)
 
+          # 处理旧表格内容
           lines = table_section.strip().split('\n')
           new_table_lines = []
           updated_names = set()
@@ -96,17 +94,20 @@ jobs:
                   if line.strip():
                       new_table_lines.append(line)
 
+          # 添加新脚本
           for name, time in updates.items():
               if name not in updated_names:
                   new_table_lines.append(f"| {name} | {time} | ✅ |")
 
+          # 组装
           header = ["| 脚本名称 | 最后一次更新时间 | 当前状态 |", "| :--- | :----: | :----: |"]
-          final_content = f"{pre_part}{start_tag}\n" + "\n".join(header + new_table_lines) + f"\n{end_tag}{post_part}"
+          final_table = "\n".join(header + new_table_lines)
+          final_content = f"{pre_part}{start_tag}\n{final_table}\n{end_tag}{post_part}"
 
           with open(readme_path, 'w', encoding='utf-8') as f:
               f.write(final_content)
           EOF
-          
+
           python update_readme.py
 
       - name: 提交并推送
@@ -118,5 +119,5 @@ jobs:
             git commit -m "docs: 自动更新脚本状态 [skip ci]"
             git push
           else
-            echo "没有变化需要提交"
+            echo "Nothing to commit"
           fi
