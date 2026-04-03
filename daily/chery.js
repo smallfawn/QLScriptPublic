@@ -3,7 +3,7 @@
 @Author: sm
 @Date: 2024.06.07 19:15
 @Description: 奇瑞汽车
-cron: 8 30 * * *
+cron: 30 8 * * *
 ------------------------------------------
 #Notice:   
 APP 抓包的登录接口uaa2c.chery.cn 里面的返回的access_token就是环境变量需要的token，多个账号换行或者&

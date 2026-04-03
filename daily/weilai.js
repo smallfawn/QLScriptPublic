@@ -3,7 +3,7 @@
 @Author: sm
 @Date: 2024.06.07 19:15
 @Description: babycare
-cron: 8 30 * * *
+cron: 30 8 * * *
 ------------------------------------------
 #Notice:   
 变量名 weilai
