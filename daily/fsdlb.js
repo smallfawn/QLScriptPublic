@@ -2,14 +2,15 @@
 ------------------------------------------
 @Author: sm
 @Date: 2024.06.07 19:15
-@Description: 蔚来APP签到
-cron: 30 8 * * *
+@Description: fsdlb 微信小程序逢三得利吧 签到积分
+cron: 30 9 * * *
 ------------------------------------------
 #Notice:   
-变量名 weilai
-APP抓请求头app.nio.com 请求头里面的authorization 去掉Bearer后面部分就是变量值，
-或者抓网页版https://www.nio.cn/ 右上角登录后请求头里面的authorization  去掉Bearer后面部分就是变量值，
-多个账号换行或者&分隔
+https://xiaodian.miyatech.com 小程序逢三得利吧签到积分，使用前请先获取token，方法如下：
+打开微信，进入逢三得利吧小程序，点击右下角“我的”，
+打开抓包软件抓取https://xiaodian.miyatech.com 请求头的Authorization 
+抓取到的Authorization值即为token，去掉前面的"bearer "，将剩余部分作为token使用。
+
 ⚠️【免责声明】
 ------------------------------------------
 1、此脚本仅用于学习研究，不保证其合法性、准确性、有效性，请根据情况自行判断，本人对此不承担任何保证责任。
@@ -22,8 +23,8 @@ APP抓请求头app.nio.com 请求头里面的authorization 去掉Bearer后面部
 */
 
 const { Env } = require("../tools/env")
-const $ = new Env("蔚来签到");
-let ckName = `weilai`;
+const $ = new Env("逢三得利吧小程序");
+let ckName = `fsdlb`;
 const strSplitor = "#";
 const axios = require("axios");
 const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.31(0x18001e31) NetType/WIFI Language/zh_CN miniProgram"
@@ -33,46 +34,67 @@ class Task {
     constructor(env) {
         this.index = $.userIdx++
         this.user = env.split(strSplitor);
-        this.token = this.user[0];
+        this.token = "bearer " + this.user[0];
 
     }
 
     async run() {
+        await this.info()
         await this.signIn()
     }
 
     async signIn() {
         let options = {
             method: 'POST',
-            url: `https://gateway-front-external.nio.com/moat/10086/c/award_cn/checkin?app_id=10086&timestamp=${Date.now()}`,
+            url: `https://xiaodian.miyatech.com/api/coupon/auth/signIn`,
             headers: {
-                "authority": "gateway-front-external.nio.com",
-                "content-type": "application/x-www-form-urlencoded",
-                "accept": "application/json, text/plain, */*",
-                "authorization": 'Bearer ' + this.token,
-                "sec-fetch-site": "cross-site",
-                "priority": "u=3, i",
-                "accept-language": "zh-CN,zh-Hans;q=0.9",
-                "accept-encoding": "gzip, deflate, br",
-                "sec-fetch-mode": "cors",
-                "origin": "null",
-                "user-agent": defaultUserAgent,
-                "sec-fetch-dest": "empty"
+                "X-VERSION": "2.1.3",
+                "Authorization": `${this.token}`,
+                "HH-VERSION": "0.2.8",
+                "HH-FROM": "20230130307725",
+                "HH-APP": "wxb33ed03c6c715482",
+                "HH-CI": "saas-wechat-app",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36",
             },
-            data: "event=checkin"
-        };
-        let { data: result } = await axios.request(options);
-        if (result?.result_code == 'success') {
-            $.log(`🌸账号[${this.index}]` + `${result.data.tip}🎉`);
+            data: {
+                "miniappId": 159
+            }
+        }
+        let { data: result } = await axios.request(options)
+        if (result?.code == 200) {
+            //打印签到结果
+            $.log(`🕊账号[${this.index}] 签到成功:[${result.data.integralToastText}]🎉`);
         } else {
-            $.log(`🌸账号[${this.index}] 签到-失败:${JSON.stringify(result)}❌`)
+            $.log(`🕊账号[${this.index}] 签到失败:${result.msg}🚫`)
         }
 
 
 
 
     }
-    
+    async info() {
+        let options = {
+            method: 'GET',
+            url: `https://xiaodian.miyatech.com/api/user/auth/member/integral/union/flow/list?pageNo=1&pageSize=10&dataType=SCORE`,
+            headers: {
+                "X-VERSION": "2.1.3",
+                "Authorization": `${this.token}`,
+                "HH-VERSION": "0.2.8",
+                "HH-FROM": "20230130307725",
+                "HH-APP": "wxb33ed03c6c715482",
+                "HH-CI": "saas-wechat-app",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36",
+            },
+
+        }
+        let { data: result } = await axios.request(options)
+        if (result?.code == 200) {
+            $.log(`🕊账号[${this.index}] 查询成功:总积分[${result.data.totalScore}]🎉`);
+
+        } else {
+            $.log(`🕊账号[${this.index}] 查询失败:${result.msg}🚫`)
+        }
+    }
 
 
 
