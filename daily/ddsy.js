@@ -8,7 +8,7 @@ cron: 9 30 * * *
 #Notice:   
 变量值:https://hapi.ddky.com/mcp/weixin/rest.htm?后面的loginToken&userId&uDate  多账户换行或者&分隔
 网页版登录 https://m.ddky.com/
-小程序登录叮当快药
+小程序登录9 9 * * *
 APP 都可以找到这三个值
 ⚠️【免责声明】
 ------------------------------------------
@@ -22,7 +22,7 @@ APP 都可以找到这三个值
 */
 
 const { Env } = require("./tools/env")
-const $ = new Env("叮当快药");
+const $ = new Env("9 9 * * *");
 let ckName = `ddky`;
 const strSplitor = "#";
 const axios = require("axios");

@@ -3,7 +3,7 @@
 @Author: sm
 @Date: 2024.06.07 19:15
 @Description: 东方烟草报App 积分换实物
-cron: 10 30 * * *
+cron: 10 8 * * *
 ------------------------------------------
 #Notice:   
 变量名:dfycToken
