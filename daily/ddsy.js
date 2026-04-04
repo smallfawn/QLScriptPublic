@@ -2,13 +2,13 @@
 ------------------------------------------
 @Author: sm
 @Date: 2024.06.07 19:15
-@Description: ddky
-cron: 9 30 * * *
+@Description: 叮当快药
+cron: 9 9 * * *
 ------------------------------------------
 #Notice:   
 变量值:https://hapi.ddky.com/mcp/weixin/rest.htm?后面的loginToken&userId&uDate  多账户换行或者&分隔
 网页版登录 https://m.ddky.com/
-小程序登录9 9 * * *
+小程序登录叮当快药
 APP 都可以找到这三个值
 ⚠️【免责声明】
 ------------------------------------------
@@ -22,7 +22,7 @@ APP 都可以找到这三个值
 */
 
 const { Env } = require("./tools/env")
-const $ = new Env("9 9 * * *");
+const $ = new Env("叮当快药");
 let ckName = `ddky`;
 const strSplitor = "#";
 const axios = require("axios");
