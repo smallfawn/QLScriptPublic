@@ -1,170 +1,227 @@
-/**
- * 蜜雪冰城
- * cron 11 12 * * *  mxbc.js
- * 感谢大佬的代码
- * ========= 青龙--配置文件 ===========
- * # 项目名称
- * export mxbc_data='token @ token'
- * 
- * 多账号用 换行 或 @ 分割
- * 抓包 mxsa.mxbc.net/api , 找到 Access-Token 即可
- * ====================================
- *   
- */
+/*
+------------------------------------------
+@Author: sm
+@Date: 2024.06.07 19:15
+@Description:  蜜雪冰城APP/小程序
+cron: 30 8 * * *
+------------------------------------------
+#Notice:   
+抓https://mxsa.mxbc.net 请求头Access-Token 多账号&或换行
+变量名：mxbc
+⚠️【免责声明】
+------------------------------------------
+1、此脚本仅用于学习研究，不保证其合法性、准确性、有效性，请根据情况自行判断，本人对此不承担任何保证责任。
+2、由于此脚本仅用于学习研究，您必须在下载后 24 小时内将所有内容从您的计算机或手机或任何存储设备中完全删除，若违反规定引起任何事件本人对此均不负责。
+3、请勿将此脚本用于任何商业或非法目的，若违反规定请自行对此负责。
+4、此脚本涉及应用与本人无关，本人对因此引起的任何隐私泄漏或其他后果不承担任何责任。
+5、本人对任何脚本引发的问题概不负责，包括但不限于由脚本错误引起的任何损失和损害。
+6、如果任何单位或个人认为此脚本可能涉嫌侵犯其权利，应及时通知并提供身份证明，所有权证明，我们将在收到认证文件确认后删除此脚本。
+7、所有直接或间接使用、查看此脚本的人均应该仔细阅读此声明。本人保留随时更改或补充此声明的权利。一旦您使用或复制了此脚本，即视为您已接受此免责声明。
+*/
 
-
-
+const { Env } = require("./tools/env")
 const $ = new Env("蜜雪冰城");
-const ckName = "mxbc_data";
-//-------------------- 一般不动变量区域 -------------------------------------
-const Notify = 1;		 //0为关闭通知,1为打开通知,默认为1
-let debug = 1;           //Debug调试   0关闭  1开启
-let envSplitor = ["@", "\n"]; //多账号分隔符
-let ck = msg = '';       //let ck,msg
-let host, hostname;
-let userCookie = ($.isNode() ? process.env[ckName] : $.getdata(ckName)) || '';
-let userList = [];
-let userIdx = 0;
-let userCount = 0;
-//---------------------- 自定义变量区域 -----------------------------------
-//---------------------------------------------------------
+let ckName = `mxbc`;
+const strSplitor = "#";
+const axios = require("axios");
+const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.31(0x18001e31) NetType/WIFI Language/zh_CN miniProgram"
 
-async function start() {
 
-    //await getNotice()
-    console.log('\n================== 用户CK ==================\n');
-    taskall = [];
-    for (let user of userList) {
-        taskall.push(await user.user_info());
-        await $.wait(1000); //延迟  1秒  可充分利用 $.环境函数
+class Task {
+    constructor(env) {
+        this.index = $.userIdx++
+        this.user = env.split(strSplitor);
+        this.ck = this.user[0];
+        this.activityOrigin = ""
+        this.activityUrl = ""
     }
-    await Promise.all(taskall);
-    console.log('\n================== 每日签到 ==================\n');
-    taskall = [];
-    for (let user of userList) {
-        if (user.ckStatus) {
-            taskall.push(await user.task_signin());
-            await $.wait(1000); //延迟  1秒  可充分利用 $.环境函数
+
+    async run() {
+
+        await this.user_info()
+        await this.getLoginUrl()
+        if (this.activityOrigin) {
+            await this.getActivityToken()
+            await this.activityIndex()
         }
-    }
-    await Promise.all(taskall);
-
-
-
-}
-
-
-class UserInfo {
-    constructor(str) {
-        this.index = ++userIdx;
-        this.ck = str.split('&')[0]; //单账号多变量分隔符
-        //let ck = str.split('&')
-        //this.data1 = ck[0]
-        this.ckStatus = true
 
     }
+
     async user_info() {
+        let time = Date.now()
         try {
             let options = {
-                url: `https://mxsa.mxbc.net/api/v1/customer/info?appId=d82be6bbc1da11eb9dd000163e122ecb&t=${ts13()}&sign=${getSHA256withRSA('appId=d82be6bbc1da11eb9dd000163e122ecb&t=' + ts13())}`,
+                url: `https://mxsa.mxbc.net/api/v1/customer/info?appId=d82be6bbc1da11eb9dd000163e122ecb&t=${time}&sign=${this.getSHA256withRSA('appId=d82be6bbc1da11eb9dd000163e122ecb&t=' + time)}`,
                 headers: {
-                    'app': 'mxbc',
-                    'appchannel': 'xiaomi',
-                    'appversion': '3.0.3',
-                    'Access-Token': this.ck,
                     'Host': 'mxsa.mxbc.net',
-                    'Connection': 'Keep-Alive',
-                    //'Accept-Encoding': 'gzip',
-                    'User-Agent': 'okhttp/4.4.1'
+                    'Connection': 'keep-alive',
+                    'user-agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36 MicroMessenger/7.0.4.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF',
+                    'xweb_xhr': 1,
+                    'Access-Token': this.ck,
+                    'Content-Type': 'application/json',
+                    'Accept': '*/*',
+                    'Sec-Fetch-Site': 'cross-site',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Dest': 'empty',
+                    'Referer': 'https://servicewechat.com/wx7696c66d2245d107/59/page-frame.html',
+                    'Accept-Language': 'en-us,en',
+                    'Accept-Encoding': 'gzip, deflate',
+
                 }
             }
-            //console.log(options);
-            let result = await httpRequest(options);
-            //console.log(result);
+            let { data: result } = await axios.request(options);
             if (result.code == 0) {
-                DoubleLog(`账号[${this.index}]  用户CK有效: [${result.data.mobilePhone}] 雪王币剩余[${result.data.customerPoint}]`);
+                $.log(`账号[${this.index}]  用户CK有效: [${result.data.mobilePhone}] 雪王币剩余[${result.data.customerPoint}]`);
                 this.ckStatus = true
 
             } else {
-                DoubleLog(`账号[${this.index}]  用户CK失效:,原因未知！`);
+                $.log(`账号[${this.index}]  用户CK失效:,原因未知！`);
                 this.ckStatus = false
 
                 console.log(result);
             }
         } catch (e) {
-            console.log(e);
+
+        }
+    }
+    async getLoginUrl() {
+        try {
+            let timestamp = Date.now();
+            const options = {
+                method: 'GET',
+                url: `https://mxsa.mxbc.net/api/v1/duiba/getLoginUrl`,
+                params: {
+                    "appId": "d82be6bbc1da11eb9dd000163e122ecb",
+                    "t": timestamp,
+                    "sign": this.getSHA256withRSA('appId=d82be6bbc1da11eb9dd000163e122ecb&t=' + timestamp)
+                },
+                headers: {
+                    'Host': 'mxsa.mxbc.net',
+                    'Connection': 'keep-alive',
+                    'user-agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36 MicroMessenger/7.0.4.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF',
+                    'xweb_xhr': 1,
+                    'Access-Token': '' + this.ck,
+                    'Content-Type': 'application/json',
+                    'Accept': '*/*',
+                    'Sec-Fetch-Site': 'cross-site',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Dest': 'empty',
+                    'Referer': 'https://servicewechat.com/wx7696c66d2245d107/59/page-frame.html',
+                    'Accept-Language': 'en-us,en',
+                    'Accept-Encoding': 'gzip, deflate',
+
+                }
+            };
+
+            let { data: res } = await axios.request(options);
+            if (res?.code == 0) {
+                this.activityOrigin = new URL(res?.data.loginUrl).origin;
+                this.activityUrl = res?.data.loginUrl;
+                return res?.data.loginUrl;
+            } else {
+                $.log(`获取跳转Url失败！原因未知！${res.msg}`);
+
+            }
+
+        } catch (e) {
+            $.log(`❌获取跳转Url失败！原因为${e}`);
+        }
+    }
+    ObjectKeys2LowerCase(e) { return e = Object.fromEntries(Object.entries(e).map((([e, t]) => [e.toLowerCase(), t]))), new Proxy(e, { get: function (e, t, r) { return Reflect.get(e, t.toLowerCase(), r) }, set: function (e, t, r, n) { return Reflect.set(e, t.toLowerCase(), r, n) } }) }
+
+
+    //获取活动token
+    async getActivityToken() {
+        try {
+            const opts = {
+                method: "GET",
+                url: this.activityUrl,
+                maxRedirects: 0,
+                // 关键点 2: 默认 Axios 认为非 2xx 是错误，需定义 302 为合法状态
+                validateStatus: function (status) {
+                    return status >= 200 && status < 400; // 允许 302 (或 3xx) 进入 .then
+                },
+                headers: {}
+            }
+            let res = await axios.request(opts);
+
+            let headers = this.ObjectKeys2LowerCase(res?.headers);
+            //对青龙进行兼容
+            let session = Array.isArray(headers['set-cookie']) ? [...new Set(headers['set-cookie'])].join("") : headers['set-cookie'];
+
+            let [wdata4, w_ts, _ac, wdata3, dcustom] = session.match(/(wdata4|w_ts|_ac|wdata3|dcustom)=.+?;/g)
+            this.session = wdata4 + w_ts + _ac + wdata3 + dcustom;
+            $.log(`✅ 获取活动token成功！`)
+
+
+        } catch (e) {
+
+            $.log(`⛔️ 获取活动token失败！${e}`);
+        }
+    }
+    async activityIndex() {
+        try {
+            const opts = {
+                url: this.activityOrigin + "/chome/index",
+                params: {
+                    from: "login",
+                    spm: "76177.1.1.1"
+                },
+                headers: {
+                    'Cookie': this.session,
+
+                    'User-Agent': `Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X)mxsa_mxbc`,
+                }
+            }
+
+            await axios.request(opts);
+            $.log(`✅ 访问雪王铺:调用成功!`);
+        } catch (e) {
+
+            $.log(`⛔️ 访问雪王铺:调用失败!${e}`);
         }
     }
     async task_signin() {
         try {
+            let time = Date.now()
             let options = {
-                url: `https://mxsa.mxbc.net/api/v1/customer/signin?appId=d82be6bbc1da11eb9dd000163e122ecb&t=${ts13()}&sign=${getSHA256withRSA('appId=d82be6bbc1da11eb9dd000163e122ecb&t=' + ts13())}`,
+                url: `https://mxsa.mxbc.net/api/v1/customer/signin?appId=d82be6bbc1da11eb9dd000163e122ecb&t=${time}&sign=${this.getSHA256withRSA('appId=d82be6bbc1da11eb9dd000163e122ecb&t=' + time)}`,
                 headers: {
-                    'app': 'mxbc',
-                    'appchannel': 'xiaomi',
-                    'appversion': '3.0.3',
-                    'Access-Token': this.ck,
                     'Host': 'mxsa.mxbc.net',
-                    'Connection': 'Keep-Alive',
-                    //'Accept-Encoding': 'gzip',
-                    'User-Agent': 'okhttp/4.4.1'
+                    'Connection': 'keep-alive',
+                    'user-agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36 MicroMessenger/7.0.4.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF',
+                    'xweb_xhr': 1,
+                    'Access-Token': this.ck,
+                    'Content-Type': 'application/json',
+                    'Accept': '*/*',
+                    'Sec-Fetch-Site': 'cross-site',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Dest': 'empty',
+                    'Referer': 'https://servicewechat.com/wx7696c66d2245d107/59/page-frame.html',
+                    'Accept-Language': 'en-us,en',
+                    'Accept-Encoding': 'gzip, deflate',
+
                 }
             }
             //console.log(options);
-            let result = await httpRequest(options);
+            let { data: result } = await axios.request(options);
             //console.log(result);
             if (result.code == 0) {
-                DoubleLog(`账号[${this.index}]  签到成功:累计签到 [${result.data.ruleValueGrowth}]天 本次获得[${result.data.ruleValuePoint}]币`);
+                $.log(`账号[${this.index}]  签到成功:累计签到 [${result.data.ruleValueGrowth}]天 本次获得[${result.data.ruleValuePoint}]币`);
                 this.ckStatus = true
 
             } else {
-                DoubleLog(`账号[${this.index}]  签到:失败 ❌ 了呢,原因未知！`);
+                $.log(`账号[${this.index}]  签到:失败 ❌ 了呢,原因未知！`);
                 console.log(result);
             }
         } catch (e) {
             console.log(e);
         }
     }
+    getSHA256withRSA(content) {
+        var rs = require("jsrsasign");
 
-
-
-
-}
-
-!(async () => {
-    if (!(await checkEnv())) return;
-    if (userList.length > 0) {
-        await start();
-    }
-    await SendMsg(msg);
-})()
-    .catch((e) => console.log(e))
-    .finally(() => $.done());
-
-
-//********************************************************
-// 变量检查与处理
-async function checkEnv() {
-    if (userCookie) {
-        // console.log(userCookie);
-        let e = envSplitor[0];
-        for (let o of envSplitor)
-            if (userCookie.indexOf(o) > -1) {
-                e = o;
-                break;
-            }
-        for (let n of userCookie.split(e)) n && userList.push(new UserInfo(n));
-        userCount = userList.length;
-    } else {
-        console.log("未找到CK");
-        return;
-    }
-    return console.log(`共找到${userCount}个账号`), true;//true == !0
-}
-/////////////////////////////////////////////////////////////////////////////////////
-var rs = require("jsrsasign");
-
-var privateKeyString = `-----BEGIN PRIVATE KEY-----
+        var privateKeyString = `-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCtypUdHZJKlQ9L
 L6lIJSphnhqjke7HclgWuWDRWvzov30du235cCm13mqJ3zziqLCwstdQkuXo9sOP
 Ih94t6nzBHTuqYA1whrUnQrKfv9X4/h3QVkzwT+xWflE+KubJZoe+daLKkDeZjVW
@@ -193,111 +250,49 @@ ZNDBLCI2G4+UFP+8ZEuBKy5NkDVqXQhHRbqr9S/OkFu+kEjHLuYSpQsclh6XSDks
 dOGyw/X4SFyodv8AEloqd81yGg==
 -----END PRIVATE KEY-----
 `;
-function getSHA256withRSA(content) {
-    const key = rs.KEYUTIL.getKey(privateKeyString);
 
-    const signature = new rs.KJUR.crypto.Signature({ alg: "SHA256withRSA" });
+        const key = rs.KEYUTIL.getKey(privateKeyString);
 
-    signature.init(key);
+        const signature = new rs.KJUR.crypto.Signature({ alg: "SHA256withRSA" });
 
-    signature.updateString(content);
+        signature.init(key);
 
-    const originSign = signature.sign();
-    const sign64u = rs.hextob64u(originSign);
+        signature.updateString(content);
 
-    return sign64u;
+        const originSign = signature.sign();
+        const sign64u = rs.hextob64u(originSign);
+
+        return sign64u;
+
+    }
+
+
+
+
+
+
+
 }
-/**
- * 获取远程通知
- */
+
+!(async () => {
+    await getNotice()
+    $.checkEnv(ckName);
+
+    for (let user of $.userList) {
+        await new Task(user).run();
+    }
+})()
+    .catch((e) => console.log(e))
+    .finally(() => $.done());
+
 async function getNotice() {
-    try {
-        const urls = [
-            "https://ghproxy.com/https://raw.githubusercontent.com/smallfawn/Note/main/Notice.json",
-            "https://fastly.jsdelivr.net/gh/smallfawn/Note@main/Notice.json",
-            "https://cdn.jsdelivr.net/gh/smallfawn/Note@main/Notice.json",
-            "https://ghproxy.net/https://raw.githubusercontent.com/smallfawn/Note/refs/heads/main/Notice.json"
-        ];
-        let notice = null;
-        for (const url of urls) {
-            const options = {
-                url,
-                headers: { "User-Agent": "" }
-            };
-            const result = await httpRequest(options);
-            if (result && "notice" in result) {
-                notice = result.notice.replace(/\\n/g, '\n');
-                break;
-            }
+    let options = {
+        url: `https://ghproxy.net/https://raw.githubusercontent.com/smallfawn/Note/refs/heads/main/Notice.json`,
+        headers: {
+            "User-Agent": defaultUserAgent,
         }
-        if (notice) {
-            DoubleLog(notice);
-        }
-    } catch (e) {
-        console.log(e);
     }
+    let { data: res } = await axios.request(options);
+    $.log(res)
+    return res
 }
-function ts13() {
-    return Math.round(new Date().getTime()).toString();
-}
-
-function httpRequest(options, method) {
-    //options = changeCode(options)
-    typeof (method) === 'undefined' ? ('body' in options ? method = 'post' : method = 'get') : method = method
-    return new Promise((resolve) => {
-        $[method](options, (err, resp, data) => {
-            try {
-                if (err) {
-                    console.log(`${method}请求失败`);
-                    //console.log(JSON.parse(err));
-                    $.logErr(err);
-                    //throw new Error(err);
-                    //console.log(err);
-                } else {
-                    //httpResult = data;
-                    //httpResponse = resp;
-                    if (data) {
-                        //console.log(data);
-                        data = JSON.parse(data);
-                        resolve(data)
-                    } else {
-                        console.log(`请求api返回数据为空，请检查自身原因`)
-                    }
-                }
-            } catch (e) {
-                //console.log(e, resp);
-                $.logErr(e, resp);
-            } finally {
-                resolve();
-            }
-        })
-    })
-}
-// 双平台log输出
-function DoubleLog(data) {
-    if ($.isNode()) {
-        if (data) {
-            console.log(`${data}`);
-            msg += `\n${data}`
-        }
-    } else {
-        console.log(`${data}`);
-        msg += `\n${data}`
-    }
-}
-// 发送消息
-async function SendMsg(message) {
-    if (!message) return;
-    if (Notify > 0) {
-        if ($.isNode()) {
-            var notify = require("./sendNotify");
-            await notify.sendNotify($.name, message)
-        } else {
-            $.msg($.name, '', message)
-        }
-    } else {
-        console.log(message)
-    }
-}
-// 完整 Env
-function Env(t, e) { "undefined" != typeof process && JSON.stringify(process.env).indexOf("GITHUB") > -1 && process.exit(0); class s { constructor(t) { this.env = t } send(t, e = "GET") { t = "string" == typeof t ? { url: t } : t; let s = this.get; return "POST" === e && (s = this.post), new Promise((e, i) => { s.call(this, t, (t, s, r) => { t ? i(t) : e(s) }) }) } get(t) { return this.send.call(this.env, t) } post(t) { return this.send.call(this.env, t, "POST") } } return new class { constructor(t, e) { this.name = t, this.http = new s(this), this.data = null, this.dataFile = "box.dat", this.logs = [], this.isMute = !1, this.isNeedRewrite = !1, this.logSeparator = "\n", this.startTime = (new Date).getTime(), Object.assign(this, e), this.log("", `🔔${this.name}, 开始!`) } isNode() { return "undefined" != typeof module && !!module.exports } isQuanX() { return "undefined" != typeof $task } isSurge() { return "undefined" != typeof $httpClient && "undefined" == typeof $loon } isLoon() { return "undefined" != typeof $loon } toObj(t, e = null) { try { return JSON.parse(t) } catch { return e } } toStr(t, e = null) { try { return JSON.stringify(t) } catch { return e } } getjson(t, e) { let s = e; const i = this.getdata(t); if (i) try { s = JSON.parse(this.getdata(t)) } catch { } return s } setjson(t, e) { try { return this.setdata(JSON.stringify(t), e) } catch { return !1 } } getScript(t) { return new Promise(e => { this.get({ url: t }, (t, s, i) => e(i)) }) } runScript(t, e) { return new Promise(s => { let i = this.getdata("@chavy_boxjs_userCfgs.httpapi"); i = i ? i.replace(/\n/g, "").trim() : i; let r = this.getdata("@chavy_boxjs_userCfgs.httpapi_timeout"); r = r ? 1 * r : 20, r = e && e.timeout ? e.timeout : r; const [o, h] = i.split("@"), n = { url: `http://${h}/v1/scripting/evaluate`, body: { script_text: t, mock_type: "cron", timeout: r }, headers: { "X-Key": o, Accept: "*/*" } }; this.post(n, (t, e, i) => s(i)) }).catch(t => this.logErr(t)) } loaddata() { if (!this.isNode()) return {}; { this.fs = this.fs ? this.fs : require("fs"), this.path = this.path ? this.path : require("path"); const t = this.path.resolve(this.dataFile), e = this.path.resolve(process.cwd(), this.dataFile), s = this.fs.existsSync(t), i = !s && this.fs.existsSync(e); if (!s && !i) return {}; { const i = s ? t : e; try { return JSON.parse(this.fs.readFileSync(i)) } catch (t) { return {} } } } } writedata() { if (this.isNode()) { this.fs = this.fs ? this.fs : require("fs"), this.path = this.path ? this.path : require("path"); const t = this.path.resolve(this.dataFile), e = this.path.resolve(process.cwd(), this.dataFile), s = this.fs.existsSync(t), i = !s && this.fs.existsSync(e), r = JSON.stringify(this.data); s ? this.fs.writeFileSync(t, r) : i ? this.fs.writeFileSync(e, r) : this.fs.writeFileSync(t, r) } } lodash_get(t, e, s) { const i = e.replace(/\[(\d+)\]/g, ".$1").split("."); let r = t; for (const t of i) if (r = Object(r)[t], void 0 === r) return s; return r } lodash_set(t, e, s) { return Object(t) !== t ? t : (Array.isArray(e) || (e = e.toString().match(/[^.[\]]+/g) || []), e.slice(0, -1).reduce((t, s, i) => Object(t[s]) === t[s] ? t[s] : t[s] = Math.abs(e[i + 1]) >> 0 == +e[i + 1] ? [] : {}, t)[e[e.length - 1]] = s, t) } getdata(t) { let e = this.getval(t); if (/^@/.test(t)) { const [, s, i] = /^@(.*?)\.(.*?)$/.exec(t), r = s ? this.getval(s) : ""; if (r) try { const t = JSON.parse(r); e = t ? this.lodash_get(t, i, "") : e } catch (t) { e = "" } } return e } setdata(t, e) { let s = !1; if (/^@/.test(e)) { const [, i, r] = /^@(.*?)\.(.*?)$/.exec(e), o = this.getval(i), h = i ? "null" === o ? null : o || "{}" : "{}"; try { const e = JSON.parse(h); this.lodash_set(e, r, t), s = this.setval(JSON.stringify(e), i) } catch (e) { const o = {}; this.lodash_set(o, r, t), s = this.setval(JSON.stringify(o), i) } } else s = this.setval(t, e); return s } getval(t) { return this.isSurge() || this.isLoon() ? $persistentStore.read(t) : this.isQuanX() ? $prefs.valueForKey(t) : this.isNode() ? (this.data = this.loaddata(), this.data[t]) : this.data && this.data[t] || null } setval(t, e) { return this.isSurge() || this.isLoon() ? $persistentStore.write(t, e) : this.isQuanX() ? $prefs.setValueForKey(t, e) : this.isNode() ? (this.data = this.loaddata(), this.data[e] = t, this.writedata(), !0) : this.data && this.data[e] || null } initGotEnv(t) { this.got = this.got ? this.got : require("got"), this.cktough = this.cktough ? this.cktough : require("tough-cookie"), this.ckjar = this.ckjar ? this.ckjar : new this.cktough.CookieJar, t && (t.headers = t.headers ? t.headers : {}, void 0 === t.headers.Cookie && void 0 === t.cookieJar && (t.cookieJar = this.ckjar)) } get(t, e = (() => { })) { t.headers && (delete t.headers["Content-Type"], delete t.headers["Content-Length"]), this.isSurge() || this.isLoon() ? (this.isSurge() && this.isNeedRewrite && (t.headers = t.headers || {}, Object.assign(t.headers, { "X-Surge-Skip-Scripting": !1 })), $httpClient.get(t, (t, s, i) => { !t && s && (s.body = i, s.statusCode = s.status), e(t, s, i) })) : this.isQuanX() ? (this.isNeedRewrite && (t.opts = t.opts || {}, Object.assign(t.opts, { hints: !1 })), $task.fetch(t).then(t => { const { statusCode: s, statusCode: i, headers: r, body: o } = t; e(null, { status: s, statusCode: i, headers: r, body: o }, o) }, t => e(t))) : this.isNode() && (this.initGotEnv(t), this.got(t).on("redirect", (t, e) => { try { if (t.headers["set-cookie"]) { const s = t.headers["set-cookie"].map(this.cktough.Cookie.parse).toString(); s && this.ckjar.setCookieSync(s, null), e.cookieJar = this.ckjar } } catch (t) { this.logErr(t) } }).then(t => { const { statusCode: s, statusCode: i, headers: r, body: o } = t; e(null, { status: s, statusCode: i, headers: r, body: o }, o) }, t => { const { message: s, response: i } = t; e(s, i, i && i.body) })) } post(t, e = (() => { })) { if (t.body && t.headers && !t.headers["Content-Type"] && (t.headers["Content-Type"] = "application/x-www-form-urlencoded"), t.headers && delete t.headers["Content-Length"], this.isSurge() || this.isLoon()) this.isSurge() && this.isNeedRewrite && (t.headers = t.headers || {}, Object.assign(t.headers, { "X-Surge-Skip-Scripting": !1 })), $httpClient.post(t, (t, s, i) => { !t && s && (s.body = i, s.statusCode = s.status), e(t, s, i) }); else if (this.isQuanX()) t.method = "POST", this.isNeedRewrite && (t.opts = t.opts || {}, Object.assign(t.opts, { hints: !1 })), $task.fetch(t).then(t => { const { statusCode: s, statusCode: i, headers: r, body: o } = t; e(null, { status: s, statusCode: i, headers: r, body: o }, o) }, t => e(t)); else if (this.isNode()) { this.initGotEnv(t); const { url: s, ...i } = t; this.got.post(s, i).then(t => { const { statusCode: s, statusCode: i, headers: r, body: o } = t; e(null, { status: s, statusCode: i, headers: r, body: o }, o) }, t => { const { message: s, response: i } = t; e(s, i, i && i.body) }) } } time(t, e = null) { const s = e ? new Date(e) : new Date; let i = { "M+": s.getMonth() + 1, "d+": s.getDate(), "H+": s.getHours(), "m+": s.getMinutes(), "s+": s.getSeconds(), "q+": Math.floor((s.getMonth() + 3) / 3), S: s.getMilliseconds() }; /(y+)/.test(t) && (t = t.replace(RegExp.$1, (s.getFullYear() + "").substr(4 - RegExp.$1.length))); for (let e in i) new RegExp("(" + e + ")").test(t) && (t = t.replace(RegExp.$1, 1 == RegExp.$1.length ? i[e] : ("00" + i[e]).substr(("" + i[e]).length))); return t } msg(e = t, s = "", i = "", r) { const o = t => { if (!t) return t; if ("string" == typeof t) return this.isLoon() ? t : this.isQuanX() ? { "open-url": t } : this.isSurge() ? { url: t } : void 0; if ("object" == typeof t) { if (this.isLoon()) { let e = t.openUrl || t.url || t["open-url"], s = t.mediaUrl || t["media-url"]; return { openUrl: e, mediaUrl: s } } if (this.isQuanX()) { let e = t["open-url"] || t.url || t.openUrl, s = t["media-url"] || t.mediaUrl; return { "open-url": e, "media-url": s } } if (this.isSurge()) { let e = t.url || t.openUrl || t["open-url"]; return { url: e } } } }; if (this.isMute || (this.isSurge() || this.isLoon() ? $notification.post(e, s, i, o(r)) : this.isQuanX() && $notify(e, s, i, o(r))), !this.isMuteLog) { let t = ["", "==============📣系统通知📣=============="]; t.push(e), s && t.push(s), i && t.push(i), console.log(t.join("\n")), this.logs = this.logs.concat(t) } } log(...t) { t.length > 0 && (this.logs = [...this.logs, ...t]), console.log(t.join(this.logSeparator)) } logErr(t, e) { const s = !this.isSurge() && !this.isQuanX() && !this.isLoon(); s ? this.log("", `❗️${this.name}, 错误!`, t.stack) : this.log("", `❗️${this.name}, 错误!`, t) } wait(t) { return new Promise(e => setTimeout(e, t)) } done(t = {}) { const e = (new Date).getTime(), s = (e - this.startTime) / 1e3; this.log("", `🔔${this.name}, 结束! 🕛 ${s} 秒`), this.log(), (this.isSurge() || this.isQuanX() || this.isLoon()) && $done(t) } }(t, e) }
