@@ -1,3 +1,6 @@
+# cron: 25 10 * * *
+# new Env('统一快乐星球茄皇')
+
 import requests
 import json
 import os
@@ -7,7 +10,7 @@ import random
 from collections import defaultdict
 from notify import send
 
-users = os.getenv("QH", "").splitlines()
+users = os.getenv("QH", '').splitlines()
 # 清洗数据：去除每个用户字符串的首尾空格，过滤空行/全空格的无效数据
 users = [user.strip() for user in users if user.strip()]
 
