@@ -12,7 +12,7 @@ class WeChatCodeServer {
                 headers: {
                     'auth': this.auth
                 },
-                timeout: 10 * 1000
+                timeout: 30 * 1000
             }).then(res => {
                 console.log('获取code成功:');
                 resolve(res);
@@ -28,7 +28,7 @@ class WeChatCodeServer {
                 headers: {
                     'auth': this.auth
                 },
-                timeout: 10 * 1000
+                timeout: 30 * 1000
             }).then(res => {
                 console.log('初始化成功:');
                 resolve(res);
@@ -44,7 +44,7 @@ class WeChatCodeServer {
                 headers: {
                     'auth': this.auth
                 },
-                timeout: 10 * 1000
+                timeout: 30 * 1000
             }).then(res => {
                 console.log('关闭成功:');
                 resolve(res);
@@ -60,7 +60,7 @@ class WeChatCodeServer {
                 headers: {
                     'auth': this.auth
                 },
-                timeout: 10 * 1000
+                timeout: 30 * 1000
             }).then(res => {
                 console.log('云函数初始化成功:');
                 resolve(res);
@@ -76,7 +76,7 @@ class WeChatCodeServer {
                 headers: {
                     'auth': this.auth
                 },
-                timeout: 10 * 1000
+                timeout: 30 * 1000
             }).then(res => {
                 console.log('云函数调用成功:');
                 resolve(res);
