@@ -48,7 +48,8 @@ class Task {
     }
 
     async run() {
-       
+       //随机延迟5-30s 模拟人工操作
+       await $.wait(Math.floor(Math.random() * 20 + 5) * 1000);
         let { data: codeRes } = await wechat.getCode(this.wcsid)
         if (codeRes.status) {
             await this.getUserToken(codeRes.data.code)

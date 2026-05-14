@@ -49,7 +49,8 @@ class Task {
     }
 
     async run() {
-
+        //随机延迟5-30s 模拟人工操作
+        await $.wait(Math.floor(Math.random() * 20 + 5) * 1000);
         let { data: codeRes } = await wechat.getCode(this.wcsid)
         if (codeRes.status) {
             await this.getUserToken(codeRes.data.code)
@@ -222,7 +223,7 @@ class Task {
             await new Task(user).run();
         }
     } else {
-        
+
         $.log(`${ckName}未配置微信SERVER配置 搭建可看仓库目录下的readme.md❌`)
         return
     }
