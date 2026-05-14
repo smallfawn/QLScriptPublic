@@ -48,11 +48,7 @@ class Task {
     }
 
     async run() {
-                let { data: initRes } = await wechat.init(this.wcsid)
-        if (!initRes.status) {
-            $.log(`账号[${this.index}] 微信SERVER初始化失败❌`)
-            return
-        }
+       
         let { data: codeRes } = await wechat.getCode(this.wcsid)
         if (codeRes.status) {
             await this.getUserToken(codeRes.data.code)
@@ -65,7 +61,6 @@ class Task {
 
         await this.getUserInfo()
         if (!this.isSign) await this.doSign()
-        await wechat.close(this.wcsid)
     }
     async getUserToken(code) {
         let options = {
