@@ -2,37 +2,36 @@
 ------------------------------------------
 @Author: sm
 @Date: 2026.05.31
-@Description:  敷尔佳小程序签到
-cron: 20 8 * * *
+@Description: tuoluzhe 拓路者小程序签到
+cron: 27 8 * * *
 ------------------------------------------
-变量名：fej
+变量名：tuoluzhe
 变量值：wx_server 里的 openid/账号标识，多账号用 & 或换行
 ------------------------------------------
 */
 
 const { Env } = require("../tools/env.js");
-const $ = new Env("敷尔佳小程序签到");
+const $ = new Env("tuoluzhe拓路者小程序签到");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 const WeChatServer = require("./wcs.js");
 
-const MINI_APP_ID = "wx7ff0b3a99cb13b43";
-const CLIENT_ID = "4d65249d377b2c3ed8";
-const CLIENT_SECRET = "1cdc05151d64f3a4a6ebd0e9de64422a";
-const GRANT_TYPE = "yz_union";
-const KDT_ID = "44980544";
-const USER_VERSION = "2.220.5.101";
+const MINI_APP_ID = "wx19afe76fc30d5c37";
+const CLIENT_BIZ = "weapp_wsc";
+const KDT_ID = "100505629";
+const USER_VERSION = "2.224.7.101";
+const PAGE_VERSION = "146";
 const API_BASE = "https://h5.youzan.com";
-const TOKEN_CACHE_FILE = path.join(__dirname, "fej_token_cache.json");
+const TOKEN_CACHE_FILE = path.join(__dirname, "tuoluzhe_token_cache.json");
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MicroMessenger/3.9.12 MiniProgramEnv/Windows WindowsWechat/WMPF";
 
-let ckName = "fej";
+let ckName = "tuoluzhe";
 
 const wechat = new WeChatServer({
     url: process.env.wx_server_url || "http://192.168.31.196:8787",
     appid: MINI_APP_ID,
-    auth: process.env.wx_auth || "your-api-key",
+    auth: process.env.wx_auth || "",
 });
 
 function readTokenCache() {
@@ -54,6 +53,14 @@ function writeTokenCache(cache) {
 
 function maskPhone(phone = "") {
     return String(phone).replace(/^(\d{3})\d{4}(\d{4})$/, "$1****$2");
+}
+
+function pickToken(data = {}) {
+    return data.accessToken || data.access_token || "";
+}
+
+function isTokenError(message) {
+    return /access_token|token|登录|invalid session|session/i.test(String(message || ""));
 }
 
 class Task {
@@ -115,10 +122,12 @@ class Task {
             writeTokenCache(cache);
         }
         this.token = "";
+        this.sessionId = "";
+        this.cookie = "";
     }
 
     applyToken(data = {}) {
-        this.token = data.accessToken || data.access_token || "";
+        this.token = pickToken(data);
         this.sessionId = data.sessionId || data.session_id || "";
         this.kdtId = String(data.kdtId || data.kdt_id || KDT_ID);
         this.cookie = data.cookie || "";
@@ -127,7 +136,7 @@ class Task {
     getHeaders(extra = {}) {
         const headers = {
             "User-Agent": USER_AGENT,
-            "Referer": `https://servicewechat.com/${MINI_APP_ID}/30/page-frame.html`,
+            "Referer": `https://servicewechat.com/${MINI_APP_ID}/${PAGE_VERSION}/page-frame.html`,
             "Accept": "*/*",
             "Extra-Data": JSON.stringify({
                 sid: this.sessionId || "",
@@ -159,8 +168,7 @@ class Task {
             timeout: 15000,
             validateStatus: () => true,
         };
-        if (!skipToken) options.params = this.getBaseParams(params);
-        else options.params = params;
+        options.params = skipToken ? params : this.getBaseParams(params);
         if (method !== "GET") options.data = data;
 
         const { data: result, status, headers } = await axios.request(options);
@@ -188,16 +196,14 @@ class Task {
                 skipToken: true,
                 data: {
                     appId: MINI_APP_ID,
-                    clientId: CLIENT_ID,
-                    clientSecret: CLIENT_SECRET,
-                    grantType: GRANT_TYPE,
+                    clientBiz: CLIENT_BIZ,
                     code,
                 },
             });
             this.applyToken(data);
             this.userInfo = data || {};
             this.saveCachedToken();
-            $.log(`账号[${this.index}] 登录成功: ${data.nick_name || ""} ${maskPhone(data.mobile) || ""}`);
+            $.log(`账号[${this.index}] 登录成功: ${data.nick_name || data.nickName || ""} ${maskPhone(data.mobile) || ""}`);
         } catch (e) {
             $.log(`账号[${this.index}] 登录失败: ${e.message || e}`);
         }
@@ -217,9 +223,11 @@ class Task {
         try {
             const data = await this.request({ path: "/wscump/checkin/show_checkin_page_v2.json" });
             this.checkinId = data?.checkinId;
-            $.log(`账号[${this.index}] 签到活动: checkinId=${this.checkinId || "未获取"} isShow=${!!data?.isShow}`);
+            this.isShow = !!data?.isShow;
+            $.log(`账号[${this.index}] 签到活动: checkinId=${this.checkinId || "未获取"} isShow=${this.isShow}`);
         } catch (e) {
             $.log(`账号[${this.index}] 获取签到活动失败: ${e.message || e}`);
+            if (isTokenError(e.message || e)) this.removeCachedToken();
         }
     }
 
@@ -236,8 +244,13 @@ class Task {
             const awards = (data?.list || []).map((item) => item?.infos?.title).filter(Boolean).join(", ");
             $.log(`账号[${this.index}] 签到成功: ${data?.desc || ""}${awards ? ` ${awards}` : ""}`);
         } catch (e) {
-            $.log(`账号[${this.index}] 签到失败: ${e.message || e}`);
-            if (/access_token|token|登录|授权|请先登录/i.test(String(e.message || e))) this.removeCachedToken();
+            const message = String(e.message || e);
+            if (/已达最大参与次数|已签到|重复签到/.test(message)) {
+                $.log(`账号[${this.index}] 今日已签到`);
+                return;
+            }
+            $.log(`账号[${this.index}] 签到失败: ${message}`);
+            if (isTokenError(message)) this.removeCachedToken();
         }
     }
 
