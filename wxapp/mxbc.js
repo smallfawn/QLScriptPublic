@@ -6,8 +6,8 @@
 cron: 30 8 * * *
 ------------------------------------------
 #Notice:   
-抓https://mxsa.mxbc.net 请求头Access-Token 多账号&或换行
 变量名：mxbc
+变量值：wx_server 里的 openid/账号标识，多账号&或换行
 ⚠️【免责声明】
 ------------------------------------------
 1、此脚本仅用于学习研究，不保证其合法性、准确性、有效性，请根据情况自行判断，本人对此不承担任何保证责任。
@@ -19,26 +19,77 @@ cron: 30 8 * * *
 7、所有直接或间接使用、查看此脚本的人均应该仔细阅读此声明。本人保留随时更改或补充此声明的权利。一旦您使用或复制了此脚本，即视为您已接受此免责声明。
 */
 
-const { Env } = require("../tools/env")
+const { Env } = require("../tools/env.js")
 const $ = new Env("蜜雪冰城");
 let ckName = `mxbc`;
 const strSplitor = "#";
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
+const WeChatServer = require("./wcs.js");
 const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.31(0x18001e31) NetType/WIFI Language/zh_CN miniProgram"
+const MINI_APP_ID = "wx7696c66d2245d107";
+const APP_ID = "d82be6bbc1da11eb9dd000163e122ecb";
+const API_BASE = "https://mxsa.mxbc.net/api";
+const APP_VERSION = "2.8.28";
+const TOKEN_CACHE_FILE = path.join(__dirname, "mxbc_token_cache.json");
+let wechat = new WeChatServer({
+    url: process.env.wx_server_url || 'http://192.168.31.196:8787',
+    appid: MINI_APP_ID,
+    auth: process.env.wx_auth || "your-api-key",
+
+}
+);
+
+function readTokenCache() {
+    try {
+        if (!fs.existsSync(TOKEN_CACHE_FILE)) return {};
+        return JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, "utf8")) || {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function writeTokenCache(cache) {
+    try {
+        fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(cache, null, 2), "utf8");
+    } catch (e) {
+        $.log(`写入token缓存失败: ${e.message || e}`);
+    }
+}
+
+function maskPhone(phone = "") {
+    return String(phone).replace(/^(\d{3})\d{4}(\d{4})$/, "$1****$2");
+}
 
 
 class Task {
     constructor(env) {
         this.index = $.userIdx++
         this.user = env.split(strSplitor);
-        this.ck = this.user[0];
+        this.wcsid = this.user[0]
+        this.ck = "";
+        this.loginCode = "";
         this.activityOrigin = ""
         this.activityUrl = ""
     }
 
     async run() {
 
-        await this.user_info()
+        const cachedToken = this.getCachedToken();
+        if (cachedToken) {
+            this.ck = cachedToken;
+            $.log(`账号[${this.index}]  使用缓存token验证`);
+            await this.user_info();
+        }
+
+        if (!this.ckStatus) {
+            this.removeCachedToken();
+            await this.loginByWxCode()
+            if (!this.ckStatus) return
+            await this.user_info()
+        }
+        if (!this.ckStatus) return
         await this.getLoginUrl()
         if (this.activityOrigin) {
             await this.getActivityToken()
@@ -46,7 +97,133 @@ class Task {
         }
 
     }
+    getCachedToken() {
+        const cache = readTokenCache();
+        return cache[this.wcsid]?.accessToken || "";
+    }
+    saveCachedToken() {
+        if (!this.ck) return;
+        const cache = readTokenCache();
+        cache[this.wcsid] = {
+            accessToken: this.ck,
+            mobilePhone: this.mobilePhone || "",
+            updatedAt: new Date().toISOString()
+        };
+        writeTokenCache(cache);
+    }
+    removeCachedToken() {
+        const cache = readTokenCache();
+        if (cache[this.wcsid]) {
+            delete cache[this.wcsid];
+            writeTokenCache(cache);
+        }
+    }
+    getSignedBody(params = {}) {
+        const body = {
+            ...params,
+            t: Date.now(),
+            appId: APP_ID
+        };
+        const content = Object.keys(body)
+            .sort()
+            .filter(key => body[key] || body[key] === 0)
+            .map(key => {
+                const value = typeof body[key] === "object" ? JSON.stringify(body[key]) : body[key];
+                return `${key}=${value}`;
+            })
+            .join("&");
+        return {
+            ...body,
+            sign: this.getSHA256withRSA(content)
+        };
+    }
+    getMiniHeaders(accessToken = "") {
+        return {
+            'Host': 'mxsa.mxbc.net',
+            'Connection': 'keep-alive',
+            'user-agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36 MicroMessenger/7.0.4.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF',
+            'xweb_xhr': 1,
+            'Access-Token': accessToken,
+            'Content-Type': 'application/json',
+            'Accept': '*/*',
+            'Sec-Fetch-Site': 'cross-site',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Dest': 'empty',
+            'Referer': 'https://servicewechat.com/wx7696c66d2245d107/59/page-frame.html',
+            'Accept-Language': 'en-us,en',
+            'Accept-Encoding': 'gzip, deflate',
+            'version': APP_VERSION
+        };
+    }
+    async getLoginCode(force = false) {
+        if (this.loginCode && !force) return this.loginCode;
+        const { data: codeRes } = await wechat.getCode(this.wcsid);
+        const code = codeRes?.code || codeRes?.data?.code;
+        if (!code) throw new Error(`wx_server 未返回 code: ${JSON.stringify(codeRes)}`);
+        this.loginCode = code;
+        return this.loginCode;
+    }
+    async getOpenId() {
+        try {
+            let options = {
+                method: 'POST',
+                url: `${API_BASE}/v1/app/code2Session`,
+                headers: this.getMiniHeaders(),
+                data: this.getSignedBody({ miniAppId: MINI_APP_ID, code: await this.getLoginCode(true) })
+            }
+            let { data: result } = await axios.request(options);
+            if (result.code == 0) {
+                this.openId = result.data.openid
 
+                this.unionId = result.data.unionid
+                $.log(`账号[${this.index}]  code2Session成功`);
+                return true
+            } else {
+                $.log(`账号[${this.index}]  code2Session失败❌ ${result.msg || ""}`);
+                this.ckStatus = false
+
+                console.log(result);
+                return false
+            }
+        } catch (e) {
+            $.log(`账号[${this.index}]  code2Session异常❌ ${e.message || e}`);
+            this.ckStatus = false
+            return false
+        }
+    }
+    async loginByWxCode() {
+        try {
+            const ok = await this.getOpenId();
+            if (!ok) return;
+            let options = {
+                method: 'POST',
+                url: `${API_BASE}/v1/app/regByUnionid`,
+                headers: this.getMiniHeaders(),
+                data: this.getSignedBody({
+                    code: this.loginCode,
+                    openId: this.openId,
+                    unionid: this.unionId,
+                    third: "wxmini",
+                    miniAppId: MINI_APP_ID
+                })
+            };
+            let { data: result } = await axios.request(options);
+            if (result.code == 0) {
+                this.ck = result.data.accessToken;
+                this.ckStatus = !!this.ck;
+                this.mobilePhone = result.data.mobilePhone;
+                this.saveCachedToken();
+                $.log(`账号[${this.index}]  登录成功: [${maskPhone(this.mobilePhone) || "未绑定手机号"}]`);
+            } else {
+                $.log(`账号[${this.index}]  登录失败❌ ${result.msg || ""}`);
+                this.ckStatus = false;
+                console.log(result);
+            }
+        } catch (e) {
+            $.log(`账号[${this.index}]  登录异常❌ ${e.response?.data?.msg || e.message || e}`);
+            this.ckStatus = false;
+        }
+    }
     async user_info() {
         let time = Date.now()
         try {
@@ -71,6 +248,7 @@ class Task {
             }
             let { data: result } = await axios.request(options);
             if (result.code == 0) {
+                this.mobilePhone = result.data.mobilePhone;
                 $.log(`账号[${this.index}]  用户CK有效: [${result.data.mobilePhone}] 雪王币剩余[${result.data.customerPoint}]`);
                 this.ckStatus = true
 
@@ -81,7 +259,8 @@ class Task {
                 console.log(result);
             }
         } catch (e) {
-
+            $.log(`账号[${this.index}]  用户信息校验异常❌ ${e.response?.data?.msg || e.message || e}`);
+            this.ckStatus = false
         }
     }
     async getLoginUrl() {
@@ -219,7 +398,7 @@ class Task {
         }
     }
     getSHA256withRSA(content) {
-        var rs = require("jsrsasign");
+        const crypto = require("crypto");
 
         var privateKeyString = `-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCtypUdHZJKlQ9L
@@ -251,18 +430,12 @@ dOGyw/X4SFyodv8AEloqd81yGg==
 -----END PRIVATE KEY-----
 `;
 
-        const key = rs.KEYUTIL.getKey(privateKeyString);
-
-        const signature = new rs.KJUR.crypto.Signature({ alg: "SHA256withRSA" });
-
-        signature.init(key);
-
-        signature.updateString(content);
-
-        const originSign = signature.sign();
-        const sign64u = rs.hextob64u(originSign);
-
-        return sign64u;
+        return crypto
+            .createSign("RSA-SHA256")
+            .update(content)
+            .sign(privateKeyString, "base64")
+            .replace(/\//g, "_")
+            .replace(/\+/g, "-");
 
     }
 
@@ -286,19 +459,19 @@ dOGyw/X4SFyodv8AEloqd81yGg==
     .finally(() => $.done());
 
 async function getNotice() {
-	try {
-		let options = {
-			url: `https://ghproxy.net/https://raw.githubusercontent.com/smallfawn/Note/refs/heads/main/Notice.json`,
-			headers: {
-				"User-Agent": defaultUserAgent,
-			},
-            timeout:3000
-		}
-		let {
-			data: res
-		} = await axios.request(options);
-		$.log(res)
-		return res
-	} catch (e) {}
+    try {
+        let options = {
+            url: `https://ghproxy.net/https://raw.githubusercontent.com/smallfawn/Note/refs/heads/main/Notice.json`,
+            headers: {
+                "User-Agent": defaultUserAgent,
+            },
+            timeout: 3000
+        }
+        let {
+            data: res
+        } = await axios.request(options);
+        $.log(res)
+        return res
+    } catch (e) { }
 
 }
