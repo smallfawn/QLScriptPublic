@@ -4,3 +4,4 @@ package*.json
 .codex
 .czrc
 Tools/
+wxapp/*_token_cache.json
