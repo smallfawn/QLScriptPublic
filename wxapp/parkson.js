@@ -2,7 +2,7 @@
 ------------------------------------------
 @Author: sm
 @Date: 2026.05.31
-@Description: parkson 小程序签到
+@Description: parkson 呼啦圈小程序签到
 cron: 35 8 * * *
 ------------------------------------------
 变量名：parkson
@@ -11,7 +11,7 @@ cron: 35 8 * * *
 */
 
 const { Env } = require("../tools/env.js");
-const $ = new Env("parkson 小程序签到");
+const $ = new Env("呼啦圈小程序签到");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
