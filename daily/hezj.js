@@ -7,7 +7,8 @@ cron: 30 7 * * *
 ------------------------------------------
 #Notice:   
 变量名hezj
-抓取https://zjrs.haier.net请求头accounttoken 多账户&或换行
+变量值填写 wx_server 里的 openid/账号标识，多账户&或换行
+需要配置 wx_server_url、wx_auth
 
 ⚠️【免责声明】
 ------------------------------------------
@@ -25,47 +26,144 @@ const $ = new Env("海尔智家");
 let ckName = `hezj`;
 const strSplitor = "#";
 const axios = require("axios");
+const crypto = require("crypto");
+const WeChatCodeServer = require("../wxapp/wcs");
 const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.31(0x18001e31) NetType/WIFI Language/zh_CN miniProgram"
+const MINI_APP_ID = "wxe24b2f1f4e378891";
+const PAGE_VERSION = "475";
+const HA_APP_ID = "MB-SHEZJAPPWXXCX-0000";
+const HA_APP_KEY = "79ce99cc7f9804663939676031b8a427";
+const API_HOST = "https://zj.haier.net";
+
+const wechat = new WeChatCodeServer({
+    url: process.env.wx_server_url || "http://192.168.31.196:8787",
+    appid: MINI_APP_ID,
+    auth: process.env.wx_auth || "",
+});
+
+function sign256(path, body, timestamp) {
+    const bodyStr = body ? JSON.stringify(body) : "";
+    return crypto.createHash("sha256").update(path + bodyStr + HA_APP_ID + HA_APP_KEY + timestamp).digest("hex");
+}
+
+function maskToken(token = "") {
+    if (!token) return "";
+    return token.length > 14 ? `${token.slice(0, 6)}...${token.slice(-6)}` : token;
+}
 
 
 class Task {
     constructor(env) {
         this.index = $.userIdx++
         this.user = env.split(strSplitor);
-        this.token = this.user[0];
+        this.openid = this.user[0].trim();
+        this.token = "";
+        this.clientId = `${Date.now()}${$.randomString(12)}`;
 
     }
     request(options) {
+        const path = options.path || new URL(options.url).pathname;
+        const timestamp = Date.now();
         let baseHeaers = {
             "host": "zj.haier.net",
-            "content-type": "application/json",
-            "accounttoken": this.token,
-            "appid": "MB-UZHSH-0001",
+            "Content-Type": "application/json;charset=UTF-8",
+            "appId": HA_APP_ID,
+            "appKey": HA_APP_KEY,
+            "timestamp": timestamp,
+            "platForm": "sc-mp-wx-zjapp",
+            "ENV": "",
+            "accessToken": options.isHeaderDelToken ? "" : this.token,
+            "accountToken": options.isHeaderDelToken ? "" : this.token,
+            "ak": options.isHeaderDelToken ? "" : this.token,
+            "clientId": this.clientId,
             "accept": "*/*",
-            "sec-fetch-site": "same-site",
-            "appversion": "10.18.0",
-            //"clientid": "5D6FD623-11A7-4B62-88AD-D3D62D07B72F",
             "accept-language": "zh-CN,zh-Hans;q=0.9",
-            "accept-encoding": "gzip, deflate, br",
-            "sec-fetch-mode": "cors",
-            "origin": "https://zjrs.haier.net",
-            "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_7_15 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)  Hainer/Haier Simulation/Nebula  App/Uplus Nebula mPaaSClient",
-            "referer": "https://zjrs.haier.net/",
-            "sec-fetch-dest": "empty"
+            "user-agent": defaultUserAgent,
+            "referer": `https://servicewechat.com/${MINI_APP_ID}/${PAGE_VERSION}/page-frame.html`,
         }
-        options.headers = Object.assign(baseHeaers, options.headers)
+        if (options.isSign256) {
+            baseHeaers.sign = sign256(path, options.data, timestamp);
+        }
+        options.headers = Object.assign(baseHeaers, options.headers || {});
+        delete options.path;
+        delete options.isSign256;
+        delete options.isHeaderDelToken;
         return axios.request(options)
     }
 
     async run() {
-
+        await this.loginByWxCode();
+        if (!this.token) return;
         await this.pointInfo()
         await this.signIn()
     }
+
+    async getLoginCode() {
+        if (!process.env.wx_auth) throw new Error("缺少 wx_auth，无法从 wx_server 获取 code");
+        const { data } = await wechat.getCode(this.openid);
+        const code = data?.code || data?.data?.code;
+        if (!code) throw new Error(`wx_server 未返回 code: ${JSON.stringify(data)}`);
+        return code;
+    }
+
+    async loginByWxCode() {
+        try {
+            const code = await this.getLoginCode();
+            const tokenInfo = await this.jscode2session(code);
+            const accountToken = tokenInfo?.accountToken;
+            if (!accountToken) throw new Error(`登录响应未返回 accountToken: ${JSON.stringify(tokenInfo)}`);
+            await this.queryUserInfo(accountToken);
+            this.token = accountToken;
+            $.log(`账号[${this.index}] CODE登录成功: ${maskToken(this.token)}`);
+        } catch (e) {
+            $.log(`账号[${this.index}] CODE登录失败: ${e.message || e}`);
+        }
+    }
+
+    async jscode2session(code) {
+        const path = "/api-gw/oauthserver/applet/v1/jscode2session";
+        let options = {
+            method: "POST",
+            url: API_HOST + path,
+            path,
+            isSign256: true,
+            isHeaderDelToken: true,
+            data: { code },
+        };
+        const { data: result } = await this.request(options);
+        if (result?.retCode !== "00000" && result?.code !== 200 && !result?.success) {
+            throw new Error(result?.retInfo || result?.message || JSON.stringify(result));
+        }
+        return result?.data?.tokenInfo || result?.data || {};
+    }
+
+    async queryUserInfo(accountToken) {
+        const path = "/api-gw/oauthserver/applet/v1/userinfo/query";
+        let options = {
+            method: "POST",
+            url: API_HOST + path,
+            path,
+            isSign256: true,
+            isHeaderDelToken: true,
+            data: { accountToken },
+        };
+        const { data: result } = await this.request(options);
+        if (result?.retCode !== "00000" && result?.code !== 200 && !result?.success) {
+            throw new Error(result?.retInfo || result?.message || JSON.stringify(result));
+        }
+        const info = result?.data?.userinfo || {};
+        const name = info.nickName || info.nickname || info.userName || "未知用户";
+        const phone = info.mobile || info.phoneNumber || "";
+        $.log(`账号[${this.index}] 用户: ${name}${phone ? ` ${phone.slice(0, 3)}****${phone.slice(-4)}` : ""}`);
+        return info;
+    }
+
     async pointInfo() {
+        const path = "/zjapi/zjBaseServer/signDetail/getUserPointsAndWallet";
         let options = {
             method: 'POST',
-            url: `https://zj.haier.net/zjapi/zjBaseServer/signDetail/getUserPointsAndWallet`,
+            url: API_HOST + path,
+            path,
             headers: {},
             data: {
 
@@ -82,9 +180,11 @@ class Task {
     }
 
     async signIn() {
+        const path = "/api-gw/zjBaseServer/daily/sign";
         let options = {
             method: 'POST',
-            url: `https://zj.haier.net/api-gw/zjBaseServer/daily/sign`,
+            url: API_HOST + path,
+            path,
             headers: {},
             data: {
 

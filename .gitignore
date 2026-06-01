@@ -5,3 +5,4 @@ package*.json
 .czrc
 Tools/
 wxapp/*_token_cache.json
+daily/*_token_cache.json

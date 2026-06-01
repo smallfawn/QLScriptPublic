@@ -2,7 +2,7 @@
 ------------------------------------------
 @Author: sm
 @Date: 2026.05.31
-@Description: fafa 小程序签到
+@Description: 发发藏宝洞 小程序签到
 cron: 38 8 * * *
 ------------------------------------------
 变量名：fafa
@@ -12,7 +12,7 @@ cron: 38 8 * * *
 */
 
 const { Env } = require("../tools/env.js");
-const $ = new Env("fafa小程序签到");
+const $ = new Env("发发藏宝洞小程序签到");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");

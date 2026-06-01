@@ -1,13 +1,14 @@
 /*
 ------------------------------------------
 @Author: sm
-@Date: 2024.06.07 19:15
+@Date: 2026.06.01
 @Description:  植白说小程序
 cron: 30 8 * * *
 ------------------------------------------
-#Notice:   
+#Notice:
 变量名称：zbs
-值抓取https://www.kozbs.com/demo 请求头x-dts-token
+变量值：wx_server 里的 openid/账号标识，多账号用 & 或换行
+需要配置：wx_server_url、wx_auth
 
 ⚠️【免责声明】
 ------------------------------------------
@@ -20,93 +21,235 @@ cron: 30 8 * * *
 7、所有直接或间接使用、查看此脚本的人均应该仔细阅读此声明。本人保留随时更改或补充此声明的权利。一旦您使用或复制了此脚本，即视为您已接受此免责声明。
 */
 
-const { Env } = require("../tools/env")
+const { Env } = require("../tools/env.js");
 const $ = new Env("植白说小程序");
-let ckName = `zbs`;
-const strSplitor = "#";
 const axios = require("axios");
-const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.31(0x18001e31) NetType/WIFI Language/zh_CN miniProgram"
+const fs = require("fs");
+const path = require("path");
+const WeChatServer = require("../wxapp/wcs.js");
 
+const ckName = "zbs";
+const MINI_APP_ID = "wx6b6c5243359fe265";
+const API_BASE = "https://www.kozbs.com/demo/wx/";
+const TOKEN_CACHE_FILE = path.join(__dirname, "zbs_token_cache.json");
+const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 MicroMessenger/7.0.20.1781(0x6700143B) NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF WindowsWechat(0x63090a13) UnifiedPCWindowsWechat(0xf254173b) XWEB/19027";
+const defaultUserAgent = USER_AGENT;
+
+const wechat = new WeChatServer({
+    url: process.env.wx_server_url || "http://192.168.31.196:8787",
+    appid: MINI_APP_ID,
+    auth: process.env.wx_auth || "",
+});
+
+function readTokenCache() {
+    try {
+        if (!fs.existsSync(TOKEN_CACHE_FILE)) return {};
+        return JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, "utf8")) || {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function writeTokenCache(cache) {
+    try {
+        fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(cache, null, 2), "utf8");
+    } catch (e) {
+        $.log(`写入token缓存失败: ${e.message || e}`);
+    }
+}
+
+function shortToken(token = "") {
+    const value = String(token);
+    return value ? `${value.slice(0, 6)}***${value.slice(-6)}` : "";
+}
+
+function maskPhone(phone = "") {
+    return String(phone).replace(/^(\d{3})\d{4}(\d{4})$/, "$1****$2");
+}
+
+function isTokenError(message) {
+    return /(^|[^0-9])501([^0-9]|$)|token|登录|授权|未登录|失效|过期/i.test(String(message || ""));
+}
 
 class Task {
-    constructor(env) {
-        this.index = $.userIdx++
-        this.user = env.split(strSplitor);
-        this.token = this.user[0];
-
+    constructor(openid) {
+        this.index = $.userIdx++;
+        this.openid = String(openid || "").trim();
+        this.token = "";
+        this.userInfo = {};
     }
-    request(options) {
-        let baseHeraders = {
 
-            "accept": "*/*",
-            "accept-language": "zh-CN,zh;q=0.9",
-            "content-type": "application/json",
-            "priority": "u=1, i",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "cross-site",
-            "x-dts-token": "" + this.token,
-            "xweb_xhr": "1",
-
-            "User-Agent": defaultUserAgent,
-        }
-        options.headers = Object.assign(baseHeraders, options.headers)
-        return axios.request(options)
-    }
     async run() {
+        const cached = this.getCachedToken();
+        if (cached?.token) {
+            this.token = cached.token;
+            this.userInfo = cached.userInfo || {};
+            $.log(`账号[${this.index}] 使用缓存token: ${shortToken(this.token)}`);
+            if (!(await this.checkToken())) {
+                this.removeCachedToken();
+                $.log(`账号[${this.index}] 缓存token失效，重新登录`);
+            }
+        }
 
-        await this.signIn()
+        if (!this.token) {
+            await this.loginByWxCode();
+            if (!this.token) return;
+        }
+
+        await this.getPoints("当前");
+        await this.signIn();
+        await this.getPoints("签到后");
+    }
+
+    get userId() {
+        return this.userInfo?.userId || this.userInfo?.id || 1;
+    }
+
+    getCachedToken() {
+        const cache = readTokenCache();
+        return cache[this.openid] || null;
+    }
+
+    saveCachedToken() {
+        if (!this.token) return;
+        const cache = readTokenCache();
+        cache[this.openid] = {
+            token: this.token,
+            userInfo: this.userInfo,
+            updatedAt: new Date().toISOString(),
+        };
+        writeTokenCache(cache);
+    }
+
+    removeCachedToken() {
+        const cache = readTokenCache();
+        if (cache[this.openid]) {
+            delete cache[this.openid];
+            writeTokenCache(cache);
+        }
+        this.token = "";
+        this.userInfo = {};
+    }
+
+    headers(extra = {}) {
+        const headers = {
+            "Content-Type": "application/json",
+            "User-Agent": USER_AGENT,
+            "Accept": "*/*",
+            "Accept-Language": "zh-CN,zh;q=0.9",
+            "Referer": "https://servicewechat.com/wx6b6c5243359fe265/171/page-frame.html",
+            "xweb_xhr": "1",
+            ...extra,
+        };
+        if (this.token) headers["X-Dts-Token"] = this.token;
+        return headers;
+    }
+
+    async request(apiPath, { method = "GET", data = {}, auth = true } = {}) {
+        const options = {
+            method,
+            url: new URL(apiPath, API_BASE).toString(),
+            headers: this.headers(),
+            timeout: 15000,
+            validateStatus: () => true,
+        };
+        if (!auth) delete options.headers["X-Dts-Token"];
+        if (method.toUpperCase() === "GET") options.params = data;
+        else options.data = data;
+
+        const { data: result, status } = await axios.request(options);
+        if (status !== 200) throw new Error(`HTTP ${status}: ${JSON.stringify(result)}`);
+        if (Number(result?.errno) !== 0) throw new Error(`${result?.errno ?? ""} ${result?.errmsg || result?.message || JSON.stringify(result)}`.trim());
+        return result;
+    }
+
+    async getLoginCode() {
+        if (!process.env.wx_auth) throw new Error("缺少 wx_auth，无法从 wx_server 获取 code");
+        const { data } = await wechat.getCode(this.openid);
+        const code = data?.code || data?.data?.code;
+        if (!code) throw new Error(`wx_server 未返回 code: ${JSON.stringify(data)}`);
+        return code;
+    }
+
+    async loginByWxCode() {
+        try {
+            const code = await this.getLoginCode();
+            const result = await this.request("auth/login_by_weixin", {
+                method: "POST",
+                auth: false,
+                data: {
+                    code,
+                    userInfo: {},
+                    shareUserId: 1,
+                },
+            });
+            const token = result?.data?.token || "";
+            if (!token) throw new Error(`登录响应未返回token: ${JSON.stringify(result)}`);
+            this.token = token;
+            this.userInfo = result?.data?.userInfo || {};
+            this.saveCachedToken();
+            $.log(`账号[${this.index}] 登录成功: ${this.userInfo.nickname || maskPhone(this.userInfo.mobile) || this.userId}`);
+        } catch (e) {
+            $.log(`账号[${this.index}] 登录失败: ${e.message || e}`);
+        }
+    }
+
+    async checkToken() {
+        try {
+            await this.request("user/getUserIntegral", {
+                data: { userId: this.userId },
+            });
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    async getPoints(prefix = "当前") {
+        try {
+            const result = await this.request("user/getUserIntegral", {
+                data: { userId: this.userId },
+            });
+            const integer = result?.data?.integer ?? result?.data?.integral ?? result?.data?.point ?? "未知";
+            $.log(`🌸账号[${this.index}] ${prefix}积分: ${integer}🎉`);
+        } catch (e) {
+            const message = String(e.message || e);
+            $.log(`🌸账号[${this.index}] 获取积分失败: ${message}❌`);
+            if (isTokenError(message)) this.removeCachedToken();
+        }
     }
 
     async signIn() {
-        let options = {
-            method: 'GET',
-            url: "https://www.kozbs.com/demo/wx/home/sign?userId=",
-            headers: {},
+        try {
+            const status = await this.request("home/signDay", {
+                data: { userId: this.userId },
+            });
+            if (status?.data?.isSign) {
+                $.log(`🌸账号[${this.index}] 今日已签到`);
+                return;
+            }
 
-        };
-        let { data: result } = await this.request(options);
-        if (result?.errno == '0') {
-            //打印签到结果
-            $.log(`🌸账号[${this.index}]` + `签到成功🎉`);
-        } else {
-            $.log(`🌸账号[${this.index}] 签到-失败:${result.errmsg}❌`)
-        }
-
-
-
-
-    }
-    async getPoints() {
-        let options = {
-            method: 'GET',
-            url: "https://www.kozbs.com/demo/wx/user/getUserIntegral?userId=",
-            headers: {},
-
-        };
-        let { data: result } = await this.request(options);
-        if (result?.errno == '0') {
-            //打印签到结果
-            $.log(`🌸账号[${this.index}]` + `当前积分` + `${result.data.integer}🎉`);
-        } else {
-            $.log(`🌸账号[${this.index}] 获取积分-失败:${result.errmsg}❌`)
+            await this.request("home/sign", {
+                data: { userId: this.userId },
+            });
+            $.log(`🌸账号[${this.index}] 签到成功🎉`);
+        } catch (e) {
+            const message = String(e.message || e);
+            if (/已签到|已签|重复/.test(message)) {
+                $.log(`🌸账号[${this.index}] 今日已签到`);
+                return;
+            }
+            $.log(`🌸账号[${this.index}] 签到失败: ${message}❌`);
+            if (isTokenError(message)) this.removeCachedToken();
         }
     }
-
-
-
-
-
-
-
-
 }
 
 !(async () => {
-    await getNotice()
+    await getNotice();
     $.checkEnv(ckName);
 
-    for (let user of $.userList) {
+    for (const user of $.userList) {
         await new Task(user).run();
     }
 })()
@@ -114,19 +257,16 @@ class Task {
     .finally(() => $.done());
 
 async function getNotice() {
-	try {
-		let options = {
-			url: `https://ghproxy.net/https://raw.githubusercontent.com/smallfawn/Note/refs/heads/main/Notice.json`,
-			headers: {
-				"User-Agent": defaultUserAgent,
-			},
-            timeout:3000
-		}
-		let {
-			data: res
-		} = await axios.request(options);
-		$.log(res)
-		return res
-	} catch (e) {}
-
+    try {
+        const options = {
+            url: "https://ghproxy.net/https://raw.githubusercontent.com/smallfawn/Note/refs/heads/main/Notice.json",
+            headers: {
+                "User-Agent": defaultUserAgent,
+            },
+            timeout: 3000,
+        };
+        const { data: res } = await axios.request(options);
+        $.log(res);
+        return res;
+    } catch (e) {}
 }
