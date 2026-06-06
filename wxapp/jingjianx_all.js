@@ -41,7 +41,7 @@ const APPS = [
     },
     {
         ck: "afdacw",
-        name: "阿凡达潮玩",
+        name: "阿凡达潮玩荟家庭娱乐中心",
         appid: "wxea93bab38fc144d1",
         chainId: "10967",
         shops: [
@@ -67,11 +67,53 @@ const APPS = [
         ],
     },
     {
+        ck: "gxdwj",
+        name: "高新大玩家",
+        appid: "wx7ec8c4f08046df18",
+        chainId: "11279",
+        shops: [{ shopId: "19642", shopName: "高新大玩家" }],
+    },
+    {
+        ck: "dwjjxyl",
+        name: "大玩家匠心娱乐",
+        appid: "wxf64d5e147f9cc3b6",
+        chainId: "9663",
+        shops: [{ shopId: "17093", shopName: "大玩家匠心娱乐" }],
+    },
+    {
+        ck: "wjsldwjxy",
+        name: "玩家森林大玩家XY",
+        appid: "wx6136bd123a990614",
+        chainId: "9095",
+        shops: [{ shopId: "18894", shopName: "玩家森林大玩家XY" }],
+    },
+    {
         ck: "jswjbzjk",
         name: "极速玩家巴中经开店",
         appid: "wx174a477493da1aeb",
         chainId: "4748",
         shops: [{ shopId: "19081", shopName: "极速玩家巴中经开店" }],
+    },
+    {
+        ck: "jyxmhdylly",
+        name: "嘉鱼县梦幻岛游乐园",
+        appid: "wxb7fcdb0c375bac0c",
+        chainId: "10762",
+        shops: [{ shopId: "18752", shopName: "嘉鱼县梦幻岛游乐园" }],
+    },
+    {
+        ck: "qccwc",
+        name: "七彩潮玩城",
+        appid: "wx72727cb43e04f838",
+        chainId: "7243",
+        shops: [{ shopId: "12860", shopName: "七彩潮玩城" }],
+    },
+    {
+        ck: "jhjtylclc",
+        name: "吉合家庭娱乐超乐场",
+        appid: "wxdc43cd8bfcfd00ad",
+        chainId: "3580",
+        shops: [{ shopId: "8551", shopName: "吉合家庭娱乐超乐场" }],
     },
     {
         ck: "super101cmdwyd",
@@ -107,6 +149,20 @@ const APPS = [
         appid: "wxf0a7f75ab1670953",
         chainId: "3900",
         shops: [{ shopId: "17457", shopName: "星贝乐阜阳商厦中心店" }],
+    },
+    {
+        ck: "zjdmc",
+        name: "中嘉动漫创美店",
+        appid: "wx97b6b57988678880",
+        chainId: "8006",
+        shops: [{ shopId: "21310", shopName: "中嘉动漫创美店" }],
+    },
+    {
+        ck: "zjdmzj",
+        name: "中嘉动漫城樽憬店",
+        appid: "wx334c4ec677c62f96",
+        chainId: "8006",
+        shops: [{ shopId: "16741", shopName: "中嘉动漫城樽憬店" }],
     },
 ];
 
