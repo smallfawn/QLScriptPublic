@@ -406,7 +406,7 @@ class Task {
             const phone = data?.Phone ? ` ${maskPhone(data.Phone)}` : "";
             const assets = await this.getAssets(data);
             this.summary.member = `${name}${phone}`;
-            this.summary.assets = `代币=${assets.coin} 金币=${assets.goldCoin} 积分=${assets.integral} 彩票=${assets.ticket}`;
+            this.summary.assets = `代币=${assets.coin} 金币=${assets.goldCoin} 积分=${assets.integral} 彩票=${assets.ticket} 优惠券=${assets.coupon}`;
             this.log(`会员: ${this.summary.member} ${this.summary.assets}`);
         } catch (e) {
             this.summary.member = `查询失败: ${e.message || e}`;
@@ -421,6 +421,7 @@ class Task {
             goldCoin: firstValue(memberInfo, ["GoldCoin", "GoldCoinAmount"]),
             integral: firstValue(memberInfo, ["ARTotalIntegral", "Integral", "Exchange", "Points"]),
             ticket: firstValue(memberInfo, ["Ticket", "TicketPackage", "TicketCount", "Lottery"]),
+            coupon: firstValue(memberInfo, ["Coupon", "CouponCount"]),
         };
 
         try {
@@ -429,18 +430,22 @@ class Task {
                 ...(Array.isArray(data) ? data : []),
                 ...(Array.isArray(data?.List) ? data.List : []),
                 ...(Array.isArray(data?.Data) ? data.Data : []),
+                ...(Array.isArray(data?.LeaguerValues) ? data.LeaguerValues : []),
+                ...(Array.isArray(data?.Data?.LeaguerValues) ? data.Data.LeaguerValues : []),
                 ...(Array.isArray(data?.StoredValueList) ? data.StoredValueList : []),
             ];
             const source = Array.isArray(data) ? {} : data || {};
-            assets.coin = firstValue(source, ["MyScrip", "Coin", "CoinAmount", "Scrip", "Balance", "StoredCoin", "GameCoin"]);
+            assets.coin = firstValue(source, ["BalanceNum", "MyScrip", "Coin", "CoinAmount", "Scrip", "Balance", "StoredCoin", "GameCoin"]);
             assets.goldCoin = firstValue(source, ["GoldCoin", "GoldCoinAmount"]);
             assets.integral = firstValue(source, ["ARTotalIntegral", "Integral", "Exchange", "Points", "Point"]);
             assets.ticket = firstValue(source, ["Ticket", "TicketPackage", "TicketCount", "Lottery", "LotteryTicket"]);
+            assets.coupon = firstValue(source, ["Coupon", "CouponCount"]);
             for (const item of list) {
-                const type = String(item.Type || item.StoredValueType || item.StoreCategory || item.Category || item.Name || item.Title || item.Key || "");
-                const amount = firstValue(item, ["Balance", "Amount", "Num", "Count", "Value", "Total", "Available", "StoredValue"]);
+                const type = String(item.Equity || item.Type || item.StoredValueType || item.StoreCategory || item.Category || item.Name || item.Title || item.Key || "");
+                const amount = firstValue(item, ["BalanceNum", "Balance", "AllAmount", "Amount", "Num", "Count", "Value", "Total", "Available", "StoredValue"]);
                 if (/GoldCoin|金币/i.test(type)) assets.goldCoin = amount;
-                else if (/Ticket|彩票|票/i.test(type)) assets.ticket = amount;
+                else if (/Ticket|TicketPackage|彩票|票/i.test(type)) assets.ticket = amount;
+                else if (/Coupon|优惠券|券/i.test(type)) assets.coupon = amount;
                 else if (/Integral|Point|积分|Exchange/i.test(type)) assets.integral = amount;
                 else if (/Coin|代币|MyScrip|币/i.test(type)) assets.coin = amount;
             }

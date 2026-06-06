@@ -228,11 +228,18 @@ function isToday(dateText = "") {
     return String(dateText).startsWith(`${y}-${m}-${d}`);
 }
 
-function addStoreAsset(assets, category, value) {
+function addStoreAsset(assets, category, value, name = "") {
     const amount = Number(value || 0);
-    if ([101, 102, 103, 150, 151, 152, 153, 199, 1001, 1002, 1003].includes(Number(category))) assets.coin += amount;
+    const label = String(name || "");
+    if (label) {
+        if (/积分|Point/i.test(label)) assets.integral += amount;
+        else if (/彩票|票/.test(label)) assets.ticket += amount;
+        else if (/游戏币|本币|代币/.test(label)) assets.coin += amount;
+        return;
+    }
+    if ([101, 102, 103].includes(Number(category))) assets.coin += amount;
     else if (Number(category) === 105) assets.integral += amount;
-    else if ([106, 107].includes(Number(category))) assets.ticket += amount;
+    else if ([104, 106, 1001, 1002, 1003].includes(Number(category))) assets.ticket += amount;
 }
 
 function parseEntries(raw = "") {
@@ -470,6 +477,19 @@ class ShopTask {
 
     async getAssets() {
         const assets = { coin: 0, integral: 0, ticket: 0, coupon: 0 };
+        const accountNames = {};
+        try {
+            const account = await this.ctx.request({
+                apiPath: "/basic/shop/xcx/scene/getaccount",
+                shopId: this.shop.shopId,
+                token: this.token,
+            });
+            const list = Array.isArray(account?.data) ? account.data : [];
+            for (const item of list) accountNames[Number(item.key)] = item.value;
+        } catch (e) {
+            $.log(`${this.prefix()} 查询账户类型失败: ${e.message || e}`);
+        }
+
         try {
             const store = await this.ctx.request({
                 apiPath: "/member/capp/member/store/get",
@@ -477,7 +497,7 @@ class ShopTask {
                 token: this.token,
             });
             const list = Array.isArray(store?.data) ? store.data : [];
-            for (const item of list) addStoreAsset(assets, item.storeCategory, item.value);
+            for (const item of list) addStoreAsset(assets, item.storeCategory, item.value, accountNames[Number(item.storeCategory)]);
         } catch (e) {
             $.log(`${this.prefix()} 查询资产失败: ${e.message || e}`);
         }
