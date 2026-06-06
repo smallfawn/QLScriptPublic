@@ -424,18 +424,28 @@ class Task {
         };
 
         try {
-            const data = await this.request({ apiPath: "/ykb_moblie/api/v1/MobilePointsActivity/QueryPackage" });
-            const list = Array.isArray(data?.List) ? data.List : Array.isArray(data) ? data : [];
+            const data = await this.request({ apiPath: "/ykb_huiyuan/api/v1/Member/GetMemberStoredValue" });
+            const list = [
+                ...(Array.isArray(data) ? data : []),
+                ...(Array.isArray(data?.List) ? data.List : []),
+                ...(Array.isArray(data?.Data) ? data.Data : []),
+                ...(Array.isArray(data?.StoredValueList) ? data.StoredValueList : []),
+            ];
+            const source = Array.isArray(data) ? {} : data || {};
+            assets.coin = firstValue(source, ["MyScrip", "Coin", "CoinAmount", "Scrip", "Balance", "StoredCoin", "GameCoin"]);
+            assets.goldCoin = firstValue(source, ["GoldCoin", "GoldCoinAmount"]);
+            assets.integral = firstValue(source, ["ARTotalIntegral", "Integral", "Exchange", "Points", "Point"]);
+            assets.ticket = firstValue(source, ["Ticket", "TicketPackage", "TicketCount", "Lottery", "LotteryTicket"]);
             for (const item of list) {
-                const type = String(item.Type || item.StoredValueType || item.PackageType || item.Name || item.Title || "");
-                const amount = firstValue(item, ["Balance", "Amount", "Num", "Count", "Value", "Total", "Available"]);
+                const type = String(item.Type || item.StoredValueType || item.StoreCategory || item.Category || item.Name || item.Title || item.Key || "");
+                const amount = firstValue(item, ["Balance", "Amount", "Num", "Count", "Value", "Total", "Available", "StoredValue"]);
                 if (/GoldCoin|金币/i.test(type)) assets.goldCoin = amount;
                 else if (/Ticket|彩票|票/i.test(type)) assets.ticket = amount;
                 else if (/Integral|Point|积分|Exchange/i.test(type)) assets.integral = amount;
                 else if (/Coin|代币|MyScrip|币/i.test(type)) assets.coin = amount;
             }
         } catch (e) {
-            this.log(`查询资产包失败: ${e.message || e}`);
+            this.log(`查询储值资产失败: ${e.message || e}`);
         }
 
         return assets;
