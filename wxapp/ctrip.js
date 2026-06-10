@@ -32,8 +32,6 @@ const TASK_CHANNELS = [
   { label: "做任务赚积分", channelCode: "2H3294O46M" },
   { label: "升级赚积分", channelCode: "5EBG1WS7J1" },
 ];
-const CSIGN_PATH =
-  "C:/Users/86056/AppData/Roaming/Tencent/xwechat/radium/users/b0ef81749f07b62f5cfab8d1240b6c6a/applet/packages/wx0e6ed4f51db9d078/1055/OUTPUT/wx0e6ed4f51db9d078/cwx/ext/sign/c-sign.js";
 
 const wechat = new WeChatServer({
   url: process.env.wx_server_url || "http://192.168.31.196:8787",
@@ -50,12 +48,7 @@ global.navigator = global.navigator || {
 global.document = global.document || { cookie: "" };
 global.screen = global.screen || { width: 1920, height: 1080 };
 
-let csign = null;
-try {
-  csign = require(CSIGN_PATH);
-} catch (e) {
-  $.log(`CSign模块加载失败，将不带 n-payload-source 请求: ${e.message || e}`);
-}
+const csign = null;
 
 function readCache() {
   try {

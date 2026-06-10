@@ -33,15 +33,13 @@ const DEFAULT_VALUE = "-1";
 const DEFAULT_LICENSE = "-1";
 const SOURCE_TYPE = 21;
 const SIGN_APP_KEY = "commonweb";
+const SIGN_APP_SECRET = "MORZRbkuiWxjp+SM4vR_GxY4pZxLZ6rn";
 const POINT_BASE = "https://mobile-aiot.hismarttv.com";
 const WXTV_BASE = "https://public-wxtv.hismarttv.com";
 const MINI_MOBI_BASE = "https://mini-mobi.hismarttv.com";
 const ACCOUNT_BASE = "https://portal-account.hismarttv.com";
-const SIGN_LIB_PATH =
-  "C:/Users/86056/AppData/Roaming/Tencent/xwechat/radium/users/b0ef81749f07b62f5cfab8d1240b6c6a/applet/packages/wxf488d623a17cd7b5/115/OUTPUT/wxf488d623a17cd7b5/pkg_main/common/3rd_libs/sign.js";
 const TOKEN_CACHE_FILE = path.join(__dirname, "hisense_aijia_token_cache.json");
 
-const signLib = require(SIGN_LIB_PATH);
 const wechat = new WeChatServer({
   url: process.env.wx_server_url || "http://192.168.31.196:8787",
   appid: MINI_APP_ID,
@@ -85,6 +83,33 @@ function randHex(len = 4) {
   return Math.floor(Math.random() * Math.pow(16, len)).toString(16);
 }
 
+function getSignSecret(appKey = SIGN_APP_KEY) {
+  if (appKey !== SIGN_APP_KEY) throw new Error(`appSecret not found: ${appKey}`);
+  return SIGN_APP_SECRET;
+}
+
+function signString(data, postAndJSON = false, appKey = SIGN_APP_KEY) {
+  const secret = getSignSecret(appKey);
+  let text = "";
+  if (postAndJSON) {
+    text = typeof data === "string" ? data : JSON.stringify(data || {});
+  } else if (typeof data === "string") {
+    text = data;
+  } else {
+    text = Object.keys(data || {})
+      .map((key) => {
+        let value = data[key];
+        if (value === "" || value === null || value === undefined) return "";
+        if (typeof value === "object") value = JSON.stringify(value);
+        return `${key}=${value}`;
+      })
+      .filter(Boolean)
+      .sort()
+      .join("&");
+  }
+  return crypto.createHash("md5").update(`${text}${secret}`).digest("base64");
+}
+
 function uuid() {
   if (crypto.randomUUID) return crypto.randomUUID();
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -104,18 +129,22 @@ function pureGuid() {
 }
 
 function buildSign(data, postAndJSON) {
-  return signLib(data || {}, { appKey: SIGN_APP_KEY, postAndJSON });
+  return signString(data || {}, postAndJSON, SIGN_APP_KEY);
 }
 
 function encryptByAppKey(value) {
   if (!value) return "";
-  return signLib.encryptByAppKey(String(value), SIGN_APP_KEY);
+  const secret = getSignSecret(SIGN_APP_KEY);
+  const cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(secret, "utf8"), Buffer.from(secret.slice(0, 16), "utf8"));
+  return Buffer.concat([cipher.update(String(value), "utf8"), cipher.final()]).toString("base64");
 }
 
 function decryptByAppKey(value) {
   if (!value) return "";
   try {
-    return signLib.decryptByAppKey(String(value), SIGN_APP_KEY);
+    const secret = getSignSecret(SIGN_APP_KEY);
+    const decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(secret, "utf8"), Buffer.from(secret.slice(0, 16), "utf8"));
+    return Buffer.concat([decipher.update(String(value), "base64"), decipher.final()]).toString("utf8");
   } catch {
     return value;
   }
