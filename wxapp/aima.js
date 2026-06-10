@@ -126,7 +126,7 @@ async function getWxCode(account) {
   }
 
   const res = await axios.post(
-    `${wxServerUrl.replace(/\/$/, "")}/wx/operatedata`,
+    `${wxServerUrl.replace(/\/$/, "")}/wx/getuserinfo`,
     {
       appid: MINI_APPID,
       openid: account,

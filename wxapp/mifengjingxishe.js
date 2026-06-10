@@ -180,7 +180,7 @@ class Task {
         if (!wxServerUrl || !wxAuth) throw new Error("未配置 wx_server_url 或 wx_auth");
 
         const { status, data } = await axios.post(
-            `${wxServerUrl.replace(/\/$/, "")}/wx/operatedata`,
+            `${wxServerUrl.replace(/\/$/, "")}/wx/getuserinfo`,
             { appid: MINI_APP_ID, openid: this.openid },
             {
                 headers: {
