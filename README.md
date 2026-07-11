@@ -144,7 +144,7 @@
 <!-- WXAPP_TABLE_END -->
 # 青龙面板拉库命令
 
-`ql repo https://github.com/smallfawn/QLScriptPublic.git backup main`
+`ql repo https://github.com/smallfawn/QLScriptPublic.git`
 
 ## 免责声明
 
