@@ -113,6 +113,10 @@ class Task {
             this.treeId = Number(result.result.treeId)
             this.userId = result.result.userId
             this.headers.userid = String(this.userId || "")
+
+            //果园打卡领水滴
+            await this.getfreeFruitSignInfo()
+
             this.todayFullWaterTaskId = Number(result?.result?.todayFullWaterTaskId || 0)
             for (let i = 0; i < Math.floor(Number(result.result.kettleWater) / 10); i++) {
                 await $.wait(3000)
@@ -122,6 +126,47 @@ class Task {
             $.log(`[账号${this.index}]  查询失败[${result.msg}]`);
         }
     }
+
+    async getfreeFruitSignInfo() {
+        let options = {
+            method: 'POST',
+            url: `https://tuan.api.ybm100.com/miniapp/marketing/signActivity/signRecord`,
+            headers: this.headers,
+            data: {
+                "sceneId": 6,
+                "channelCode": ""
+            }
+        };
+        let { data: result } = await axios.request(options);
+        if (result.code == 0) {
+            const isSigned = result?.result?.todaySignStatusDesc === "已签到";
+            $.log(`[账号${this.index}] 今日签到: ${isSigned ? "已签到" : "未签到"}`)
+            if (!isSigned) {
+                await this.doFreeFruitSign()
+            }
+        } else {
+            $.log(`[账号${this.index}] 获取签到状态失败[${result.msg}]`);
+        }
+    }
+
+    async doFreeFruitSign() {
+        let options = {
+            method: 'POST',
+            url: `https://tuan.api.ybm100.com/miniapp/marketing/signActivity/sign`,
+            headers: this.headers,
+            data: {
+                "sceneId": 6,
+                "channelCode": ""
+            }
+        };
+        let { data: result } = await axios.request(options);
+        if (result?.code == '0') {
+            $.log(`[账号${this.index}] 签到成功[${result.msg}]`);
+        } else {
+            $.log(`[账号${this.index}] 签到失败:${result.msg}`)
+        }
+    }
+
     async doWater() {
         try {
             let data = { "channelCode": this.channelCode, "treeId": this.treeId, "nonce": $.randomString(6) }
@@ -639,20 +684,20 @@ class Task {
     });
 
 async function getNotice() {
-	try {
-		let options = {
-			url: `https://ghproxy.net/https://raw.githubusercontent.com/smallfawn/Note/refs/heads/main/Notice.json`,
-			headers: {
-				"User-Agent": defaultUserAgent,
-			},
-            timeout:3000
-		}
-		let {
-			data: res
-		} = await axios.request(options);
-		$.log(res)
-		return res
-	} catch (e) {}
+    try {
+        let options = {
+            url: `https://ghproxy.net/https://raw.githubusercontent.com/smallfawn/Note/refs/heads/main/Notice.json`,
+            headers: {
+                "User-Agent": defaultUserAgent,
+            },
+            timeout: 3000
+        }
+        let {
+            data: res
+        } = await axios.request(options);
+        $.log(res)
+        return res
+    } catch (e) { }
 
 }
 
