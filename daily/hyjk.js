@@ -140,7 +140,7 @@ class Task {
         let { data: result } = await axios.request(options);
         if (result.code == 0) {
             const isSigned = result?.result?.todaySignStatusDesc === "已签到";
-            $.log(`[账号${this.index}] 今日签到: ${isSigned ? "已签到" : "未签到"}`)
+            $.log(`[账号${this.index}] 果园今日打卡: ${isSigned ? "已打卡" : "未打卡"}`)
             if (!isSigned) {
                 await this.doFreeFruitSign()
             }
