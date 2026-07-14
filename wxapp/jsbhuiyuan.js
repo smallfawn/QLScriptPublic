@@ -20,7 +20,7 @@ const APP = {
     name: "杰士邦会员中心",
     appid: "wx5966681b4a895dee",
     shopId: "467028",
-    signActivityId: "156947",
+    signActivityId: "170630",
 };
 const WX_SERVER_URL = (process.env.wx_server_url || "http://192.168.31.196:8787").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
