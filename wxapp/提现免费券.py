@@ -16,11 +16,11 @@ urllib3.disable_warnings()
 
 # ── 账号 & 鉴权 ──
 APPID = "wxdb3c0e388702f785"
-OPENID = os.environ.get("OPENID", "")  # 多个账号用 & 分隔
-APIKEY = os.environ.get("APIKEY", "")  
+OPENID = os.environ.get("wxtxopenids", "")  # 多个账号用 & 分隔
+APIKEY = os.environ.get("wx_auth", "")  
 
 # ── 桥接服务 ──
-BRIDGE_BASE_URL = os.environ.get("BRIDGE_BASE_URL", "")  # 调用时自动拼接 /wx/code
+BRIDGE_BASE_URL = os.environ.get("wx_server_url", "")  # 调用时自动拼接 /wx/code
 BRIDGE_TIMEOUT = 40
 
 # ── 领券策略 ──
