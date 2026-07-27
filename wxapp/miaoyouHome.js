@@ -22,15 +22,83 @@ class UserInfo {
         //定义在这里的headers会被get请求删掉content-type 而不会重置
     }
     async main() {
+
+        await this.manageList()
+        await this.querySceneGameInstance()
         await this.task();
         await this.userInfo()
+    }
+
+
+    async manageList() {
+        try {
+            let options = {
+                fn: "首页",
+                method: "post",
+                url: `https://www.popcentury.cn/scrm-rz-minip-tzlm/minipPointsController/showIconManageList`,
+                headers: {
+                    "Connection": "keep-alive",
+                    //"Content-Length": "2",
+                    "Accept": "application/json, text/plain, */*",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/111.0.5563.116 Mobile Safari/537.36 XWEB/1110017 MMWEBSDK/20231002 MMWEBID/2585 MicroMessenger/8.0.43.2480(0x28002B51) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
+                    "Content-Type": "application/json;charset=UTF-8",
+                    "Origin": "http://www.jumpingcarp.cn",
+                    "Referer": "https://servicewechat.com/wx10b22bd20e2bccca/11/page-frame.html",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+                    //"Cookie": "JSESSIONID=" + this.ck
+                },
+                body: JSON.stringify({})
+            }
+            let { body: result } = await $.httpRequest(options);
+            //console.log(options);
+            //console.log(result);
+            for (let item of result.data.iconList) {
+                if (item.iconName.match(/签到/)) {
+                    this.sceneGameInstanceCode = item.actionUrl.split("?")[1]
+                    break
+                }
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    async querySceneGameInstance() {
+        try {
+            let options = {
+                fn: "签到信息",
+                method: "post",
+                url: `https://www.popcentury.cn/scrm-rz-minip-tzlm/minipPointsController/querySceneGameInstance`,
+                headers: {
+                    "Connection": "keep-alive",
+                    //"Content-Length": "2",
+                    "Accept": "application/json, text/plain, */*",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "User-Agent": "Mozilla/5.0 (Linux; Android 10; MI 8 Lite Build/QKQ1.190910.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/111.0.5563.116 Mobile Safari/537.36 XWEB/1110017 MMWEBSDK/20231002 MMWEBID/2585 MicroMessenger/8.0.43.2480(0x28002B51) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
+                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                    "Origin": "http://www.jumpingcarp.cn",
+                    "Referer": "https://servicewechat.com/wx10b22bd20e2bccca/11/page-frame.html",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+                    "Cookie": "JSESSIONID=" + this.ck
+                },
+                body: `${this.sceneGameInstanceCode}`
+            }
+            let { body: result } = await $.httpRequest(options);
+            //console.log(options);
+            //console.log(result);
+
+        } catch (e) {
+            console.log(e);
+        }
     }
     async task() {
         try {
             let options = {
                 fn: "签到",
                 method: "post",
-                url: `http://www.jumpingcarp.cn/scrm-rz-wechat-tzlm/lotteryController/extractMemberAwards`,
+                url: `https://www.popcentury.cn/scrm-rz-minip-tzlm/minipPointsController/extractInstanceMemberAwards?${this.sceneGameInstanceCode}`,
                 headers: {
                     "Connection": "keep-alive",
                     //"Content-Length": "2",
@@ -49,7 +117,7 @@ class UserInfo {
             let { body: result } = await $.httpRequest(options);
             //console.log(options);
             console.log(result);
-            
+
         } catch (e) {
             console.log(e);
         }
@@ -59,7 +127,7 @@ class UserInfo {
             let options = {
                 fn: "我的积分",
                 method: "post",
-                url: `http://www.jumpingcarp.cn/scrm-rz-wechat-tzlm/memberController/showMemberInfo`,
+                url: `https://www.popcentury.cn/scrm-rz-minip-tzlm/memberController/showMemberInfo.do`,
                 headers: {
                     "Connection": "keep-alive",
                     //"Content-Length": "2",
@@ -78,12 +146,12 @@ class UserInfo {
             let { body: result } = await $.httpRequest(options);
             //console.log(options);
             //console.log(result);
-            if(result.code == 200){
+            if (result.code == 200) {
                 $.log(`当前积分[${result.data.pointsBalance}]`)
-            }else {
+            } else {
                 console.log(result);
             }
-            
+
         } catch (e) {
             console.log(e);
         }
