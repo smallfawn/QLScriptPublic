@@ -169,10 +169,10 @@ smallfawn 对任何脚本问题概不负责，包括但不限于由任何脚本�
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=smallfawn%2FQLScriptPublic&type=date&legend=top-left">
+<a href="https://star-history.dera.page/#smallfawn/QLScriptPublic&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=smallfawn/QLScriptPublic&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=smallfawn/QLScriptPublic&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=smallfawn/QLScriptPublic&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=smallfawn/QLScriptPublic&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=smallfawn/QLScriptPublic&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=smallfawn/QLScriptPublic&type=date&legend=top-left" />
  </picture>
 </a>
