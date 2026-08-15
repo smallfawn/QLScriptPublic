@@ -1,3 +1,8 @@
+## 免费AI中转站
+https://vsllm.com
+## 大环境不好求职
+本人大专毕业！学习逆向5年，移动应用；PC应用；浏览器网页逆向相关！JSVMP；混淆等；可用AI工具提高开发效率！
+目标薪资10K
 ### 脚本功能列表
 <!-- README_TABLE_START -->
 | 脚本名称 | 最后一次更新时间 | 当前状态 |
@@ -26,7 +31,7 @@
 | 得物0元抽 | 2026-04-08 20:04:58 | ✅ |
 | 海尔智家 | 2026-04-09 17:59:11 | ✅ |
 | iqoo社区 | 2026-04-08 20:04:58 | ✅ |
-| 心喜小程序 | 2026-04-07 15:53:03 | ✅ |
+| 心喜小程序 | 2026-08-13 20:55:54 | ✅ |
 | BREO | 2026-04-07 19:05:34 | ✅ |
 | stokkes小程序签到 | 2026-04-07 19:05:34 | ✅ |
 | 浓五的酒馆 | 2026-04-07 19:05:34 | ✅ |
@@ -52,12 +57,15 @@
 | 谷雨小程序 | 2026-04-12 13:28:49 | ✅ |
 | 立乐家会员俱乐部 | 2026-04-08 13:57:03 | ✅ |
 | 益禾堂 | 2026-04-12 14:09:41 | ✅ |
+| 统一快乐星球茄皇（五期） | 2026-08-03 15:36:18 | ✅ |
 <!-- README_TABLE_END -->
 ## 微信小程序脚本
 
 需要配置 `wx_server_url` / `wx_auth` 获取微信小程序 `code`。首次使用一般需要先在对应微信小程序内完成注册、授权或绑定手机号。
 
 <!-- WXAPP_TABLE_START -->
+| 脚本名称 | 最后一次更新时间 | 当前状态 |
+| :--- | :----: | :----: |
 | 杰士邦会员中心 | 2026-07-14 09:32:52 | ✅ |
 | 雀巢会员俱乐部 | 2026-07-14 09:32:52 | ✅ |
 | 好人家签到 | 2026-07-14 09:32:52 | ✅ |
@@ -125,7 +133,7 @@
 | CASETiFY 签到 | 2026-07-14 09:32:52 | ✅ |
 | 发发藏宝洞小程序签到 | 2026-07-14 09:32:52 | ✅ |
 | BREO | 2026-07-14 09:32:52 | ✅ |
-| wx_庙友之家 | 2026-07-14 09:32:52 | ✅ |
+| wx_庙友之家 | 2026-07-28 10:47:43 | ✅ |
 | 国乐酱酒 | 2026-07-14 09:32:52 | ✅ |
 | 飞鹤星妈会 | 2026-07-14 09:32:52 | ✅ |
 | 烈儿宝贝小程序签到 | 2026-07-14 09:32:52 | ✅ |
@@ -164,10 +172,10 @@ smallfawn 对任何脚本问题概不负责，包括但不限于由任何脚本�
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=smallfawn%2FQLScriptPublic&type=date&legend=top-left">
+<a href="https://star-history.dera.page/#smallfawn/QLScriptPublic&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=smallfawn/QLScriptPublic&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=smallfawn/QLScriptPublic&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=smallfawn/QLScriptPublic&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=smallfawn/QLScriptPublic&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=smallfawn/QLScriptPublic&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=smallfawn/QLScriptPublic&type=date&legend=top-left" />
  </picture>
 </a>

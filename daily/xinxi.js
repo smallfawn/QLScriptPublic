@@ -1,7 +1,7 @@
 /*
 ------------------------------------------
 @Author: sm
-@Date: 2024.06.07 19:15
+@Date: 2026.08.13 16:55
 @Description:  心喜 小程序
 cron: 30 7 * * *
 ------------------------------------------
@@ -129,7 +129,8 @@ class Task {
             for (let task of result.data) {
                 await this.getPosts()
                 if (task.status == false) {
-                    if (task.code == 'BROWSE_PRODUCTS') {
+                    // console.log(`${task.taskName}[${task.code}]--${task.annotation} -- ${task.finishNum}`)
+                    if (task.code == 'BROWSE_PRODUC1TS') {
                         await this.browseGoods()
                     }
                     if (task.code == 'COMMENT_POSTS') {
@@ -172,19 +173,24 @@ class Task {
 
     }
     async postsComments(postsId) {
-        let options = {
-            method: 'POST',
-            url: `https://api.xinc818.com/mini/postsComments`,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            data: { "content": "666", "postsId": postsId }
+        try {
+            let options = {
+                method: 'POST',
+                url: `https://api.xinc818.com/mini/postsComments`,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                data: { "content": "👍👍👍👍👍", "postsId": postsId }
 
-        };
-        let { data: result } = await this.request(options);
-        if (result.code == 0) {
-            $.log(`✅账号[${this.index}]  【发表评论】成功 获得积分【${result.data.singleReward}】🎉`)
+            };
+            let { data: result } = await this.request(options);
+            if (result.code == 0) {
+                $.log(`✅账号[${this.index}]  【发表评论】成功 获得积分【${result.data.taskResult.singleReward}】🎉`)
+            }
+        } catch (e) {
+            $.log(`❎账号[${this.index}]  【发表评论】失败`)
         }
+
     }
     async getPosts() {
         let options = {
@@ -196,59 +202,64 @@ class Task {
         let { data: result } = await this.request(options);
         if (result.code == 0) {
             this.posts = result.data.list
-
         }
     }
     async likePosts() {
         //找到posts里面liked为false的
         let posts = this.posts.filter(item => item.liked == false)
-
         let options = {
             method: 'PUT',
             url: `https://api.xinc818.com/mini/posts/like`,
             headers: {
                 "Content-Type": "application/json",
             },
-            data: { "postsId": posts, "decision": true }
+            data: { "postsId": posts[0].id, "decision": true }
 
         };
 
         let { data: result } = await this.request(options);
         if (result.code == 0) {
-            console.log(result);
-
+            // console.log(result);
             $.log(`✅账号[${this.index}]  【点赞帖子】成功 获得积分【${result.data.singleReward}】🎉`)
+        }else{
+            $.log(`❎账号[${this.index}]  【点赞帖子】失败，原因【${result.msg}】🎉`)
         }
     }
 
-    async followUser(postsId) {
+    async followUser(publisherId) {
         let options = {
             method: 'PUT',
             url: `https://api.xinc818.com/mini/user/follow`,
             headers: {
                 "Content-Type": "application/json",
             },
-            data: { "postsId": postsId, "decision": true }
+            data: { "followUserId": publisherId, "decision": true }
 
         };
         let { data: result } = await this.request(options);
         if (result.code == 0) {
             $.log(`✅账号[${this.index}]  【关注用户】成功 获得积分【${result.data.singleReward}】🎉`)
+        }else{
+            $.log(`❎账号[${this.index}]  【关注用户】失败，原因【${result.msg}】🎉`)
         }
     }
-    async likeGoods(goodsId) {
-        let options = {
-            method: 'POST',
-            url: `https://api.xinc818.com/mini/live/likeLiveItem`,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            data: { "isLike": true, "dailyTaskId": 20, "productId": "" + goodsId }
+    async likeGoods(goodsId = "210000904376") {
+        try {
+            let options = {
+                method: 'POST',
+                url: `https://api.xinc818.com/mini/live/likeLiveItem`,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                data: { "isLike": true, "dailyTaskId": 20, "productId": goodsId }
 
-        };
-        let { data: result } = await this.request(options);
-        if (result.code == 0) {
-            $.log(`✅账号[${this.index}]  【点赞商品】成功 获得积分【${result.data.singleReward}】🎉`)
+            };
+            let { data: result } = await this.request(options);
+            if (result.code == 0) {
+                $.log(`✅账号[${this.index}]  【点赞商品】成功 获得积分【${result.data.singleReward}】🎉`)
+            }
+        } catch (err) {
+            $.log(`❎账号[${this.index}]  【点赞商品】失败:${err}`)
         }
     }
 
@@ -266,19 +277,19 @@ class Task {
     .finally(() => $.done());
 
 async function getNotice() {
-	try {
-		let options = {
-			url: `https://ghproxy.net/https://raw.githubusercontent.com/smallfawn/Note/refs/heads/main/Notice.json`,
-			headers: {
-				"User-Agent": defaultUserAgent,
-			},
-            timeout:3000
-		}
-		let {
-			data: res
-		} = await axios.request(options);
-		$.log(res)
-		return res
-	} catch (e) {}
+    try {
+        let options = {
+            url: `https://ghproxy.net/https://raw.githubusercontent.com/smallfawn/Note/refs/heads/main/Notice.json`,
+            headers: {
+                "User-Agent": defaultUserAgent,
+            },
+            timeout: 3000
+        }
+        let {
+            data: res
+        } = await axios.request(options);
+        $.log(res)
+        return res
+    } catch (e) { }
 
 }
