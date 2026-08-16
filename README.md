@@ -1,5 +1,5 @@
 ## 免费AI中转站
-https://vsllm.com
+https://vsllm.com/register?aff=5Wvk
 
 
 https://tabitoken.com/sign-up?aff=c6Rg  
