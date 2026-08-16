@@ -29,6 +29,8 @@ const TOKEN_CACHE_FILE = path.join(__dirname, "ykb_all_token_cache.json");
 const USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MicroMessenger/3.9.12 MiniProgramEnv/Windows WindowsWechat/WMPF";
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const APPS = [
     { ck: "ayldf", name: "爱游乐东方", appid: "wxf133aa0a4f191ffc", templateVersion: "game_2.32.0" },
     { ck: "ayljz", name: "爱游乐胶州", appid: "wx52005ba8c71a756a", templateVersion: "game_2.32.0" },
@@ -359,10 +361,21 @@ class Task {
 
     async getLoginCode() {
         if (!process.env.wx_auth) throw new Error("未配置 wx_auth，无法通过 wx_server 获取 code");
-        const { data } = await this.wechat.getCode(this.account);
-        const code = data?.code || data?.data?.code;
-        if (!code) throw new Error(`wx_server 未返回 code: ${JSON.stringify(data)}`);
-        return code;
+        // 本脚本一次会遍历几十家门店，每店取一次 code，很容易撞上 wx_server 的取码频率窗口。
+        // 只在「服务端明确没给出 code」时退避重试，避免整轮门店从中途开始全军覆没。
+        const waits = [0, 45000, 90000];
+        let last = null;
+        for (let i = 0; i < waits.length; i++) {
+            if (waits[i]) {
+                this.log(`取code被限流，等待${waits[i] / 1000}秒后重试(${i}/${waits.length - 1})`);
+                await sleep(waits[i]);
+            }
+            const { data } = await this.wechat.getCode(this.account);
+            const code = data?.code || data?.data?.code;
+            if (code) return code;
+            last = data;
+        }
+        throw new Error(`wx_server 未返回 code: ${JSON.stringify(last)}`);
     }
 
     async login() {

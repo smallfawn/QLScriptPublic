@@ -44,6 +44,21 @@ class Task {
         this.token = null
         this.wcsid = this.user[0]
         this.isSign = false
+        this.promotionId = ""
+    }
+
+    get headers() {
+        return {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 MicroMessenger/7.0.20.1781 NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF XWEB/50249',
+            'Content-Type': 'application/json',
+            'xweb_xhr': '1',
+            'sec-fetch-site': 'cross-site',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-dest': 'empty',
+            'referer': 'https://servicewechat.com/wxed3cf95a14b58a26/255/page-frame.html',
+            'accept-language': 'zh-CN,zh;q=0.9',
+            authorization: this.token || ''
+        }
     }
 
     async run() {
@@ -52,6 +67,8 @@ class Task {
         let { data: codeRes } = await wechat.getCode(this.wcsid)
         if (codeRes.status) {
             await this.getUserToken(codeRes.data.code)
+        } else {
+            $.log(`账号[${this.index}] 获取code失败:${codeRes.message || JSON.stringify(codeRes)}❌`)
         }
         if (!this.token) {
             $.log(`账号[${this.index}] 获取用户Token失败❌`)
@@ -60,6 +77,7 @@ class Task {
         this.token = 'Bearer ' + this.token
 
         await this.getUserInfo()
+        await this.findSignPromotion()
         await this.doSign()
     }
     async getUserToken(code) {
@@ -71,17 +89,7 @@ class Task {
         let options = {
             method: 'POST',
             url: 'https://stdcrm.dtmiller.com/std-weixin-mp-service/miniApp/custom/login',
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 MicroMessenger/7.0.20.1781 NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF XWEB/50249',
-                'Content-Type': 'application/json',
-                'xweb_xhr': '1',
-                'authorization': '',
-                'sec-fetch-site': 'cross-site',
-                'sec-fetch-mode': 'cors',
-                'sec-fetch-dest': 'empty',
-                'referer': 'https://servicewechat.com/wxed3cf95a14b58a26/255/page-frame.html',
-                'accept-language': 'zh-CN,zh;q=0.9'
-            },
+            headers: this.headers,
             data: data
         };
         let {
@@ -90,7 +98,7 @@ class Task {
 
         if (result?.code == '0') {
             this.token = result.data
-            $.log(`🌸账号[${this.index}] 获取用户Token成功:${this.token}`)
+            $.log(`🌸账号[${this.index}] 获取用户Token成功`)
         } else {
             $.log(`🌸账号[${this.index}] 获取用户Token-失败:${result.msg}❌`)
         }
@@ -99,18 +107,7 @@ class Task {
         let options = {
             method: 'GET',
             url: `https://stdcrm.dtmiller.com/scrm-promotion-service/mini/wly/user/info`,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 MicroMessenger/7.0.20.1781 NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF XWEB/50249',
-                'Content-Type': 'application/json',
-                'xweb_xhr': '1',
-                'authorization': '',
-                'sec-fetch-site': 'cross-site',
-                'sec-fetch-mode': 'cors',
-                'sec-fetch-dest': 'empty',
-                'referer': 'https://servicewechat.com/wxed3cf95a14b58a26/255/page-frame.html',
-                'accept-language': 'zh-CN,zh;q=0.9',
-                authorization: this.token
-            }
+            headers: this.headers
 
         }
         let {
@@ -124,30 +121,52 @@ class Task {
         }
     }
 
+    // 签到活动每隔几个月会换一个 promotionId，写死就会收到「活动已结束!」，
+    // 这里从个人中心的模块配置里取「每日签到」入口上挂的 promotionId
+    async findSignPromotion() {
+        try {
+            let {
+                data: result
+            } = await axios.request({
+                method: 'POST',
+                url: `https://stdcrm.dtmiller.com/scrm-promotion-service/mini/module/config/list`,
+                headers: this.headers,
+                data: {}
+            });
+            let hit = JSON.stringify(result?.data || "").match(/signUp\?promotionId=(PI[0-9a-zA-Z]+)/)
+            if (hit) {
+                this.promotionId = hit[1]
+                $.log(`🌸账号[${this.index}] 每日签到活动:${this.promotionId}`)
+            } else {
+                $.log(`🌸账号[${this.index}] 未找到每日签到活动入口❌`)
+            }
+        } catch (e) {
+            $.log(`🌸账号[${this.index}] 查询签到活动异常:${e.message || e}❌`)
+        }
+    }
+
     async doSign() {
+        if (!this.promotionId) {
+            $.log(`🌸账号[${this.index}] 跳过签到:没有可用的签到活动`)
+            return
+        }
         let options = {
             method: 'GET',
-            url: `https://stdcrm.dtmiller.com/scrm-promotion-service/promotion/sign/today?promotionId=PI69cb44d522cc56000aa80bbe`,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 MicroMessenger/7.0.20.1781 NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF XWEB/50249',
-                'Content-Type': 'application/json',
-                'xweb_xhr': '1',
-                'authorization': '',
-                'sec-fetch-site': 'cross-site',
-                'sec-fetch-mode': 'cors',
-                'sec-fetch-dest': 'empty',
-                'referer': 'https://servicewechat.com/wxed3cf95a14b58a26/255/page-frame.html',
-                'accept-language': 'zh-CN,zh;q=0.9',
-                authorization: this.token
-            }
+            url: `https://stdcrm.dtmiller.com/scrm-promotion-service/promotion/sign/today?promotionId=${this.promotionId}`,
+            headers: this.headers
         };
         let {
             data: result
         } = await axios.request(options);
         if (result?.code == '0') {
             //打印签到结果
-            $.log(`签到天数：${sign_data['data']['signDays']}`)
-            $.log(`签到成功`);
+            this.isSign = true
+            let d = result.data || {}
+            let prize = d.prize?.prizeName || d.prize?.virtualGiftRemark || ""
+            $.log(`🌸账号[${this.index}] 签到成功 已签${d.signDays ?? "?"}天${prize ? ` 奖励:${prize}` : ""}`);
+        } else if (/已签|重复/.test("" + (result?.msg || ""))) {
+            this.isSign = true
+            $.log(`🌸账号[${this.index}] 今日已签到`)
         } else {
             $.log(`🌸账号[${this.index}] 签到-失败:${result.msg}❌`)
         }

@@ -1,560 +1,627 @@
+/*
+------------------------------------------
+@Author: sm
+@Date: 2026.08.16
+@Description:  骁龙骁友会 小程序 签到 + 每日任务(抽奖/点赞/阅读5分钟/VLOG1分钟)
+cron: 20 9 * * *
+------------------------------------------
+#Notice:
+变量名：wx_xlxyh
+变量值：wx_server 里的 openid/账号标识，多账户用 & 或换行；支持 openid#备注
+        也兼容旧格式 sessionKey#userId（手填会话，过期就得重填，不推荐）
+需要配置：wx_server_url、wx_auth
+
+可选变量：
+  wx_xlxyh_read_task  是否做两个「停留时长」任务，默认 1(开启)。
+                      阅读文章要真等 5 分钟、VLOG 要真等 1 分钟——服务端是用
+                      enterReadDaily / exitReadDaily 两次调用的时间差算时长的，
+                      没有任何时长参数可以传，所以只能真等。整个脚本因此约跑 6.5 分钟。
+                      不想让任务跑这么久就置 0，只做签到/抽奖/点赞。
+
+登录链路（反编译主包 wx026c06df6adc5d06 逐行核对，A21B5B03…js）：
+  wx.login code -> POST /api/user/getOpenId {code}
+                -> {openId, sessionKey, userInfo}；userInfo.id 就是 userId
+  之后每个请求把 userId / sessionKey / openId 放在【请求头】上（22E9D2A0…js）
+  userInfo.id === 0 表示这个微信号还没在骁友会注册过，脚本会直接提示而不是瞎跑。
+
+请求签名（22E9D2A0…js + B1596B97…js:165/284 + 563700E2…js）：
+  sign = md5( joinJson(参数) + requestId + timestamp )      —— 小写、无盐
+  joinJson: k1=encodeURIComponent(v1)&k2=...   （对象自身的枚举顺序）
+  requestId: 源码 uuid() 无参调用，第 8/13/18/23 位被置成 undefined 再 join，
+             实际得到的是 32 位十六进制而不是标准 UUID，必须照抄这个 quirk。
+  注意：必须带微信小程序 User-Agent，否则 getOpenId 直接回 {"code":1,"message":"非法请求"}。
+  另注：sign 实测服务端并不校验（故意写错签名，signList / checkActivity 照样回 200），
+        真正的准入是那个 User-Agent；照抄签名只是为了跟真机一致。
+
+已知服务端拦截（不是脚本 bug，别再往签名/会话上找原因）：
+  · 签到 GET /api/user/signIn   恒回 40001「登录过期」。同一把会话打 /api/user/info、
+    /api/user/signList、/api/home/taskDaily 全是 200；换 getOpenId 会话、换
+    grantAuth 会话（返回的还是同一把 sessionKey）、把时间戳对齐服务端 Date 头、
+    换手机/PC 微信 UA、给 sessionKey 里的 + 做各种转义，结果都一样；会话头留空时
+    它改回 20001，说明请求头是被读到的。是账号态/风控，需要在小程序里手点。
+  · 抽奖 POST /api/luckDraw/getLuck 恒回 code=1「非法请求」。参数与 raffle.js:126
+    一字不差，checkActivity(7) 与 luckDraw/list 都是 200，说明活动开着。
+  点赞 / 阅读 5 分钟 / VLOG 1 分钟 三个任务是通的（实测芯动值 125 -> 150）。
+
+⚠️【免责声明】
+------------------------------------------
+1、此脚本仅用于学习研究，不保证其合法性、准确性、有效性，请根据情况自行判断，本人对此不承担任何保证责任。
+2、由于此脚本仅用于学习研究，您必须在下载后 24 小时内将所有内容从您的计算机或手机或任何存储设备中完全删除，若违反规定引起任何事件本人对此均不负责。
+3、请勿将此脚本用于任何商业或非法目的，若违反规定请自行对此负责。
+4、此脚本涉及应用与本人无关，本人对因此引起的任何隐私泄漏或其他后果不承担任何责任。
+5、本人对任何脚本引发的问题概不负责，包括但不限于由脚本错误引起的任何损失和损害。
+6、如果任何单位或个人认为此脚本可能涉嫌侵犯其权利，应及时通知并提供身份证明，所有权证明，我们将在收到认证文件确认后删除此脚本。
+7、所有直接或间接使用、查看此脚本的人均应该仔细阅读此声明。本人保留随时更改或补充此声明的权利。一旦您使用或复制了此脚本，即视为您已接受此免责声明。
+*/
+
+const { Env } = require("../tools/env.js");
+const $ = new Env("骁龙骁友会");
+const axios = require("axios");
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
+const WeChatServer = require("../wxapp/wcs.js");
+
 const ckName = "wx_xlxyh";
+const strSplitor = "#";
+const MINI_APP_ID = "wx026c06df6adc5d06";
+const PAGE_VERSION = "644";
+// BC195B25ACE3C9CFDA7F33222D124737.js: API_ROOT(release)
+const API_BASE = "https://qualcomm.boysup.cn/qualcomm-app";
+const TOKEN_CACHE_FILE = path.join(__dirname, "wx_xlxyh_token_cache.json");
+const WX_SERVER_URL = process.env.wx_server_url || "";
+// 两个停留时长任务开关：服务端按 enter/exit 两次调用的时间差算时长，只能真等
+const READ_TASK = !/^(0|false|no|off)$/i.test(String(process.env.wx_xlxyh_read_task ?? "1"));
 
-// 工具类
-class Env {
-    constructor(name) {
-        this.name = name;
-        this.logs = [];
-    }
+const defaultUserAgent =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 MicroMessenger/7.0.20.1781(0x6700143B) NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF WindowsWechat(0x63090a13) UnifiedPCWindowsWechat(0xf254162e) XWEB/18151";
 
-    log(...args) {
-        const msg = args.join(" ");
-        this.logs.push(msg);
-        console.log(msg);
-    }
+// 端点（B3F98543ACE3C9CFD59FED444E024737.js / 671C83A1…js，方法与参数逐条核对）
+const EP_GET_OPENID = "/api/user/getOpenId"; // POST {code}                    postNoSession
+const EP_USER_INFO = "/api/user/info"; // GET  {userId}
+const EP_SIGN_LIST = "/api/user/signList"; // GET  {userId}
+const EP_SIGN_IN = "/api/user/signIn"; // GET  {userId}   ← 是 GET，不是 POST
+const EP_TASK_DAILY = "/api/home/taskDaily"; // GET  {userId}
+const EP_DRAW_LIST = "/api/luckDraw/list"; // GET  {page,userId,activityId}
+const EP_GET_LUCK = "/api/luckDraw/getLuck"; // POST {userId,activityId}
+const EP_ARTICLES = "/api/home/articles"; // GET  {page,size,userId,type,searchDate,articleShowPlace}
+const EP_ARTICLE_LIKE = "/api/article/like"; // GET  {articleId,userId}
+const EP_ENTER_READ = "/api/article/enterReadDaily"; // POST {articleId,userId}
+const EP_EXIT_READ = "/api/article/exitReadDaily"; // POST {articleId,userId}
+const EP_VLOG_LIST = "/api/article/vlogList"; // GET  {page,size,userId,sortBy}
+const EP_VLOG_PLAY = "/api/article/vlogPlay"; // GET  {articleId}
+const EP_SYS_CONFIG = "/api/sysConfig/detail"; // POST {propertyKey}
+const EP_QUIZ_DETAIL = "/api/interactQuestion/detail"; // POST {userId}
 
-    isNode() {
-        return typeof process !== "undefined" && process.release && process.release.name === 'node';
-    }
+// pages/wheel/index.js:34 —— 客户端自己也是硬编码 7，不存在活动 id 轮换
+const LUCK_ACTIVITY_ID = 7;
+// pages/article-details/index.js:299 —— 5 == minute 才算完成；userExitRead 在 lookTimes>=300 时直接 return
+const READ_SECONDS = 300;
+// pages/vlog/detail.js:197 —— 1 == minute 才算完成；进入条件是 lookTimes < 60
+const VLOG_SECONDS = 60;
+const VLOG_SWITCH_KEY = "task_switch_DAILY_PLAY_VIDEO_1_MINUTES";
 
-    getdata(key) {
-        if (this.isNode()) {
-            return process.env[key] || "";
-        }
-        return localStorage.getItem(key) || "";
-    }
+// 22E9D2A0…js: f = String(code)，放行 "200" 与 "40003"；40001 = 会话失效需重登
+const SUCCESS_CODES = new Set(["200", "40003"]);
+const CODE_SESSION_EXPIRED = "40001";
 
-    wait(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+const wechat = new WeChatServer({
+    url: WX_SERVER_URL || "http://192.168.31.196:8787",
+    appid: MINI_APP_ID,
+    auth: process.env.wx_auth || "",
+});
 
-    async httpRequest(config) {
-        if (this.isNode()) {
-            const axios = require('axios');
-            return axios(config);
-        } else {
-            return new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.open(config.method || 'GET', config.url);
-                
-                if (config.headers) {
-                    for (const [key, value] of Object.entries(config.headers)) {
-                        xhr.setRequestHeader(key, value);
-                    }
-                }
-                
-                xhr.onload = () => {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        try {
-                            const data = JSON.parse(xhr.responseText);
-                            resolve({ data });
-                        } catch (e) {
-                            resolve({ data: xhr.responseText });
-                        }
-                    } else {
-                        reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
-                    }
-                };
-                
-                xhr.onerror = () => reject(new Error('Network error'));
-                xhr.send(config.data);
-            });
-        }
-    }
-
-    done() {
-        if (this.isNode()) {
-            process.exit(0);
-        }
+function readTokenCache() {
+    try {
+        if (!fs.existsSync(TOKEN_CACHE_FILE)) return {};
+        return JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, "utf8")) || {};
+    } catch (e) {
+        return {};
     }
 }
 
-// 初始化环境
-const $ = new Env("骁龙骁友会");
+function writeTokenCache(cache) {
+    try {
+        fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(cache, null, 2), "utf8");
+    } catch (e) {
+        $.log(`写入token缓存失败: ${e.message || e}`);
+    }
+}
 
-class XLXYH {
-    constructor(ck) {
-        const parts = ck.split("#");
-        this.ck = (parts[0] || "").trim();
-        this.userId = (parts[1] || "").trim();
+function md5(str) {
+    return crypto.createHash("md5").update(str).digest("hex");
+}
+
+// B1596B97ACE3C9CFD73F039088324737.js:165 exports.joinJson
+function joinJson(data) {
+    let out = "";
+    let i = 0;
+    for (const key in data || {}) {
+        if (i > 0) out += "&";
+        out += `${key}=${encodeURIComponent(data[key])}`;
+        i++;
+    }
+    return out;
+}
+
+// B1596B97ACE3C9CFD73F039088324737.js:284 exports.uuid
+// 源码调用处是无参 uuid()，于是 t[8]/t[13]/t[18]/t[23] 被赋成 undefined，
+// join("") 会把 undefined 丢掉 —— 实际发出去的是 32 位十六进制。照抄。
+function requestId() {
+    const t = [];
+    for (let i = 0; i < 36; i++) t[i] = "0123456789abcdef".substr(Math.floor(16 * Math.random()), 1);
+    t[14] = "4";
+    t[19] = "0123456789abcdef".substr((3 & parseInt(t[19], 16)) | 8, 1);
+    t[8] = t[13] = t[18] = t[23] = undefined;
+    return t.join("");
+}
+
+function bizCode(result) {
+    return String(result?.code ?? "");
+}
+
+function isSuccess(result) {
+    return SUCCESS_CODES.has(bizCode(result));
+}
+
+// 幂等：重复签到/重复完成时服务端文案不止一种
+function isAlreadyDone(message) {
+    return /已签|已经签|签到过|重复|已完成|已领|already/i.test(String(message || ""));
+}
+
+function maskPhone(phone = "") {
+    return String(phone).replace(/^(\d{3})\d{4}(\d{4})$/, "$1****$2");
+}
+
+function shortId(value = "") {
+    const s = String(value || "");
+    return s ? `${s.slice(0, 4)}***${s.slice(-4)}` : "";
+}
+
+function stripHtml(text = "") {
+    return String(text || "")
+        .replace(/<[^>]*>/g, "")
+        .trim();
+}
+
+function cut(text = "", n = 26) {
+    const s = String(text || "").replace(/\s+/g, " ").trim();
+    return s.length > n ? `${s.slice(0, n)}…` : s;
+}
+
+class Task {
+    constructor(env) {
+        this.index = $.userIdx++;
+        this.raw = String(env || "").trim();
+        this.user = this.raw.split(strSplitor);
+        this.accountId = (this.user[0] || "").trim();
+        this.remark = (this.user[1] || "").trim();
+        this.userId = 0;
+        this.sessionKey = "";
         this.openId = "";
-        this.valid = !!(this.ck && this.userId);
+        this.userInfo = {};
+        this.cache = readTokenCache();
+        // 旧格式 sessionKey#userId：第一段是 base64 会话而不是 openid，第二段是纯数字
+        this.legacySession = /^\d+$/.test(this.remark) && /[=+/]/.test(this.accountId);
+        if (this.legacySession) {
+            this.sessionKey = this.accountId;
+            this.userId = Number(this.remark);
+            this.accountId = "";
+        }
     }
 
-    generateSign(timestamp, requestId, body = "") {
-        const crypto = require("crypto");
-        return crypto.createHash("md5")
-            .update(`${timestamp}${requestId}${body}boysup`)
-            .digest("hex");
+    get tag() {
+        const who = this.userInfo.nick || this.remark || shortId(this.accountId) || `userId ${this.userId}`;
+        return `账号[${this.index}] ${who}`;
     }
 
-    uuid() {
-        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
-            const r = Math.random() * 16 | 0;
-            return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
-        });
+    log(msg) {
+        $.log(`${this.tag}: ${msg}`);
     }
 
-    async request(method, path, data = null, extraHeaders = {}, skipSign = false) {
-        if (!this.valid) {
-            return { code: 400, message: "CK无效" };
+    /**
+     * 22E9D2A0…js:u()/i() —— 参数一律走 joinJson，GET 拼 query、POST 放 body，
+     * 会话三件套(userId/sessionKey/openId)和签名都在请求头上。
+     * withSession=false 对应 postNoSession（userId "0"、sessionKey/openId 空串）。
+     */
+    async request(endpoint, { method = "GET", data = null, withSession = true, retry = true } = {}) {
+        const body = joinJson(data);
+        const ts = Date.now();
+        const rid = requestId();
+        const headers = {
+            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+            userId: withSession ? String(this.userId || 0) : "0",
+            sessionKey: withSession ? this.sessionKey || "" : "",
+            openId: withSession ? this.openId || "" : "",
+            timestamp: String(ts),
+            requestId: rid,
+            sign: md5(body + rid + ts),
+            "User-Agent": defaultUserAgent,
+            Referer: `https://servicewechat.com/${MINI_APP_ID}/${PAGE_VERSION}/page-frame.html`,
+            Accept: "*/*",
+            xweb_xhr: "1",
+        };
+        const config = {
+            url: API_BASE + endpoint,
+            method,
+            headers,
+            timeout: 30000,
+            validateStatus: () => true,
+        };
+        if (method === "GET") {
+            if (body) config.url += `?${body}`;
+        } else {
+            config.data = body;
         }
 
-        const timestamp = Date.now().toString();
-        const requestId = this.uuid().replace(/-/g, "");
-        const sign = skipSign ? "" : this.generateSign(timestamp, requestId, data || "");
+        let result;
+        try {
+            const res = await axios(config);
+            result = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
+        } catch (e) {
+            return { code: "-1", message: e.message || "网络错误" };
+        }
 
-        const headers = {
-            "Host": "qualcomm.boysup.cn",
-            "Connection": "keep-alive",
-            "Content-Type": "application/x-www-form-urlencoded",
-            "timestamp": timestamp,
-            "sign": sign,
-            "xweb_xhr": "1",
-            "openId": this.openId,
-            "requestId": requestId,
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 MicroMessenger/7.0.20.1781(0x6700143B) NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF WindowsWechat(0x63090a13) UnifiedPCWindowsWechat(0xf254162e) XWEB/18151",
-            "userId": this.userId,
-            "sessionKey": this.ck,
-            "Referer": "https://servicewechat.com/wx026c06df6adc5d06/644/page-frame.html",
-            "Accept": "*/*",
-            "Sec-Fetch-Site": "cross-site",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Dest": "empty",
-            ...extraHeaders
-        };
+        // 22E9D2A0…js: 40001 -> clearUserInfo + refreshUserInfo + 重放一次
+        if (bizCode(result) === CODE_SESSION_EXPIRED && retry && !this.legacySession) {
+            this.log("会话失效，重新登录后重试");
+            if (await this.login(true)) {
+                return this.request(endpoint, { method, data, withSession, retry: false });
+            }
+        }
+        return result || {};
+    }
 
-        if (skipSign) {
-            delete headers.sign;
+    /**
+     * 从 wx_server 取一次性 code。
+     * wcs.getCode 在 status:false 时也会 resolve，必须自己判失败，
+     * 否则 smallcat 的取码限流会被误当成骁友会登录失败。
+     */
+    async getServerCode() {
+        if (!process.env.wx_auth) throw new Error("缺少 wx_auth，无法从 wx_server 取 code");
+        const { data } = await wechat.getCode(this.accountId);
+        if (data?.status === false) throw new Error(`wx_server 取码失败: ${data?.message || data?.error || "未知原因"}`);
+        const code = data?.code || data?.data?.code;
+        if (!code) throw new Error("wx_server 未返回 code");
+        return code;
+    }
+
+    /** A21B5B03…js: wx.login code -> getOpenId -> {openId, sessionKey, userInfo} */
+    async loginByWxCode() {
+        const code = await this.getServerCode();
+        const result = await this.request(EP_GET_OPENID, {
+            method: "POST",
+            data: { code },
+            withSession: false,
+            retry: false,
+        });
+        if (!isSuccess(result)) throw new Error(`getOpenId 失败: ${result.message || bizCode(result)}`);
+        const data = result.data || {};
+        const id = Number(data.userInfo?.id || 0);
+        if (!id) {
+            throw new Error("该微信号还没在骁友会注册（userInfo.id=0），先在小程序里完成注册/授权手机号");
+        }
+        this.userId = id;
+        this.sessionKey = data.sessionKey || "";
+        this.openId = data.openId || "";
+        return true;
+    }
+
+    /** 只读校验会话：/api/user/info 通了就说明 userId+sessionKey 还有效 */
+    async loadUserInfo() {
+        const result = await this.request(EP_USER_INFO, { data: { userId: this.userId }, retry: false });
+        if (!isSuccess(result) || !result.data?.id) return false;
+        this.userInfo = result.data;
+        return true;
+    }
+
+    async login(force = false) {
+        if (this.legacySession) {
+            if (!this.userId || !this.sessionKey) {
+                $.log(`账号[${this.index}]: 旧格式变量应为 sessionKey#userId`);
+                return false;
+            }
+            if (await this.loadUserInfo()) return true;
+            $.log(`账号[${this.index}]: 手填的 sessionKey 已失效，建议改用 wx_server 的 openid 自动登录`);
+            return false;
+        }
+
+        if (!this.accountId) {
+            $.log(`账号[${this.index}]: 变量值为空`);
+            return false;
+        }
+
+        const cached = this.cache[this.accountId];
+        if (!force && cached?.userId && cached?.sessionKey) {
+            this.userId = Number(cached.userId);
+            this.sessionKey = cached.sessionKey;
+            this.openId = cached.openId || "";
+            if (await this.loadUserInfo()) {
+                this.log("会话缓存有效");
+                return true;
+            }
+            this.log("会话缓存已失效，重新登录");
         }
 
         try {
-            const config = {
-                url: `https://qualcomm.boysup.cn${path}`,
-                method,
-                headers
-            };
-
-            if (data && method !== "GET") {
-                config.data = data;
-            }
-
-            const resp = await $.httpRequest(config);
-            
-            if (typeof resp.data === "object") {
-                return resp.data;
-            } else {
-                return JSON.parse(resp.data);
-            }
+            await this.loginByWxCode();
         } catch (e) {
-            const msg = e.response?.data?.message || e.message || "网络错误";
-            $.log(`❌ 请求失败: ${msg} (路径: ${path})`);
-            if (e.response) {
-                $.log(`📄 响应数据: ${JSON.stringify(e.response.data)}`);
-            }
-            return { 
-                code: e.response?.status || 500, 
-                message: msg,
-                response: e.response
-            };
+            $.log(`账号[${this.index}]: 登录失败 ${e.message || e}`);
+            return false;
+        }
+        if (!(await this.loadUserInfo())) {
+            $.log(`账号[${this.index}]: 登录后读取用户信息失败`);
+            return false;
+        }
+        this.cache = readTokenCache();
+        this.cache[this.accountId] = {
+            userId: this.userId,
+            sessionKey: this.sessionKey,
+            openId: this.openId,
+            nick: this.userInfo.nick || "",
+            updatedAt: new Date().toISOString(),
+        };
+        writeTokenCache(this.cache);
+        this.log("登录成功");
+        return true;
+    }
+
+    /** pages/task-center/index.js:200-235  signList -> isSignToday==0 才 signIn */
+    async signTask() {
+        const list = await this.request(EP_SIGN_LIST, { data: { userId: this.userId } });
+        if (!isSuccess(list)) {
+            this.log(`❌ 读取签到状态失败: ${list.message || bizCode(list)}`);
+            return;
+        }
+        const info = list.data || {};
+        if (Number(info.isSignToday) === 1) {
+            this.log(`✅ 今日已签到（本月连续 ${info.signContinuityMonth || 0} 天）`);
+            return;
+        }
+        // retry:false —— 实测这个接口的 40001 不是会话过期：换新会话（getOpenId 或
+        // grantAuth 都试过）、换时间戳、换 UA 一律 40001，而同一把会话打 user/info /
+        // signList 都是 200。会话头留空时它反而报 20001，说明头是读到了的。
+        // 所以这里不做「重登再重放」，免得白耗一次取码额度。
+        const result = await this.request(EP_SIGN_IN, { data: { userId: this.userId }, retry: false });
+        if (isSuccess(result) && result.data) {
+            // state 1/2/3 在源码里对应三种「签到成功」弹窗
+            this.log(`✅ 签到成功 芯动值+${result.data.coreCoin ?? 0}`);
+        } else if (isAlreadyDone(result.message)) {
+            this.log(`✅ 今日已签到（${result.message}）`);
+        } else if (bizCode(result) === CODE_SESSION_EXPIRED) {
+            this.log("❌ 签到被服务端拦下（40001），账号态问题，请在小程序里手动点一次签到");
+        } else {
+            this.log(`❌ 签到失败: ${result.message || bizCode(result)}`);
         }
     }
 
-    async getOpenId() {
-        $.log("🔍 尝试获取openId...");
-        const openIdRes = await this.request(
-            "GET", 
-            `/qualcomm-app/api/user/info?userId=${this.userId}`,
-            null,
-            {},
-            true
-        );
-        
-        if (openIdRes.code === 200 && openIdRes.data) {
-            this.openId = openIdRes.data.openId || "";
-            $.log(`✅ 获取到openId: ${this.openId || "空"}`);
-            return true;
+    /**
+     * pages/wheel —— 只抽每日免费的那次。
+     * 已玩次数 = luckDrawSumCount - luckDrawCount，超过 freeCountDay 后每抽要扣
+     * luckCoreCoin 芯动值，脚本不替用户花积分。
+     */
+    async drawTask() {
+        const list = await this.request(EP_DRAW_LIST, {
+            data: { page: 1, userId: this.userId, activityId: LUCK_ACTIVITY_ID },
+        });
+        if (!isSuccess(list)) {
+            this.log(`❌ 读取抽奖信息失败: ${list.message || bizCode(list)}`);
+            return;
+        }
+        const d = list.data || {};
+        const used = Number(d.luckDrawSumCount || 0) - Number(d.luckDrawCount || 0);
+        const free = Number(d.freeCountDay || 0);
+        if (Number(d.luckDrawCount || 0) <= 0) {
+            this.log("🎡 抽奖次数已用完，跳过");
+            return;
+        }
+        if (used >= free) {
+            this.log(`🎡 免费次数已用完（今日已抽 ${used}/${free}），再抽要扣 ${d.luckCoreCoin} 芯动值，跳过`);
+            return;
+        }
+        const result = await this.request(EP_GET_LUCK, {
+            method: "POST",
+            data: { userId: this.userId, activityId: LUCK_ACTIVITY_ID },
+        });
+        if (isSuccess(result) && result.data) {
+            this.log(`🎉 抽奖成功: ${result.data.name || "已中奖"}`);
+        } else if (isAlreadyDone(result.message)) {
+            this.log(`🎡 今日抽奖已完成（${result.message}）`);
+        } else if (/非法请求/.test(String(result.message || ""))) {
+            // 参数、请求头、UA、活动状态都与真机一致（checkActivity/luckDraw list 都是 200），
+            // 只有这个路径被前置网关挡下，属于服务端风控，脚本不绕。
+            this.log("❌ 抽奖被服务端网关拦下（非法请求），请在小程序里手动转一次");
         } else {
-            $.log(`❌ 获取openId失败: ${openIdRes.message}`);
-            return false;
+            this.log(`❌ 抽奖失败: ${result.message || bizCode(result)}`);
+        }
+    }
+
+    /** 取资讯列表（只读），阅读任务和点赞任务共用 */
+    async fetchArticles() {
+        const result = await this.request(EP_ARTICLES, {
+            data: {
+                page: 1,
+                size: 20,
+                userId: this.userId,
+                type: 0,
+                searchDate: "",
+                articleShowPlace: "骁友资讯列表页",
+            },
+        });
+        if (!isSuccess(result)) {
+            this.log(`❌ 读取资讯列表失败: ${result.message || bizCode(result)}`);
+            return [];
+        }
+        return result.data?.articleList || [];
+    }
+
+    /** 每日点赞文章 —— pages/article-details/index.js like(): articleLike(String(id), userId) */
+    async likeTask(articles) {
+        const target = articles.find((a) => Number(a.isLike) === 0);
+        if (!target) {
+            this.log("👍 列表里的文章都点过赞了，跳过");
+            return;
+        }
+        const result = await this.request(EP_ARTICLE_LIKE, {
+            data: { articleId: String(target.id), userId: this.userId },
+        });
+        if (isSuccess(result)) {
+            this.log(`👍 点赞成功: ${cut(target.title)}`);
+        } else if (isAlreadyDone(result.message)) {
+            this.log(`👍 已点赞（${result.message}）`);
+        } else {
+            this.log(`❌ 点赞失败: ${result.message || bizCode(result)}`);
+        }
+    }
+
+    /**
+     * 每日阅读文章 5 分钟。
+     * enterReadDaily / exitReadDaily 都只收 {articleId,userId}，没有时长参数——
+     * 时长是服务端按两次调用的时间差算的，所以必须真等 READ_SECONDS 秒。
+     */
+    async readTask(articles) {
+        const target = articles.find((a) => Number(a.lookTimes || 0) < READ_SECONDS);
+        if (!target) {
+            this.log("📖 列表里的文章阅读时长都够了，跳过");
+            return;
+        }
+        this.log(`📖 开始阅读: ${cut(target.title)}（已读 ${target.lookTimes || 0}s）`);
+        const enter = await this.request(EP_ENTER_READ, {
+            method: "POST",
+            data: { articleId: target.id, userId: this.userId },
+        });
+        if (!isSuccess(enter)) {
+            this.log(`❌ 进入阅读失败: ${enter.message || bizCode(enter)}`);
+            return;
+        }
+        const wait = READ_SECONDS + 5;
+        this.log(`⏳ 停留 ${wait}s（源码要求满 5 分钟）`);
+        await $.wait(wait * 1000);
+        const exit = await this.request(EP_EXIT_READ, {
+            method: "POST",
+            data: { articleId: target.id, userId: this.userId },
+        });
+        if (isSuccess(exit)) {
+            this.log("✅ 阅读任务已提交");
+        } else {
+            this.log(`❌ 退出阅读失败: ${exit.message || bizCode(exit)}`);
+        }
+    }
+
+    /** 每日观看骁友 VLOG 1 分钟 —— pages/vlog/detail.js，进入前先看任务开关 */
+    async vlogTask() {
+        const cfg = await this.request(EP_SYS_CONFIG, { method: "POST", data: { propertyKey: VLOG_SWITCH_KEY } });
+        if (isSuccess(cfg) && String(cfg.data?.propertyValue) === "0") {
+            this.log("🎬 VLOG 任务开关关闭，跳过");
+            return;
+        }
+        const list = await this.request(EP_VLOG_LIST, {
+            data: { page: 1, size: 20, userId: this.userId, sortBy: 1 },
+        });
+        if (!isSuccess(list)) {
+            this.log(`❌ 读取 VLOG 列表失败: ${list.message || bizCode(list)}`);
+            return;
+        }
+        const records = list.data?.records || [];
+        const target = records.find((v) => Number(v.lookTimes || 0) < VLOG_SECONDS);
+        if (!target) {
+            this.log("🎬 列表里的 VLOG 观看时长都够了，跳过");
+            return;
+        }
+        this.log(`🎬 开始观看: ${cut(target.title)}（已看 ${target.lookTimes || 0}s）`);
+        const enter = await this.request(EP_ENTER_READ, {
+            method: "POST",
+            data: { articleId: target.id, userId: this.userId },
+        });
+        if (!isSuccess(enter)) {
+            this.log(`❌ 进入 VLOG 失败: ${enter.message || bizCode(enter)}`);
+            return;
+        }
+        await this.request(EP_VLOG_PLAY, { data: { articleId: target.id } });
+        const wait = VLOG_SECONDS + 5;
+        this.log(`⏳ 停留 ${wait}s（源码要求满 1 分钟）`);
+        await $.wait(wait * 1000);
+        const exit = await this.request(EP_EXIT_READ, {
+            method: "POST",
+            data: { articleId: target.id, userId: this.userId },
+        });
+        if (isSuccess(exit)) {
+            this.log("✅ VLOG 任务已提交");
+        } else {
+            this.log(`❌ 退出 VLOG 失败: ${exit.message || bizCode(exit)}`);
+        }
+    }
+
+    /**
+     * 互动答题（+20）：只读提示，不自动作答。
+     * /api/interactQuestion/detail 只回题干和选项，不带正确答案；每天只有一次机会，
+     * 随机蒙一个会白白浪费掉，所以这里把题目打出来让人自己在小程序里答。
+     */
+    async quizNotice() {
+        const result = await this.request(EP_QUIZ_DETAIL, { method: "POST", data: { userId: this.userId } });
+        if (!isSuccess(result)) return;
+        const data = result.data || {};
+        if (Number(data.state) > 0) {
+            const correct = Number(data.questionAnswerRecord?.isCorrect) === 1;
+            this.log(`📝 互动答题: 今日已作答（${correct ? "答对" : "答错"}）`);
+            return;
+        }
+        const q = data.question;
+        if (!q) return;
+        const options = (q.answers || []).map((a) => `${a.answerNo}.${a.answer}`).join("  ");
+        this.log(`📝 互动答题未作答(+20)，接口不返回正确答案，需自己在小程序里答：`);
+        this.log(`   ${cut(q.question, 80)}`);
+        if (options) this.log(`   ${options}`);
+    }
+
+    /** 收尾对账：taskDaily 的 status 1 = 已完成 */
+    async summary() {
+        const result = await this.request(EP_TASK_DAILY, { data: { userId: this.userId } });
+        if (!isSuccess(result)) return;
+        const rows = (result.data || []).map((t) => `${Number(t.status) === 1 ? "✔" : "✘"}${stripHtml(t.name)}`);
+        if (rows.length) this.log(`每日任务: ${rows.join(" ")}`);
+        const info = await this.request(EP_USER_INFO, { data: { userId: this.userId } });
+        if (isSuccess(info) && info.data) {
+            this.log(`💰 芯动值 ${info.data.coreCoin} | 等级 ${info.data.levelName || info.data.level}`);
         }
     }
 
     async run() {
-        if (!this.valid) {
-            $.log(`❌ CK格式错误，请使用: sessionKey#userId`);
-            return;
-        }
+        if (!(await this.login())) return;
+        this.log(`【${this.userInfo.nick || "-"}】${maskPhone(this.userInfo.phone)} 芯动值 ${this.userInfo.coreCoin}`);
 
-        if (!(await this.getOpenId())) {
-            $.log("❌ 获取openId失败，可能sessionKey已过期");
-            return;
-        }
+        await this.signTask();
+        await this.drawTask();
 
-        $.log("🔍 获取用户信息...");
-        const userInfo = await this.request("GET", `/qualcomm-app/api/user/info?userId=${this.userId}`);
-        if (userInfo.code !== 200) {
-            $.log(`❌ 账号[${this.userId}] 获取用户信息失败: ${userInfo.message}`);
-            if (userInfo.message.includes("登录过期") || userInfo.code === 401) {
-                $.log("⚠️ 登录已过期，请重新获取sessionKey和userId");
-                return;
-            }
-            return;
-        }
+        const articles = await this.fetchArticles();
+        if (articles.length) await this.likeTask(articles);
+        await this.quizNotice();
 
-        $.log(`✅ 【${userInfo.data.nick}】等级${userInfo.data.level} | 积分: ${userInfo.data.coreCoin}`);
-
-        $.log("🔍 检查签到状态...");
-        const signList = await this.request("GET", `/qualcomm-app/api/user/signList?userId=${this.userId}`);
-        if (signList.code === 200) {
-            if (signList.data?.isSignToday !== 1) {
-                $.log("🔍 开始签到...");
-                const signResult = await this.request("POST", `/qualcomm-app/api/user/signIn?userId=${this.userId}`);
-                if (signResult.code === 200) {
-                    $.log(`✅ 签到成功 +${signResult.data.coreCoin}积分`);
-                } else {
-                    $.log(`❌ 签到失败: ${signResult.message}`);
-                }
-            } else {
-                $.log("✅ 今日已签到");
-            }
+        if (READ_TASK) {
+            if (articles.length) await this.readTask(articles);
+            await this.vlogTask();
         } else {
-            $.log(`❌ 获取签到状态失败: ${signList.message}`);
+            this.log("⏭ wx_xlxyh_read_task=0，跳过阅读 5 分钟 / VLOG 1 分钟");
         }
 
-        await this.handleDrawTask();
-
-        await this.handleReadTask();
-
-        await this.handleVlogTask();
-    }
-
-    async handleDrawTask() {
-        $.log("🔍 开始抽奖任务...");
-        
-        // 修改为使用正确的抽奖接口
-        const drawResult = await this.request(
-            "POST", 
-            "/qualcomm-app/api/luckDraw/getLuck", 
-            `userId=${this.userId}&activityId=7`
-        );
-        
-        if (drawResult.code === 200) {
-            if (drawResult.data && drawResult.data.name) {
-                $.log(`✅ 抽奖成功: ${drawResult.data.name}`);
-            } else {
-                $.log(`✅ 抽奖成功: 获得奖励`);
-            }
-            
-            // 如果有积分信息，也显示出来
-            if (drawResult.data.coreCoin) {
-                $.log(`💰 获得积分: ${drawResult.data.coreCoin}`);
-            }
-        } else if (drawResult.code === 201) {
-            $.log(`ℹ️ ${drawResult.message || '抽奖提示'}`);
-        } else {
-            $.log(`❌ 抽奖失败: ${drawResult.message || '接口请求错误'}`);
-        }
-    }
-
-    async handleReadTask() {
-        $.log("🔍 获取文章列表...");
-        const articleRes = await this.request(
-            "GET", 
-            `/qualcomm-app/api/home/articles?page=1&size=10&userId=${this.userId}&type=0&searchDate=&articleShowPlace=骁友资讯列表页`
-        );
-
-        if (articleRes.code === 200 && articleRes.data?.articleList?.length) {
-            const article = articleRes.data.articleList[0];
-            $.log(`📖 开始阅读: ${article.title.substring(0, 20)}...`);
-
-            const enterRes = await this.request("POST", 
-                "/qualcomm-app/api/article/enterReadDaily", 
-                `articleId=${article.id}&userId=${this.userId}`
-            );
-            
-            if (enterRes.code !== 200) {
-                $.log(`⚠️ 进入阅读失败: ${enterRes.message}`);
-            }
-
-            const likeRes = await this.request("GET", 
-                `/qualcomm-app/api/article/like?articleId=${article.id}&userId=${this.userId}`
-            );
-            
-            if (likeRes.code === 200) {
-                $.log("👍 点赞成功");
-            } else {
-                $.log(`⚠️ 点赞失败: ${likeRes.message}`);
-            }
-
-            const shareRes = await this.request("POST", 
-                "/qualcomm-app/api/article/shareDaily", 
-                `articleId=${article.id}&userId=${this.userId}`
-            );
-            
-            if (shareRes.code === 200) {
-                $.log("🔗 分享成功");
-            } else {
-                $.log(`⚠️ 分享失败: ${shareRes.message}`);
-            }
-
-            $.log("⏳ 模拟阅读65秒...");
-            await $.wait(65000);
-
-            const exitRes = await this.request("POST", 
-                "/qualcomm-app/api/article/exitReadDaily", 
-                `articleId=${article.id}&userId=${this.userId}`
-            );
-            
-            if (exitRes.code === 200) {
-                $.log("✅ 阅读任务完成");
-            } else {
-                $.log(`⚠️ 退出阅读失败: ${exitRes.message}`);
-            }
-        } else {
-            $.log("ℹ️ 未获取到文章，跳过阅读任务");
-        }
-    }
-
-    async handleVlogTask() {
-        $.log("🔍 获取VLOG列表...");
-        
-        const vlogRes = await this.request(
-            "GET",
-            `/qualcomm-app/api/article/vlogList?page=1&size=20&userId=${this.userId}&sortBy=1`
-        );
-
-        if (vlogRes.code === 200 && vlogRes.data?.records?.length) {
-            const vlogs = vlogRes.data.records;
-            $.log(`✅ 获取到 ${vlogs.length} 个VLOG`);
-            
-            // 只获取第一个VLOG，不管是否已观看
-            const targetVlog = vlogs[0];
-            $.log(`🎬 开始观看第一个VLOG: ${targetVlog.title.substring(0, 20)}...`);
-            $.log(`📊 时长: ${targetVlog.videoDuration} | 播放: ${targetVlog.playCountFormat} | 点赞: ${targetVlog.likeCount}`);
-
-            const enterRes = await this.request(
-                "POST",
-                "/qualcomm-app/api/article/enterReadDaily",
-                `articleId=${targetVlog.id}&userId=${this.userId}`
-            );
-
-            if (enterRes.code === 200) {
-                $.log("✅ 进入VLOG观看成功");
-                
-                // 固定观看70秒，不管视频时长
-                const waitTime = 70000;
-                
-                $.log(`⏳ 模拟观看VLOG 70秒...`);
-                await $.wait(waitTime);
-
-                const exitRes = await this.request(
-                    "POST",
-                    "/qualcomm-app/api/article/exitReadDaily",
-                    `articleId=${targetVlog.id}&userId=${this.userId}`
-                );
-
-                if (exitRes.code === 200) {
-                    $.log("✅ VLOG观看任务完成");
-                    
-                    await this.request(
-                        "GET",
-                        `/qualcomm-app/api/article/like?articleId=${targetVlog.id}&userId=${this.userId}`
-                    );
-                    
-                    await this.request(
-                        "POST",
-                        "/qualcomm-app/api/article/shareDaily",
-                        `articleId=${targetVlog.id}&userId=${this.userId}`
-                    );
-                    
-                    $.log("✅ VLOG点赞和分享完成");
-                } else {
-                    $.log(`⚠️ 退出VLOG观看失败: ${exitRes.message}`);
-                }
-            } else {
-                $.log(`❌ 进入VLOG观看失败: ${enterRes.message}`);
-            }
-        } else {
-            $.log(`❌ 获取VLOG列表失败: ${vlogRes.message || '未知错误'}`);
-        }
-    }
-
-    async batchHandleVlogs(count = 1) {
-        // 修改默认只处理1个VLOG
-        $.log(`🔍 开始批量处理${count}个VLOG任务...`);
-        
-        const vlogRes = await this.request(
-            "GET",
-            `/qualcomm-app/api/article/vlogList?page=1&size=20&userId=${this.userId}&sortBy=1`
-        );
-
-        if (vlogRes.code === 200 && vlogRes.data?.records?.length) {
-            const vlogs = vlogRes.data.records;
-            
-            // 只处理前count个VLOG，不筛选是否已观看
-            const tasks = Math.min(count, vlogs.length);
-            let completed = 0;
-
-            for (let i = 0; i < tasks; i++) {
-                const vlog = vlogs[i];
-                $.log(`\n🎬 处理第 ${i + 1}/${tasks} 个VLOG: ${vlog.title.substring(0, 20)}...`);
-
-                try {
-                    const enterRes = await this.request(
-                        "POST",
-                        "/qualcomm-app/api/article/enterReadDaily",
-                        `articleId=${vlog.id}&userId=${this.userId}`
-                    );
-
-                    if (enterRes.code === 200) {
-                        // 固定观看70秒
-                        const waitTime = 70000;
-
-                        $.log(`⏳ 观看中... (70秒)`);
-                        await $.wait(waitTime);
-
-                        const exitRes = await this.request(
-                            "POST",
-                            "/qualcomm-app/api/article/exitReadDaily",
-                            `articleId=${vlog.id}&userId=${this.userId}`
-                        );
-
-                        if (exitRes.code === 200) {
-                            completed++;
-                            $.log(`✅ 第 ${i + 1} 个VLOG观看完成`);
-                            
-                            await this.request(
-                                "GET",
-                                `/qualcomm-app/api/article/like?articleId=${vlog.id}&userId=${this.userId}`
-                            );
-                            await this.request(
-                                "POST",
-                                "/qualcomm-app/api/article/shareDaily",
-                                `articleId=${vlog.id}&userId=${this.userId}`
-                            );
-                        }
-                    }
-                } catch (error) {
-                    $.log(`❌ 处理VLOG失败: ${error.message}`);
-                }
-
-                if (i < tasks - 1) {
-                    await $.wait(2000);
-                }
-            }
-
-            $.log(`\n🎉 批量VLOG任务完成: ${completed}/${tasks} 个VLOG观看成功`);
-            return completed;
-        } else {
-            $.log("❌ 无法获取VLOG列表");
-            return 0;
-        }
+        await this.summary();
     }
 }
 
-async function main() {
-    let cookies = [];
-    
-    if ($.isNode()) {
-        const raw = process.env[ckName] || "";
-        cookies = raw.split(/[#&\n]/).filter(Boolean);
-        
-        if (!cookies.length) {
-            const fs = require('fs');
-            try {
-                if (fs.existsSync(`${ckName}.txt`)) {
-                    const content = fs.readFileSync(`${ckName}.txt`, 'utf8');
-                    cookies = content.split(/[#&\n]/).filter(Boolean);
-                }
-            } catch (e) {
-            }
-        }
-    } else {
-        const raw = $.getdata(ckName) || "";
-        cookies = raw.split(/[#&\n]/).filter(Boolean);
-    }
-
-    if (!cookies.length) {
-        $.log(`🔔 未找到变量【${ckName}】，请添加`);
-        $.log(`💡 CK格式: sessionKey#userId`);
-        $.log(`📝 配置方法:`);
-        $.log(`   1. Node.js: 设置环境变量 ${ckName}="sessionKey#userId"`);
-        $.log(`   2. 浏览器: 设置 localStorage.${ckName}="sessionKey#userId"`);
-        $.log(`   3. 本地文件: 创建 ${ckName}.txt 文件，每行一个 sessionKey#userId`);
+!(async () => {
+    $.checkEnv(ckName);
+    if (!$.userCount) {
+        $.log(`未找到变量【${ckName}】：填 wx_server 里的 openid，多账号用 & 或换行`);
         return;
     }
-
-    const accounts = [];
-    for (let i = 0; i < cookies.length; i += 2) {
-        if (cookies[i] && cookies[i + 1]) {
-            accounts.push(`${cookies[i]}#${cookies[i + 1]}`);
-        } else if (cookies[i] && cookies[i].includes('#')) {
-            accounts.push(cookies[i]);
-        }
-    }
-
-    if (!accounts.length) {
-        $.log("❌ CK格式错误，请检查是否为 'sessionKey#userId' 格式");
-        return;
-    }
-
-    $.log(`🎯 共加载 ${accounts.length} 个账号`);
-
-    for (let i = 0; i < accounts.length; i++) {
-        const account = accounts[i];
-        $.log(`\n📱 开始处理账号 ${i + 1}/${accounts.length}`);
-        
+    if (!process.env.wx_auth) $.log("提示: 未配置 wx_auth，只能用旧格式 sessionKey#userId 运行");
+    for (const user of $.userList) {
         try {
-            const xlxyh = new XLXYH(account);
-            
-            await xlxyh.run();
-            
-            const vlogCount = 1; // 只观看1个VLOG
-            await xlxyh.batchHandleVlogs(vlogCount);
-            
-            if (i < accounts.length - 1) {
-                await $.wait(3000);
-            }
-        } catch (error) {
-            $.log(`❌ 账号 ${i + 1} 处理失败: ${error.message}`);
+            await new Task(user).run();
+        } catch (e) {
+            $.log(`账号处理异常: ${e.message || e}`);
         }
     }
-
-    if ($.isNode()) {
-        try {
-            if (process.env.NOTIFY_TOKEN || process.env.PUSH_PLUS_TOKEN || process.env.SERVER_CHAN_TOKEN) {
-                await sendNotify($.name, $.logs.join("\n"));
-            }
-        } catch (error) {
-        }
-    }
-
-    $.log("\n🎉 所有账号处理完成！");
-}
-
-main().catch(e => {
-    $.log(`❌ 脚本异常: ${e.message || e}`);
-    console.error(e.stack);
-}).finally(() => {
-    $.done();
-});
-
-async function sendNotify(title, content) {
-    if (!content) return;
-    
-    const notifyTokens = [
-        process.env.NOTIFY_TOKEN,
-        process.env.PUSH_PLUS_TOKEN,
-        process.env.SERVER_CHAN_TOKEN
-    ].filter(token => token);
-
-    for (const token of notifyTokens) {
-        try {
-            const notify = require('sendNotify');
-            await notify.sendNotify(title, content);
-            break;
-        } catch (error) {
-        }
-    }
-}
+})()
+    .catch((e) => $.log(`脚本异常: ${e.message || e}`))
+    .finally(() => $.done());

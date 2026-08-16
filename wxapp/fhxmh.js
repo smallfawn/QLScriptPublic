@@ -17,6 +17,8 @@ const axios = require("axios");
 
 const CK_NAME = "fhxmh";
 const APP = { name: "飞鹤星妈会", appid: "wxc83b55d61c7fc51d" };
+// 服务端业务成功码（签到成功时返回 code=000000 且 success=true）
+const OK_CODES = ["00000", "000000", "A00002"];
 const WX_SERVER_URL = (process.env.wx_server_url || "http://192.168.31.196:8787").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const DEFAULT_OPENID = process.env.wx_openid || "";
@@ -101,7 +103,7 @@ class FeiheMom {
         if (method === "GET") opts.params = data || {};
         else opts.data = data === undefined ? {} : data;
         const res = await request(opts);
-        const ok = res.status === 200 && ["00000", "000000", "A00002"].includes(String(res.data?.code));
+        const ok = res.status === 200 && OK_CODES.includes(String(res.data?.code));
         if (!ok && !allowFail) throw new Error(`HTTP ${res.status}: ${short(res.data)}`);
         return res.data;
     }
@@ -155,7 +157,17 @@ class FeiheMom {
             data: { activityId, mockTime: Date.now() },
             allowFail: true,
         });
-        return `签到接口返回: ${short(sign)}`;
+        // 成功: {"ok":true,"success":true,"code":"000000","data":{"credits":1}}
+        if (sign?.success === true || OK_CODES.includes(String(sign?.code))) {
+            const credits = sign?.data?.credits ?? sign?.data?.point ?? sign?.data?.score;
+            return `签到成功${credits === undefined ? "" : `，+${credits}积分`} activityId=${activityId}`;
+        }
+        // 任务列表的已签标记字段不全，重复签到时靠服务端文案/业务码兜底
+        // 实测重复签到返回 {"code":"A00001","msg":"今天已经签到过了"}
+        if (String(sign?.code) === "A00001" || /已签|已经签|签到过|重复|already/i.test(`${sign?.message || ""}${sign?.msg || ""}`)) {
+            return `今日已签到 activityId=${activityId}`;
+        }
+        return `签到失败: ${short(sign)}`;
     }
 }
 

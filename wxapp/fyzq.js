@@ -5,6 +5,12 @@ cron: 20 8 * * *
 变量名：fyzq
 变量值：wx_server 中保存的 openid/账号标识，多账号用 & 或换行分隔
 依赖变量：wx_server_url、wx_auth
+
+说明：2026-08 该小程序把每日签到从原生页面迁到了 H5（首页签到入口跳
+web-view 打开 h5Url+'sign'），老接口 /min/min-mall/sign_sign_in 已被服务端
+下线，固定返回「系统版本过低，请更新后重试！」。本脚本已改用 H5 页在用的
+/mobile/business/sign/info/* 接口（同域 applet.njqsmx.com、同一 AES 签名，
+但请求体是 header/body 信封，成功码是 0 而不是 1）。
 */
 
 const { Env } = require("../tools/env.js");
@@ -18,9 +24,10 @@ const WeChatServer = require("./wcs.js");
 const ckName = "fyzq";
 const MINI_APP_ID = "wxbc00cc79a68e2305";
 const BRAND_KEY = "bjfyzq";
-const CITY_NAME = "北京";
-const APPLET_BASE = "https://aplet.njqsmx.com".replace("aplet", "applet");
+const APPLET_BASE = "https://applet.njqsmx.com";
 const SIGN_KEY = Buffer.from("rwCyegYqZjtnBPND", "utf8");
+// H5 页里 sourcePlatform: 小程序 web-view = "2"，普通 H5 = "1"
+const SOURCE_PLATFORM = "2";
 const TOKEN_CACHE_FILE = path.join(__dirname, "fyzq_token_cache.json");
 
 const wechat = new WeChatServer({
@@ -67,6 +74,12 @@ function mask(value = "") {
   return `${value.slice(0, 6)}***${value.slice(-6)}`;
 }
 
+const COMMON_HEADERS = {
+  Referer: `https://servicewechat.com/${MINI_APP_ID}/52/page-frame.html`,
+  "User-Agent": "Mozilla/5.0 MicroMessenger MiniProgramEnv/Windows",
+};
+
+// 老接口：表单 + deviceType/channel，业务成功码 1（登录仍走这条）
 async function appletPost(urlPath, params = {}, token = "") {
   const body = {
     ...params,
@@ -77,15 +90,35 @@ async function appletPost(urlPath, params = {}, token = "") {
   body.sign = makeSign(body);
 
   const { data } = await axios.post(`${APPLET_BASE}${urlPath}`, new URLSearchParams(body).toString(), {
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Referer: `https://servicewechat.com/${MINI_APP_ID}/52/page-frame.html`,
-      "User-Agent": "Mozilla/5.0 MicroMessenger MiniProgramEnv/Windows",
-    },
+    headers: { ...COMMON_HEADERS, "Content-Type": "application/x-www-form-urlencoded" },
     timeout: 15000,
     validateStatus: () => true,
   });
   return data;
+}
+
+// 新接口：header/body 信封，header 里带 portType 与签名，业务成功码 0
+async function envelopePost(urlPath, params = {}) {
+  const header = { portType: "MIN", ...params };
+  header.sign = makeSign(header);
+
+  const { data } = await axios.post(`${APPLET_BASE}${urlPath}`, { header, body: params }, {
+    headers: { ...COMMON_HEADERS, "Content-Type": "application/json" },
+    timeout: 15000,
+    validateStatus: () => true,
+  });
+
+  const code = String(data?.header?.code ?? "");
+  const message = data?.header?.message || "";
+  if (code === "-1011") {
+    const err = new Error(message || "登录状态已过期");
+    err.tokenExpired = true;
+    throw err;
+  }
+  if (code !== "0") {
+    throw new Error(message || `接口失败: ${JSON.stringify(data).slice(0, 200)}`);
+  }
+  return data?.body || {};
 }
 
 class Task {
@@ -148,16 +181,18 @@ class Task {
     $.log(`账号[${this.index}] 登录成功: ${mask(token)}`);
   }
 
-  async signBanner() {
-    const res = await appletPost("/min/min-homePage/sign_show_banner", {}, this.token);
-    if (String(res.code) !== "1") throw new Error(res.message || `查询签到状态失败: ${JSON.stringify(res)}`);
-    return res.data || {};
+  get signParams() {
+    return { sourcePlatform: SOURCE_PLATFORM, token: this.token };
   }
 
+  // H5 的 queryInit：checkStatus 0=今日未签到，非 0=已签到
+  async checkinInfo() {
+    return envelopePost("/mobile/business/sign/info/getCheckinInfo", this.signParams);
+  }
+
+  // H5 的 TodaySignIn：每日唯一的写调用
   async doSign() {
-    const res = await appletPost("/min/min-mall/sign_sign_in", {}, this.token);
-    if (String(res.code) !== "1") throw new Error(res.message || `签到失败: ${JSON.stringify(res)}`);
-    return res.data || {};
+    return envelopePost("/mobile/business/sign/info/signIn", this.signParams);
   }
 
   async run() {
@@ -167,9 +202,7 @@ class Task {
     if (this.token) {
       $.log(`账号[${this.index}] 使用缓存 token`);
       try {
-        const status = await this.signBanner();
-        await this.handleStatus(status);
-        return;
+        return await this.handleStatus(await this.checkinInfo());
       } catch (e) {
         $.log(`账号[${this.index}] 缓存失效: ${e.message || e}`);
         this.removeToken();
@@ -177,19 +210,25 @@ class Task {
     }
 
     await this.login();
-    const status = await this.signBanner();
-    await this.handleStatus(status);
+    await this.handleStatus(await this.checkinInfo());
   }
 
-  async handleStatus(status) {
-    if (status.signed) {
-      $.log(`账号[${this.index}] 今日已签到，连续签到 ${status.continuous ?? "未知"} 天`);
+  async handleStatus(info) {
+    const days = info.consecutiveDay ?? info.consCheckDays ?? "未知";
+    if (info.checkStatus !== 0) {
+      $.log(`账号[${this.index}] 今日已签到，连续签到 ${days} 天，奇豆 ${info.integralCnt ?? "未知"}`);
       return;
     }
 
-    await this.doSign();
-    const after = await this.signBanner();
-    $.log(`账号[${this.index}] 签到成功，连续签到 ${after.continuous ?? "未知"} 天`);
+    const res = await this.doSign();
+    const reward = Array.isArray(res.currentReward) ? res.currentReward.join("+") : res.currentReward || "";
+    $.log(
+      `账号[${this.index}] 签到成功，第 ${res.currentSignDay ?? days} 天` +
+      (reward ? `，获得 ${reward}` : "")
+    );
+
+    const after = await this.checkinInfo().catch(() => null);
+    if (after) $.log(`账号[${this.index}] 当前奇豆 ${after.integralCnt ?? "未知"}`);
   }
 }
 

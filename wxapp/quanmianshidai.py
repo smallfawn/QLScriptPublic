@@ -1,23 +1,56 @@
 
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-项目 全棉时代种棉花
-入口 #小程序://全棉时代
-变量 code #token#备注     多账号换行  
-变量名 qmzmh
-
-
+项目: 全棉时代 - 每日签到 + 种棉花(自动种树 + 浇水)
+入口: 微信小程序「全棉时代」-> 我的·每日签到 / 首页·种棉花
+说明: 通过 wx_server(smallcat) 用 openid 换取 wx.login code 自动登录(nmp),
+      完成每日签到(得积分); 若为已注册会员, 再对自己的树执行种棉花浇水。
+      账号尚未种树时会自动种下一棵(选定成长目标奖品), 之后每日自动浇水。
+      每次运行现取 code、现登录, 不再依赖手动粘贴的 code#token(易过期)。
+账号变量名: qmzmh   (填写 wx_server 中的 openid, 多账号用换行或 & 分割, 可选 #备注)
+需要配置 wx_server_url、wx_auth, 用于获取 wx.login code
+可选变量: qmzmh_prize_id  种树时的成长目标奖品 id, 默认 1046(加厚棉柔巾 6片/包*1包);
+          可选值来自 GET https://sg01.purcotton.com/api/prize/home
+#new Env("全棉时代签到")
+#cron 30 8 * * *
 """
 
 import os
-import requests
-from datetime import datetime, timezone, timedelta
+import sys
 import json
 import time
+import uuid
 import random
+import hashlib
+from datetime import datetime, timezone, timedelta
+from pathlib import Path
+from urllib.parse import quote
 
+import requests
 
-# 配置参数
-base_url = "https://hxxxy.gov.cn"
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+try:
+    from notify import send
+except Exception:
+    def send(title, content):
+        print(f"\n===== {title} =====\n{content}")
+
+# 配置参数 (均来自小程序反编译源码, 非机密)
+MINI_APP_ID = "wxdfcaa44b1aa891a7"
+NMP = "https://nmp.pureh2b.com"                 # config.js SERVER (生产)
+SG01 = "https://sg01.purcotton.com"             # config.js 种棉花 H5 与其 /api
+PRIZE_ID_DEFAULT = "1046"                       # 种树默认成长目标: 加厚棉柔巾 6片/包*1包
+base_url = "https://hxxxy.gov.cn"               # 旧占位常量, 保留兼容
+# smallcat / wx_server 配置 (机密, 从环境变量读取, 绝不硬编码)
+WX_SERVER_URL = os.getenv("wx_server_url", "http://192.168.31.196:8787").rstrip("/")
+WX_AUTH = os.getenv("wx_auth", "")
+TOKEN_CACHE_PATH = Path(__file__).with_name("quanmianshidai_token_cache.json")
+session = requests.Session()
 user_agent = "Mozilla/5.0 (Linux; Android 11; ONEPLUS A6000 Build/RKQ1.201217.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/116.0.0.0 Mobile Safari/537.36 XWEB/1160065 MMWEBSDK/20231201 MMWEBID/2930 MicroMessenger/8.0.45.2521(0x28002D3D) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 miniProgram/wxdfcaa44b1aa891a7"
 
 def get_beijing_date():  
@@ -36,9 +69,9 @@ def get_env_variable(var_name):
     if value is None:
         print(f'环境变量{var_name}未设置，请检查。')
         return None
-    accounts = value.strip().split('\n')
+    accounts = [x.strip() for x in value.replace('&', '\n').splitlines() if x.strip()]
     print(f'-----------本次账号运行数量：{len(accounts)}-----------')
-    print(f'------全棉时代种棉花-----1.2------')
+    print(f'------全棉时代签到+种棉花-----2.0------')
     return accounts
 
 def create_headers(code, token):
@@ -56,21 +89,227 @@ def create_headers(code, token):
         'accept-encoding': 'gzip, deflate',
         'accept-language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
         'cookie': 'sajssdk_2015_cross_new_user=1',
-        'code': code,  
-        'token': token,  
+        'code': code,
+        'token': token,
     }
     return headers
+
+
+# sg01 的 H5 只对 3 个接口(task/complete-task、task/complete-manual-task、answer/complete)
+# 的请求体做了参数签名(h5/js 里的 formatMd5)，不带签名时服务端返回 {"code":400,"msg":"参数格式错误"}。
+# 算法: 追加 timestamp(毫秒) → 丢掉值为 None/"" 的项 → 按 key 排序拼成 query 串 → md5(串+固定盐).upper()
+SG01_SIGN_SALT = "z0hQTvC21f8SXlLbL9Hv"
+
+
+def sg01_sign(params):
+    """把参数体补上 timestamp + sign，返回可直接 json= 提交的新 dict。"""
+    payload = dict(params)
+    payload["timestamp"] = int(time.time() * 1000)
+    kept = {k: v for k, v in payload.items() if v is not None and v != ""}
+    query = "&".join(
+        f"{quote(str(k), safe='')}={quote(str(v), safe='')}" for k, v in sorted(kept.items())
+    )
+    payload["sign"] = hashlib.md5((query + SG01_SIGN_SALT).encode("utf-8")).hexdigest().upper()
+    return payload
+
+
+# ---------------------------------------------------------------------------
+# smallcat + nmp 登录 (每次运行现取 wx.login code, 现登录, 不存长期令牌)
+# ---------------------------------------------------------------------------
+def mask(value):
+    if not value:
+        return ""
+    value = str(value)
+    return value[:2] + "***" if len(value) <= 12 else f"{value[:4]}***{value[-4:]}"
+
+
+def gen_guid():
+    return str(uuid.uuid4())
+
+
+def read_token_cache():
+    try:
+        if TOKEN_CACHE_PATH.exists():
+            return json.loads(TOKEN_CACHE_PATH.read_text(encoding="utf-8")) or {}
+    except Exception:
+        pass
+    return {}
+
+
+def write_token_cache(cache):
+    try:
+        TOKEN_CACHE_PATH.write_text(
+            json.dumps(cache, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception as e:
+        print(f"⚠️ 写入token缓存失败: {e}")
+
+
+def get_wx_code(openid):
+    if not WX_AUTH:
+        raise RuntimeError("缺少 wx_auth, 无法从 wx_server 获取 code")
+    headers = {"Accept": "application/json", "Content-Type": "application/json",
+               "auth": WX_AUTH}
+    body = json.dumps({"appid": MINI_APP_ID, "openid": openid})
+    last_msg = ""
+    for attempt in range(4):
+        if attempt:
+            # smallcat 偶发 "获取失败"(会话抖动), 刷新会话后间隔重试
+            try:
+                session.post(f"{WX_SERVER_URL}/wx/refresh", data=body,
+                             headers=headers, timeout=30)
+            except Exception:
+                pass
+            time.sleep(3)
+        resp = session.post(f"{WX_SERVER_URL}/wx/code", data=body,
+                            headers=headers, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
+        if isinstance(data, dict) and data.get("status") is False:
+            last_msg = data.get("message") or "获取失败"
+            continue
+        code = data.get("code") or (data.get("data") or {}).get("code")
+        if code:
+            return code
+        last_msg = "wx_server 未返回 code"
+    raise RuntimeError(f"wx_server 获取 code 失败(已重试): {last_msg}")
+
+
+def nmp_headers(guid, token=None):
+    """复刻 request.js: 每个请求头带 code=GUID、tag=v3.0, 登录后再带 token。"""
+    h = {"Content-Type": "application/json;charset=UTF-8", "code": guid, "tag": "v3.0"}
+    if token:
+        h["token"] = token
+    return h
+
+
+def nmp_login(openid, guid):
+    """wx.login code -> GET /api/wx/main/login。返回 (token, member, bind)。
+
+    member 为 None 或无 phone 表示尚未绑定手机号/注册, 无法签到。
+    """
+    wxcode = get_wx_code(openid)
+    resp = session.get(f"{NMP}/api/wx/main/login", params={"code": wxcode},
+                       headers=nmp_headers(guid), timeout=30)
+    resp.raise_for_status()
+    body = resp.json()
+    data = body.get("data") if isinstance(body.get("data"), dict) else None
+    token = (data or {}).get("token") or body.get("token")
+    member = (data or {}).get("member") if data else None
+    if member is None:
+        member = body.get("member")
+    bind = (data or {}).get("bind") if data else body.get("bind")
+    return token, member, bind
+
+
+def get_account_session(openid, index):
+    """现取 code、现登录, 复用缓存的设备 GUID。返回 (guid, token, member, bind)。"""
+    cache = read_token_cache()
+    entry = cache.get(openid) or {}
+    guid = entry.get("guid") or gen_guid()
+    token, member, bind = nmp_login(openid, guid)
+    phone = member.get("phone") if isinstance(member, dict) else None
+    cache[openid] = {"guid": guid, "hasPhone": bool(phone), "updatedAt": int(time.time())}
+    write_token_cache(cache)
+    tag = "已绑定手机号会员" if phone else f"未绑定(bind={bind})"
+    print(f"账号 {index} nmp登录: token={mask(token)} {tag}")
+    return guid, token, member, bind
+
+
+def member_sign_in(guid, token):
+    """每日签到: GET /api/member/signIn/point。响应体为裸数字 1=成功 0=今日已签到。"""
+    resp = session.get(f"{NMP}/api/member/signIn/point",
+                       headers=nmp_headers(guid, token), timeout=30)
+    if resp.status_code != 200:
+        return None, f"签到请求HTTP {resp.status_code}"
+    text = (resp.text or "").strip()
+    try:
+        val = json.loads(text)
+    except Exception:
+        val = text
+    if val in (1, "1"):
+        return True, "签到成功"
+    if val in (0, "0"):
+        return True, "今日已签到"
+    return False, f"签到失败(返回={text[:80]})"
+
+
+def prize_home(code, token):
+    """GET /api/prize/home: 可选的成长目标(奖品)列表, 对应 H5 的 guidePrizeList。"""
+    url = "https://sg01.purcotton.com/api/prize/home"
+    try:
+        response = requests.get(url, headers=create_headers(code, token), timeout=30)
+        response.raise_for_status()
+        data = response.json()
+        if data.get("code") == 200:
+            lst = (data.get("data") or {}).get("list")
+            return lst if isinstance(lst, list) else []
+        print(f"获取目标奖品列表失败: code={data.get('code')} msg={data.get('msg')}")
+    except requests.exceptions.RequestException as e:
+        print(f"获取目标奖品列表失败: {e}")
+    return []
+
+
+def zhongshu(code, token):
+    """种树: 选定成长目标后 POST /api/gain-tree {prize_id}。
+
+    对应 sg01 H5 `chunk-d2e24086` 的 gainTree():
+        axios.get("guidePrizeList")  -> /api/prize/home  取目标列表(seedList)
+        axios.post("getTree", {prize_id: seedList[seedIndex].id}) -> /api/gain-tree
+    选苗(choiceSeed)只是前端下标, 无额外校验; 该动作一次性且不消耗水滴。
+    目标由环境变量 qmzmh_prize_id 指定(默认 PRIZE_ID_DEFAULT); 若该 id 不在
+    当前列表中(奖品会下架), 回退为列表首项并打印实际选中的标题。
+    """
+    prizes = prize_home(code, token)
+    if not prizes:
+        return False, "无可选成长目标(prize/home 为空), 未种树"
+
+    want = str(os.getenv("qmzmh_prize_id", PRIZE_ID_DEFAULT)).strip()
+    chosen = next((p for p in prizes if str(p.get("id")) == want), None)
+    if chosen is None:
+        chosen = prizes[0]
+        print(f"目标 prize_id={want} 已不在列表中, 回退为首项")
+    title = chosen.get("title") or chosen.get("name") or ""
+
+    url = "https://sg01.purcotton.com/api/gain-tree"
+    try:
+        response = requests.post(url, headers=create_headers(code, token),
+                                 json={"prize_id": chosen.get("id")}, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+    except requests.exceptions.RequestException as e:
+        return False, f"种树请求失败: {e}"
+
+    if data.get("code") == 200:
+        return True, f"已种下(目标: {title})"
+    msg = data.get("msg") or f"code={data.get('code')}"
+    # 已有树时服务端会拒绝, 视为幂等成功
+    if any(k in str(msg) for k in ("已", "存在", "重复")):
+        return True, f"已有树({msg})"
+    return False, f"种树失败: {msg}"
 
 
 def jscz(code, token):  # 浇水
     # 调用hqid函数并获取树木ID及其他信息
     tree_id, sunshine, total_sunshine = hqid(code, token)
-    
+
+    if tree_id is None:
+        # tree 为空列表 => 尚未种树。种树 = 选定成长目标 + gain-tree, 一次性动作,
+        # 不消耗水滴; 种下后继续本次浇水。
+        print("尚未种树, 正在自动种下...")
+        planted, plant_msg = zhongshu(code, token)
+        print(f"种树: {plant_msg}")
+        if not planted:
+            return False
+        tree_id, sunshine, total_sunshine = hqid(code, token)
+        if tree_id is None:
+            print("种树后仍未取到树木ID, 跳过浇水")
+            return False
+
     if tree_id is not None:
         #print(f"获得的树木ID: {tree_id}")
         # 可以在这里打印阳光信息，如果需要
         #print(f"当前阳光: {sunshine}, 总阳光: {total_sunshine}")
-        
+
         while True:  # 开始一个无限循环
             url = "https://sg01.purcotton.com/api/watering"
             data = {"tree_user_id": tree_id, "water_cnt": 1}  # 使用动态获取的树木ID
@@ -106,8 +345,8 @@ def jscz(code, token):  # 浇水
             except requests.exceptions.RequestException as e:
                 print(f"请求失败: {e}")
                 break  # 请求异常时停止循环
-    else:
-        print("未能获取树木ID，无法执行浇水操作。")
+        return True
+    return False
 
 
 def llhmp(code, token, action, tid):  # 添加了tid参数
@@ -333,10 +572,10 @@ def pdrw(code, token):  # 判断任务
 def complete_task(code, token, tid):  # 棉花工厂
     url = "https://sg01.purcotton.com/api/task/complete-manual-task"
     headers = create_headers(code, token)
-    payload = {
+    payload = sg01_sign({
         "tid": tid,
         "relate_id": 0,
-    }
+    })
 
     try:
         response = requests.post(url, headers=headers, json=payload)
@@ -367,7 +606,7 @@ def lq_fd(code, token, tid):  # 三餐福袋和签到
 
     url = "https://sg01.purcotton.com/api/task/complete-task"
     headers = create_headers(code, token)
-    data = {"tid": tid}  # 使用传入的任务ID
+    data = sg01_sign({"tid": tid})  # 使用传入的任务ID
     try:
         response = requests.post(url, headers=headers, json=data)
         response.raise_for_status()  # 检查响应状态码
@@ -403,10 +642,19 @@ def hqid(code, token):  # 获取树木ID和阳光信息
         # print("Response JSON:", response_data)  # 用于调试
 
         if response_data.get("code") == 200:
-            tree_data = response_data['data']['tree']
-            user_data = response_data['data']['user']  # 获取用户相关数据
+            payload = response_data.get('data') or {}
+            tree_data = payload.get('tree')
+            user_data = payload.get('user')  # 获取用户相关数据
+            if not isinstance(user_data, dict):
+                user_data = {}
 
             # 获取树木ID
+            # 接口的 tree 字段有两种形态: 单棵树为 dict, 多棵/未种树为 list(空列表表示
+            # 尚未种树)。兼容处理, 避免 'list' object has no attribute 'get'。
+            if isinstance(tree_data, list):
+                tree_data = tree_data[0] if tree_data else {}
+            if not isinstance(tree_data, dict):
+                tree_data = {}
             tree_id = tree_data.get('id')
 
             # 获取阳光相关数据
@@ -472,23 +720,31 @@ def hdwt_box(code, token, tid): #庄园小课堂
             
             # 这里是你提交答案的代码逻辑
             url_submit_answer = "https://sg01.purcotton.com/api/answer/complete"
-            payload = {
-                "tid": tid,  # 假设任务ID为14
+            # H5 提交的是所选选项字母(answer=A/B/C/D)，服务端在响应里回正确答案；
+            # 早先写的 win=1 不是真实字段，配合缺失的签名会一起被判「参数格式错误」
+            options = [letter for letter in ("A", "B", "C", "D") if exam.get(letter.lower())]
+            choice = options[0] if options else "A"
+            payload = sg01_sign({
+                "answer": choice,
                 "exam_id": exam_id,
-                "win": 1  # 假设标记为正确
-            }
+                "tid": int(tid),
+            })
             submit_response = requests.post(url_submit_answer, headers=headers, json=payload)
             submit_response.raise_for_status()
 
             if submit_response.status_code == 200:
                 submit_response_data = submit_response.json()
                 #print(submit_response_data)  # 打印完整的响应体
-                
+                if submit_response_data.get("code") != 200:
+                    print(f"提交答案失败：{submit_response_data.get('msg')}")
+                    continue
+
                 # 提取并打印get_water, complete_num, 和 box_id
-                get_water = submit_response_data.get("data", {}).get("get_water", 0)
-                complete_num = submit_response_data.get("data", {}).get("complete_num", 0)
-                box_id = submit_response_data.get("data", {}).get("box_id", 0)
-                print(f"获取水量：{get_water}, 完成数量：{complete_num}, 宝箱ID：{box_id}")
+                data_ans = submit_response_data.get("data", {}) or {}
+                get_water = data_ans.get("get_water", 0)
+                complete_num = data_ans.get("complete_num", 0)
+                box_id = data_ans.get("box_id", 0)
+                print(f"答{choice} 正确答案{data_ans.get('answer', '?')} 获取水量：{get_water}, 完成数量：{complete_num}, 宝箱ID：{box_id}")
                 
                 # 如果box_id大于0，则打开宝箱
                 if box_id > 0:
@@ -752,44 +1008,84 @@ def process_all_friends(friends_user_ids, code, token):
 
 
 def main():
-    var_name = 'qmzmh'
-    tokens = get_env_variable(var_name)
-    if not tokens:
+    accounts = get_env_variable('qmzmh')
+    if not accounts:
         return
-    
-    total_tokens = len(tokens)
-    
-    if total_tokens > 20:
+    if not WX_AUTH:
+        print("❌ 未配置 wx_auth, 无法获取 code, 退出。")
+        return
+    total = len(accounts)
+    if total > 20:
         print("账号数量超过20个，不执行操作。")
         return
 
-
-    for index, token_info in enumerate(tokens, start=1):
-        parts = token_info.split('#')
-        if len(parts) < 2:
-            print("令牌格式不正确。跳过处理。")
-            continue
-
-        code = parts[0]
-        token = parts[1]
-        remark = parts[2] if len(parts) > 2 else ""
+    print("=============== 全棉时代 签到开始 ===============")
+    summaries = []
+    ok_count = 0
+    for index, entry in enumerate(accounts, start=1):
+        parts = str(entry).split('#', 1)
+        openid = parts[0].strip()
+        remark = parts[1].strip() if len(parts) > 1 else ""
         print()
-        print(f"------账号{index}/{total_tokens}，备注: {remark}-------")
-        
-        phone, user_id = login(code, token)
-        if phone and user_id:  # 检查是否成功获取电话号码和用户ID
-            # 进行后续任务
-            cscscs(code, token)
-            #sj_yg(code, token)#收集阳光
-            #syyg(code, token)#使用阳光
-            jscz(code, token) #浇水
-            pdrw(code, token) #任务判断
-            friend_user_ids = hyid(code, token)  
-            if friend_user_ids:
-                process_all_friends(friend_user_ids, code, token)  # 正确传入朋友ID列表
-        else:
-            print("登录失败或获取用户信息失败，跳过当前账号的后续操作。")
-      
+        print(f"------账号{index}/{total}，备注: {remark}-------")
+        lines = [f"【账号 {index}{('/' + remark) if remark else ''}】"]
+        try:
+            guid, token, member, bind = get_account_session(openid, index)
+            if not token:
+                msg = "登录失败(nmp未返回token)"
+                print(f"❌ {msg}")
+                lines.append(f"❌ {msg}")
+                summaries.append("\n".join(lines))
+                continue
+
+            phone = member.get("phone") if isinstance(member, dict) else None
+            if not (isinstance(member, dict) and phone):
+                msg = ("该账号尚未绑定手机号(需先在小程序「全棉时代」内完成手机号授权"
+                       "注册为会员后, 才能签到/种棉花)")
+                print(f"⚠️ {msg}")
+                lines.append(f"⚠️ {msg}")
+                summaries.append("\n".join(lines))
+                continue
+
+            # 核心动作: 每日签到 (本次修复重点)
+            ok, sign_msg = member_sign_in(guid, token)
+            print(("🎉 " if ok else "❌ ") + sign_msg)
+            lines.append(("🎉 " if ok else "❌ ") + sign_msg)
+            ok_count += 1 if ok else 0
+
+            # 种棉花: 仅给「自己的树」浇水 (沿用原 sg01 游戏流程)。
+            # sg01 侧需再登录一次拿到 phone/user_id; 失败仅提示, 不影响签到结果。
+            try:
+                sg_phone, sg_uid = login(guid, token)
+                if sg_phone and sg_uid:
+                    cscscs(guid, token)   # 刷新/领取日常
+                    watered = jscz(guid, token)   # 浇水(种棉花), 只浇自己的树
+                    pdrw(guid, token)     # 日常任务判断
+                    if watered:
+                        lines.append("🌱 种棉花: 已完成浇水/日常任务")
+                    else:
+                        lines.append("🌱 种棉花: 日常任务已完成; 种树/浇水未成功, "
+                                     "详见日志")
+                else:
+                    print("种棉花: sg01 登录未通过, 跳过浇水(不影响签到)")
+                    lines.append("🌱 种棉花: sg01 未登录, 已跳过")
+            except Exception as e:
+                print(f"种棉花流程异常(忽略, 不影响签到): {e}")
+                lines.append("🌱 种棉花: 异常已忽略")
+            # 说明: 原脚本的「给好友浇水」(process_all_friends) 是把自身水量消耗到
+            #       他人的树上, 属社交/代浇, 非「种自己的树」目标, 按安全约束停用。
+        except Exception as e:
+            print(f"❌ 账号 {index} 执行异常: {e}")
+            lines.append(f"❌ 执行异常: {e}")
+        summaries.append("\n".join(lines))
+        time.sleep(1)
+
+    print("\n=============== 全棉时代 签到结束 ===============")
+    title = f"全棉时代签到 {ok_count}/{total} 成功"
+    try:
+        send(title, "\n\n".join(summaries))
+    except Exception as e:
+        print(f"⚠️ 通知发送失败: {e}")
 
 
 if __name__ == "__main__":

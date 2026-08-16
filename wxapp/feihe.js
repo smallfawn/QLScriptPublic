@@ -266,7 +266,8 @@ class Task {
             const points = complete.data?.awardSendPoints || complete.data?.awardPoint || "";
             $.log(`账号[${this.index}] 签到完成${points ? `，获得${points}积分` : ""}`);
         } else if (complete?.msg) {
-            $.log(`账号[${this.index}] 完成确认返回: ${complete.msg}`);
+            // msg 常常只是一串 trace id，带上 code 与完整响应才能判断是奖励已领还是真失败
+            $.log(`账号[${this.index}] 完成确认返回: code=${complete.code} ${JSON.stringify(complete).slice(0, 200)}`);
         }
     }
 }

@@ -46,6 +46,9 @@ class Task {
         this.token = null
         this.wcsid = this.user[0]
         this.isSign = false
+        this.shopId = '100186753'
+        this.integralAccount = ''
+        this.activityId = ''
     }
 
     async run() {
@@ -59,50 +62,41 @@ class Task {
             $.log(`账号[${this.index}] 获取用户Token失败❌`)
             return
         }
+        await this.findSignActivity()
         await this.signIn()
         await this.getUserPoints()
     }
     async getUserToken(code) {
-        let data = JSON.stringify({
-            "code": "" + code,
-            "appid": "wxda948f3be0afc375",
-            "shopId": null,
-            "envVersion": "release",
-            "isEnterpriseWx": false,
-            "scene": 1168,
-            "referrerInfo": {
-                "appId": "wxda948f3be0afc375"
-            }
-        });
-
+        // 这个接口和其他接口一样要过 sign 校验，直接裸发会被服务端判成 code:996 当前请求异常，
+        // 所以必须走下面带 sign/ts/starttime 的 request()
         let options = {
             method: 'POST',
             url: 'https://mall-mobile-v6.vecrp.com/mobile/wxAppLogin',
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 MicroMessenger/7.0.20.1781 NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF XWEB/50249',
-                'Content-Type': 'application/json;charset=UTF-8',
-                'xweb_xhr': '1',
-                'appid': 'wxda948f3be0afc375',
-                'token': '',
-                'Sec-Fetch-Site': 'cross-site',
-                'Sec-Fetch-Mode': 'cors',
-                'Sec-Fetch-Dest': 'empty',
-                'Referer': 'https://servicewechat.com/wxda948f3be0afc375/65/page-frame.html',
-                'Accept-Language': 'zh-CN,zh;q=0.9'
-            },
-            data: data
+            headers: {},
+            data: {
+                "code": "" + code,
+                "appid": "wxda948f3be0afc375",
+                "shopId": null,
+                "envVersion": "release",
+                "isEnterpriseWx": false,
+                "scene": 1168,
+                "referrerInfo": {
+                    "appId": "wxda948f3be0afc375"
+                }
+            }
         };
 
         let {
             data: result
-        } = await axios.request(options);
-        console.log(result);
+        } = await this.request(options);
 
         if (result?.success) {
-            this.token = result.result.mobileToken
-            $.log(`🌸账号[${this.index}] 获取用户Token成功:${this.token}`)
+            let info = result.result || {}
+            this.token = info.mobileToken
+            if (info.shopId) this.shopId = "" + info.shopId
+            $.log(`🌸账号[${this.index}] 获取用户Token成功 门店:${info.shopName || this.shopId}`)
         } else {
-            $.log(`🌸账号[${this.index}] 获取用户Token-失败:${result.message}❌`)
+            $.log(`🌸账号[${this.index}] 获取用户Token-失败:${result?.msg || result?.message}❌`)
         }
     }
     sha1(str) {
@@ -149,7 +143,7 @@ class Task {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 MicroMessenger/7.0.20.1781(0x6700143B) NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF WindowsWechat(0x63090a13) UnifiedPCWindowsWechat(0xf254173b) XWEB/19027",
             "sign": "" + sign,
             "starttime": "" + n,
-            "token": "" + this.token,
+            "token": "" + (this.token || ""),
             "ts": "" + n,
             "x-tracedid": "" + $.uuid(),
             "xweb_xhr": "1",
@@ -159,16 +153,77 @@ class Task {
 
         return axios.request(options)
     }
+    // 签到活动是按年新建的(如「签到赚积分-2026年」)，写死 activityId 每年都会失效，
+    // 这里用两个只读查询接口动态拿当前可参与的签到活动(activityType=3)
+    async findSignActivity() {
+        try {
+            let { data: sys } = await this.request({
+                method: 'GET',
+                url: `https://mall-mobile-v6.vecrp.com/mobile/activity/common/queryIntegralSystemList`,
+                params: { shopId: this.shopId, earnSpendType: 1 },
+                headers: {},
+            });
+            this.integralAccount = (Array.isArray(sys?.result) ? sys.result[0]?.integralAccount : "") || ""
+
+            let { data: list } = await this.request({
+                method: 'POST',
+                url: `https://mall-mobile-v6.vecrp.com/mobile/activity/common/queryActivityList`,
+                headers: {},
+                data: {
+                    earnSpendType: 1,
+                    shopId: this.shopId,
+                    pageNo: 1,
+                    pageSize: 10,
+                    integralAccount: this.integralAccount,
+                    activityType: 3,
+                },
+            });
+            let rows = Array.isArray(list?.result) ? list.result : (list?.result?.data || list?.result?.rows || [])
+            let activity = rows.find((item) => String(item.activityType) === "3" && item.canJoin !== false)
+            if (activity?.activityId) {
+                this.activityId = activity.activityId
+                $.log(`🌸账号[${this.index}] 签到活动:${activity.title || activity.activityId}`)
+            } else {
+                $.log(`🌸账号[${this.index}] 未查到可参与的签到活动`)
+            }
+        } catch (e) {
+            $.log(`🌸账号[${this.index}] 查询签到活动异常:${e.message || e}`)
+        }
+    }
     async signIn() {
+        if (!this.activityId) {
+            $.log(`🌸账号[${this.index}] 跳过签到:没有可用的签到活动`)
+            return
+        }
+        // 先查本月已签日期，避免重复提交
+        try {
+            let now = new Date()
+            let pad = (n) => ("" + n).padStart(2, "0")
+            let ym = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`
+            let last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+            let { data: monthInfo } = await this.request({
+                method: 'POST',
+                url: `https://mall-mobile-v6.vecrp.com/mobile/activity/sign/querySignInfoList`,
+                headers: {},
+                data: { activityId: this.activityId, startDate: `${ym}-01`, endDate: `${ym}-${pad(last)}` },
+            });
+            let signed = monthInfo?.result?.signDateList || []
+            if (signed.some((d) => ("" + d).slice(0, 10) === $.time('yyyy-MM-dd'))) {
+                $.log(`🌸账号[${this.index}] 今日已签到`)
+                this.isSign = true
+                return
+            }
+        } catch (e) { }
+
         let options = {
             method: 'POST',
             url: `https://mall-mobile-v6.vecrp.com/mobile/activity/sign/sign`,
 
             headers: {},
             data: {
-                activityId: 'cdd30467-abb8-4944-8941-2879aa950a86',
-                shopId: '100186753',
-                signDate: $.time(`yyyy-M-dd`),
+                activityId: this.activityId,
+                shopId: this.shopId,
+                signDate: $.time(`yyyy-MM-dd`),
             }
 
         };
@@ -177,9 +232,13 @@ class Task {
         } = await this.request(options);
         if (result?.success) {
             //打印签到结果
+            this.isSign = true
             $.log(`🌸账号[${this.index}]` + `签到成功`);
+        } else if (/已签|重复/.test("" + (result?.msg || ""))) {
+            this.isSign = true
+            $.log(`🌸账号[${this.index}] 今日已签到`)
         } else {
-            $.log(`🌸账号[${this.index}] 签到-失败:${result.msg}❌`)
+            $.log(`🌸账号[${this.index}] 签到-失败:${result?.msg}❌`)
         }
 
 
@@ -191,7 +250,7 @@ class Task {
             method: 'GET',
             url: `https://mall-mobile-v6.vecrp.com/mobile/customer/getMyAllPoint`,
             params: {
-                shopId: '100186753'
+                shopId: this.shopId
             },
             headers: {},
 

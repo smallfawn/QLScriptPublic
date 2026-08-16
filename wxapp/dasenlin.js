@@ -314,7 +314,10 @@ class Task {
                 $.log(`账号[${this.index}] 今日已签到`);
                 return;
             }
-            if (!isSuccess(result)) throw new Error(getMessage(result));
+            if (!isSuccess(result)) {
+                // 服务端只回一句「签到失败」，带上原始响应便于定位（status/code 才能区分签名错误与活动限制）
+                throw new Error(`${getMessage(result) || "未知错误"} | 原始响应: ${JSON.stringify(result).slice(0, 200)}`);
+            }
 
             const data = result.data || {};
             if (data.yearPointFull) {

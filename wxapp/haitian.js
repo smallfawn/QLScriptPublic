@@ -7,8 +7,25 @@ cron: 30 11 * * *
 ------------------------------------------
 #Notice:
 变量名 haitian
-变量值：wx_server 里的 openid/账号标识，多账号&或换行
+变量值：wx_server 里的 openid/账号标识，多账号&或换行；也兼容旧格式 authorization#uuid
 需要配置：wx_server_url、wx_auth
+
+可选变量：
+  haitian_phone_login  是否允许用 /wx/getphonenumber 的手机号授权数据登录，默认 1(开启)。
+                       海天只有这一条登录路（等同小程序里点“手机号快捷登录”按钮），
+                       置 0 则改为自己抓包按 authorization#uuid 手填变量。
+
+登录链路（反编译包 wx7a890ea13f50d7b6 主包，逐行核对）：
+  手机号授权 -> e.detail.encryptedData / e.detail.iv
+  再 uni.login() 取一次 code
+  -> POST buyer-api/wechat/mini/phoneNew/login?edata=&iv=&code=&uuid=&article_ids=&app_versions=
+  -> {access_token, refresh_token, uid, success}
+  components/login/login.js:180-212(mpWxPhoneLogin)、common/vendor.js:4394(wxRegisterOrLogin)
+  注意 edata/iv 必须是【手机号】授权回调里的加密数据（wx_server 走 /wx/getphonenumber
+  返回的 data.raw.encryptedData / data.raw.iv）；早先脚本传的是 /wx/getuserinfo 的
+  【用户资料】加密数据（里面只有 nickName/avatarUrl），服务端解出来没有 phoneNumber，
+  固定回 HTTP 500 {"code":"E131","message":"登录失败"}——这不是服务端故障。
+  access_token 过期可用 POST buyer-api/passport/token {refresh_token} 续期（vendor.js:13707）。
 
 ⚠️【免责声明】
 ------------------------------------------
@@ -34,6 +51,10 @@ const PAGE_VERSION = "772";
 const API_BASE = "https://cmallapi.xkmm.cn/buyer-api";
 const BASE_API = "https://cmallapi.xkmm.cn/base-api";
 const TOKEN_CACHE_FILE = path.join(__dirname, "haitian_token_cache.json");
+// 手机号授权开关：默认开启(1)。海天的登录接口只吃手机号授权的加密数据，
+// 不想授权就置 0，然后自行抓包按 authorization#uuid 填变量。
+const PHONE_LOGIN = !/^(0|false|no|off)$/i.test(String(process.env.haitian_phone_login ?? "1"));
+const WX_SERVER_URL = (process.env.wx_server_url || "http://192.168.31.196:8787").replace(/\/+$/, "");
 const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_7_15 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.70(0x1800462d) NetType/WIFI Language/zh_CN";
 
 function readTokenCache() {
@@ -73,6 +94,17 @@ function isTokenError(message) {
     return /401|403|token|登录|授权|失效|过期|no-show-toast/i.test(String(message || ""));
 }
 
+// 幂等：重复签到服务端回 HTTP 500 {"code":"1019","message":"今天已经签到过了"}，
+// 老正则只有 /已签|重复/，匹配不到「已经签到过了」，会把成功当失败报
+function isAlreadySigned(message) {
+    return /\b1019\b|已签|已经签|签到过|重复|already/i.test(String(message || ""));
+}
+
+// 活动侧状态（结束/未开始），不是脚本故障，不打 ❌
+function isActivityClosed(message) {
+    return /活动(还没有开始|未开始|已经结束|已结束)|已经结束|已结束|\b002\b|\b1009\b/.test(String(message || ""));
+}
+
 class Task {
     constructor(env) {
         this.index = $.userIdx++;
@@ -86,7 +118,8 @@ class Task {
         this.activity_code = "";
         this.userFlag = false;
         this.userInfo = {};
-        this.isLegacyToken = this.user.length >= 2;
+        // 旧格式 authorization#uuid：第一段是 JWT；openid#备注 这种不算
+        this.isLegacyToken = this.user.length >= 2 && /^ey[A-Za-z0-9_-]{10,}\./.test(this.accountId);
         if (this.isLegacyToken) {
             this.token = this.user[0].trim();
             this.uuid = this.user[1].trim() || this.uuid;
@@ -104,12 +137,24 @@ class Task {
                 this.applyToken(cached);
                 $.log(`账号[${this.index}] 使用缓存token: ${shortToken(this.token)}`);
                 if (!(await this.checkToken())) {
-                    this.removeCachedToken();
-                    $.log(`账号[${this.index}] 缓存token失效，重新CODE登录`);
+                    $.log(`账号[${this.index}] 缓存token失效，尝试用 refresh_token 续期`);
+                    if (!(await this.refreshAccessToken())) {
+                        this.removeCachedToken();
+                        $.log(`账号[${this.index}] 续期失败，重新登录`);
+                    }
                 }
             }
 
             if (!this.token) {
+                if (!PHONE_LOGIN) {
+                    $.log(
+                        `账号[${this.index}] 没有可用 token：海天唯一的登录接口 wechat/mini/phoneNew/login 需要微信手机号授权的加密数据(小程序里就是“手机号快捷登录”)，而你把 haitian_phone_login 置成了 0。\n` +
+                            `  两种办法二选一：\n` +
+                            `  1) 允许手机号授权 -> 去掉 haitian_phone_login 或置 1，脚本自动用 wx_server 的 /wx/getphonenumber 登录；\n` +
+                            `  2) 继续不授权 -> 自行抓一次小程序请求，把 Authorization 和 uuid 按 authorization${strSplitor}uuid 填进 ${ckName} 变量`
+                    );
+                    return;
+                }
                 await this.loginByWxCode();
                 if (!this.token) return;
             }
@@ -124,8 +169,7 @@ class Task {
 
         if (this.activity_code) {
             await this.signIn();
-            await this.getLotteryTaskList();
-            await this.getLotteryNum();
+            if (await this.getLotteryTaskList()) await this.getLotteryNum();
         }
     }
 
@@ -210,22 +254,41 @@ class Task {
         return result;
     }
 
-    async getOperateData() {
+    /** 统一调 wx_server，status:false 时单独报错，避免把取码限流误判成海天登录失败 */
+    async callWxServer(endpoint) {
         if (!process.env.wx_auth) throw new Error("缺少 wx_auth，无法从 wx_server 获取登录数据");
-        const url = (process.env.wx_server_url || "http://192.168.31.196:8787").replace(/\/$/, "");
-        const { data } = await axios.post(`${url}/wx/getuserinfo`, {
-            appid: MINI_APP_ID,
-            openid: this.accountId,
-        }, {
-            headers: { auth: process.env.wx_auth },
-            timeout: 45000,
-            validateStatus: () => true,
-        });
-        const result = data?.data || {};
-        if (!data?.status || !result.code || !result.encryptedData || !result.iv) {
-            throw new Error(`wx_server 未返回完整登录数据: ${JSON.stringify(data)}`);
+        const { data } = await axios.post(
+            `${WX_SERVER_URL}${endpoint}`,
+            { appid: MINI_APP_ID, openid: this.accountId },
+            { headers: { auth: process.env.wx_auth }, timeout: 45000, validateStatus: () => true }
+        );
+        if (!data || data.status === false) {
+            throw new Error(`wx_server ${endpoint} 失败: ${data?.message || data?.error || "未知原因"}`);
         }
-        return result;
+        return data.data || {};
+    }
+
+    /**
+     * 取【手机号】授权的加密数据。
+     * /wx/getphonenumber 的 data.raw 里带 encryptedData/iv（等同 getPhoneNumber 回调里的字段）；
+     * 注意不能用 /wx/getuserinfo，那个是用户资料(nickName/avatarUrl)的加密数据，
+     * 服务端解不出 phoneNumber，固定回 500 E131 登录失败。
+     */
+    async getPhoneAuthData() {
+        const result = await this.callWxServer("/wx/getphonenumber");
+        const raw = result.raw || {};
+        const edata = raw.encryptedData || result.encryptedData || "";
+        const iv = raw.iv || result.iv || "";
+        if (!edata || !iv) throw new Error(`wx_server /wx/getphonenumber 未返回手机号加密数据: ${JSON.stringify(Object.keys(raw))}`);
+        return { edata, iv };
+    }
+
+    /** 手机号授权之后再取一次 wx.login code（顺序和小程序一致） */
+    async getLoginCode() {
+        const result = await this.callWxServer("/wx/code");
+        const code = result.code || "";
+        if (!code) throw new Error("wx_server /wx/code 未返回 code");
+        return code;
     }
 
     async getArticleIds() {
@@ -244,12 +307,13 @@ class Task {
 
     async loginByWxCode() {
         try {
-            const wxData = await this.getOperateData();
+            const { edata, iv } = await this.getPhoneAuthData();
+            const code = await this.getLoginCode();
             const articleIds = await this.getArticleIds();
             const params = {
-                edata: wxData.encryptedData,
-                iv: wxData.iv,
-                code: wxData.code,
+                edata,
+                iv,
+                code,
                 uuid: this.uuid,
                 article_ids: articleIds,
                 app_versions: "1.0.0",
@@ -265,9 +329,32 @@ class Task {
             this.refreshToken = result.refresh_token || result.refreshToken || "";
             await this.loginCommunityToken().catch(() => {});
             this.saveCachedToken();
-            $.log(`账号[${this.index}] CODE登录成功: ${shortToken(this.token)}`);
+            $.log(`账号[${this.index}] 手机号授权登录成功: ${shortToken(this.token)}`);
         } catch (e) {
-            $.log(`账号[${this.index}] CODE登录失败: ${e.message || e}`);
+            $.log(`账号[${this.index}] 登录失败: ${e.message || e}`);
+        }
+    }
+
+    /** access_token 续期：vendor.js:13707 POST /passport/token {refresh_token} */
+    async refreshAccessToken() {
+        if (!this.refreshToken) return false;
+        try {
+            const result = await this.request("/passport/token", {
+                method: "POST",
+                data: { refresh_token: this.refreshToken },
+                auth: false,
+            });
+            const token = result?.accessToken || result?.access_token || "";
+            if (!token) return false;
+            this.token = token;
+            this.refreshToken = result.refreshToken || result.refresh_token || this.refreshToken;
+            await this.loginCommunityToken().catch(() => {});
+            this.saveCachedToken();
+            $.log(`账号[${this.index}] token续期成功: ${shortToken(this.token)}`);
+            return await this.checkToken();
+        } catch (e) {
+            $.log(`账号[${this.index}] token续期失败: ${e.message || e}`);
+            return false;
         }
     }
 
@@ -336,16 +423,19 @@ class Task {
             });
             if (result?.is_sign === true || result?.success === true) {
                 $.log("签到成功");
+            } else if (isAlreadySigned(JSON.stringify(result))) {
+                $.log("今日已签到");
             } else {
                 $.log(`签到失败 [${result?.message || JSON.stringify(result)}]`);
             }
         } catch (e) {
             const message = String(e.message || e);
-            if (/已签|重复/.test(message)) {
+            if (isAlreadySigned(message)) {
                 $.log("今日已签到");
                 return;
             }
             $.log(`签到失败 [${message}]`);
+            if (isTokenError(message)) this.removeCachedToken();
         }
     }
 
@@ -389,14 +479,21 @@ class Task {
             });
             if (result?.lucky_record_vo) {
                 $.log(`🌸账号[${this.index}]🕊抽奖结果:${result.lucky_record_vo.prize_name}🎉`);
-            } else {
-                $.log(`🌸账号[${this.index}] 抽奖-失败:${JSON.stringify(result)}❌`);
+                return true;
             }
+            $.log(`🌸账号[${this.index}] 抽奖-失败:${JSON.stringify(result)}❌`);
         } catch (e) {
-            $.log(`🌸账号[${this.index}] 抽奖-失败:${e.message || e}❌`);
+            const message = String(e.message || e);
+            if (isActivityClosed(message)) {
+                $.log(`🌸账号[${this.index}] 抽奖活动已结束，跳过`);
+                return false;
+            }
+            $.log(`🌸账号[${this.index}] 抽奖-失败:${message}❌`);
         }
+        return false;
     }
 
+    /** 返回 false 表示抽奖活动已关闭，外层不用再查次数 */
     async getLotteryTaskList() {
         try {
             const result = await this.request(`/lucky/task/package/jfcj${this.activity_code}`);
@@ -418,12 +515,18 @@ class Task {
                         }
                     }
                 }
-            } else {
-                $.log(`🌸账号[${this.index}] 抽奖次数任务-失败:${JSON.stringify(result)}❌`);
+                return true;
             }
+            $.log(`🌸账号[${this.index}] 抽奖次数任务-失败:${JSON.stringify(result)}❌`);
         } catch (e) {
-            $.log(`🌸账号[${this.index}] 抽奖次数任务-失败:${e.message || e}❌`);
+            const message = String(e.message || e);
+            if (isActivityClosed(message)) {
+                $.log(`🌸账号[${this.index}] 积分抽奖活动未开始或已结束，跳过抽奖`);
+                return false;
+            }
+            $.log(`🌸账号[${this.index}] 抽奖次数任务-失败:${message}❌`);
         }
+        return true;
     }
 
     async lotteryTaskBrowser(link) {
@@ -444,13 +547,19 @@ class Task {
             if (result?.can_use > 0) {
                 $.log(`当前剩余抽奖次数：${result.can_use}`);
                 for (let can = 0; can < result.can_use; can++) {
-                    await this.doLottery();
+                    // 活动已结束时不再空转
+                    if (!(await this.doLottery())) break;
                 }
             } else {
                 $.log("当前剩余抽奖次数0");
             }
         } catch (e) {
-            $.log(`查询抽奖次数失败:${e.message || e}`);
+            const message = String(e.message || e);
+            if (isActivityClosed(message)) {
+                $.log("抽奖活动未开始或已结束，跳过");
+                return;
+            }
+            $.log(`查询抽奖次数失败:${message}`);
         }
     }
 }
