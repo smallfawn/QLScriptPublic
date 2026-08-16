@@ -23,6 +23,8 @@ https://api.hcnsec.cn/sign-up?aff=tEPD
 访问不了就用梯子
 注册不了就用第三方登录
 
+## WEB搜索就用必应；每天搜索有积分；积分换购物卡
+https://rewards.bing.com/welcome?rh=g7a-IyWIfh0&ref=rafsrchae
 ## 大环境不好求职
 本人大专毕业！学习逆向5年，移动应用；PC应用；浏览器网页逆向相关！JSVMP；混淆等；可用AI工具提高开发效率！
 目标薪资10K
