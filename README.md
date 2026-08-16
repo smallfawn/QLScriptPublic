@@ -1,5 +1,28 @@
 ## 免费AI中转站
-https://vsllm.com
+https://vsllm.com/register?aff=5Wvk
+
+
+https://tabitoken.com/sign-up?aff=c6Rg  
+
+
+https://gorouter.app/sign-up?aff=ZXsr 
+
+
+https://agentrouter.org/register?aff=s51d
+
+
+https://api2.gemai.cc/sign-up?aff=Fjsj
+
+
+https://api456.me/register?aff=yBOp
+
+
+https://api.hcnsec.cn/sign-up?aff=tEPD
+
+
+访问不了就用梯子
+注册不了就用第三方登录
+
 ## 大环境不好求职
 本人大专毕业！学习逆向5年，移动应用；PC应用；浏览器网页逆向相关！JSVMP；混淆等；可用AI工具提高开发效率！
 目标薪资10K
