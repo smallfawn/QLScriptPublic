@@ -6,6 +6,23 @@ cron: 45 8 * * *
 变量值：wx_server 中保存的 openid/账号标识，多账号用 & 或换行分隔
       也支持 openid#token 或仅 token
 依赖变量：wx_server_url、wx_auth
+
+------------------------------------------
+已知限制（2026-08-17 实测定性，别再当成账号问题去查）：
+  只读部分全通：登录(wxMiniSilentLogin)、getMemberInfo、sorghum/index、tasks/index。
+  但所有【加密写接口】都被服务端拒绝，签到/分享/种植/浇水/施肥/收获同一个根因：
+    · 不带 encryptData  -> 5001「请从小程序重新进入！」（说明这个字段是必填的）
+    · 带 encryptData    -> 5001「用户信息异常，请删除小程序后重新打开」
+                           （说明服务端收到了、并且在校验它，只是格式不对）
+  已试过 8 种 encryptData 形状全部同样报错：
+    微信用户密钥(AES-128-GCM，key/iv base64 解码后 16+12 字节，密文+tag / 密文与 tag 分开)、
+    脚本现状(把 base64 串当 utf8 明文喂 AES-CBC 输出 hex)、
+    包里验证码模块那把固定密钥 XwKsGlMcdPMEhR1B 的 ECB/CBC + base64，
+    明文分别试过 {ts} / {member_id,ts} / 时间戳字符串 / openid。
+  正确格式无从还原：这套逻辑在 plant/ 分包里，而 /wx/downloadurl 只给主包
+  （plant/ 下 24 个文件全是空壳）。要修必须在小程序里抓一次成功签到的请求
+  （URL + 请求头 + 完整 body），拿到 encryptData 的真实构造方式。
+------------------------------------------
 */
 
 const { Env } = require("../tools/env.js");
@@ -302,11 +319,27 @@ class Task {
   }
 
   async encryptedPost(urlPath, data = {}) {
-    return this.gardenPost(urlPath, await this.encryptData(data));
+    return this.withEncryptHint(urlPath, async () => this.gardenPost(urlPath, await this.encryptData(data)));
   }
 
   async encryptedGet(urlPath, data = {}) {
-    return this.gardenGet(urlPath, await this.encryptData(data));
+    return this.withEncryptHint(urlPath, async () => this.gardenGet(urlPath, await this.encryptData(data)));
+  }
+
+  /**
+   * 加密写接口被服务端拒时补一句根因，避免下一个人把它当账号问题查。
+   * 见文件头：encryptData 的真实构造在 plant/ 分包里，下包 API 只给主包，需要抓包。
+   */
+  async withEncryptHint(urlPath, fn) {
+    try {
+      return await fn();
+    } catch (e) {
+      const msg = String(e.message || e);
+      if (/用户信息异常|请从小程序重新进入/.test(msg)) {
+        throw new Error(`${msg} ← encryptData 格式未还原(plant/ 是空壳分包)，需抓一次真机请求，见文件头说明`);
+      }
+      throw e;
+    }
   }
 
   async queryMember() {
