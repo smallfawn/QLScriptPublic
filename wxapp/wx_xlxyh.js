@@ -30,18 +30,41 @@ cron: 20 9 * * *
   requestId: 源码 uuid() 无参调用，第 8/13/18/23 位被置成 undefined 再 join，
              实际得到的是 32 位十六进制而不是标准 UUID，必须照抄这个 quirk。
   注意：必须带微信小程序 User-Agent，否则 getOpenId 直接回 {"code":1,"message":"非法请求"}。
-  另注：sign 实测服务端并不校验（故意写错签名，signList / checkActivity 照样回 200），
+  另注：sign 服务端不校验（故意写错签名，signList / checkActivity 照样回 200），
         真正的准入是那个 User-Agent；照抄签名只是为了跟真机一致。
+        （sign 的算法本身是核对过的：563700E2…js 的 hex_md5 就是标准小写 md5，
+          h() 按 charCodeAt&255 取字节，l() 输出小写 hex，没有任何私货。）
 
-已知服务端拦截（不是脚本 bug，别再往签名/会话上找原因）：
-  · 签到 GET /api/user/signIn   恒回 40001「登录过期」。同一把会话打 /api/user/info、
-    /api/user/signList、/api/home/taskDaily 全是 200；换 getOpenId 会话、换
-    grantAuth 会话（返回的还是同一把 sessionKey）、把时间戳对齐服务端 Date 头、
-    换手机/PC 微信 UA、给 sessionKey 里的 + 做各种转义，结果都一样；会话头留空时
-    它改回 20001，说明请求头是被读到的。是账号态/风控，需要在小程序里手点。
-  · 抽奖 POST /api/luckDraw/getLuck 恒回 code=1「非法请求」。参数与 raffle.js:126
-    一字不差，checkActivity(7) 与 luckDraw/list 都是 200，说明活动开着。
-  点赞 / 阅读 5 分钟 / VLOG 1 分钟 三个任务是通的（实测芯动值 125 -> 150）。
+签到（GET /api/user/signIn）—— 已知服务端拦截，脚本不再瞎试：
+  客户端 pages/task-center/index.js:180-220 的 userSign() 会先看 signList 的
+  isSignToday，已签就只弹个 toast、根本不打 signIn。脚本照这个顺序做，
+  所以正常情况下（含用户自己在小程序里签过）走的是「今日已签到」这条分支。
+  未签时打 signIn 会恒回 40001「登录过期」，两天共 15 轮变量法排除到底，
+  以下全部试过且结果一律 40001：
+    · 会话来源：getOpenId / grantAuth（返回同一把 sessionKey）
+    · sessionKey 里 + 的 5 种转义、整体 urlencode
+    · timestamp 毫秒/秒、对齐服务端 Date 头
+    · requestId：32 位无横线（真机 quirk）/ 标准 UUID / 纯随机 32 位
+    · GET / POST、sign 大小写、Content-Type 有无、头名全小写
+    · Referer 换 page-frame / task-center / 首页 / 我的 / 只到版本号
+    · UA 换安卓 / 苹果 / PC 微信
+    · userId 换成别人（连 userId=1 都是 40001）、openId 改错、会话也塞进 query
+  而同一把会话打 /api/user/info、/api/user/signList、/api/user/userLevel、
+  /api/user/check、以及两个【写】接口 /api/user/signInSupplement、
+  /api/user/upgradeConfirm 全是 200 —— 所以既不是会话失效，也不是写操作被禁。
+  会话头留空时它改回 20001，说明请求头确实被读到了。
+  也不是「今天已签所以报错」：8-16 那天 signList 显示未签，signIn 同样 40001。
+  结论：这一个路径被服务端单独挡住，包里的请求契约已经复刻到位，
+  要再往下走只能拿一次真机成功签到的抓包（URL + 完整请求头 + body）来 diff。
+
+抽奖（POST /api/luckDraw/getLuck）：
+  参数与 pages/wheel/components/raffle/raffle.js:126 一字不差。
+  实测这个后端的 code=1 是【通用错误兜底】而不是网关拦截 —— 同一个请求换个
+  Referer 会变成 90002「请求太频繁」（源码里客户端静默吞掉的那个码），
+  同一时段连只读的 luckDraw/list 也在回 code=1「服务异常」。
+  脚本只抽每日免费的那次，免费次数用尽就跳过，不花芯动值。
+
+点赞 / 阅读 5 分钟 / VLOG 1 分钟 三个任务是通的（实测芯动值 125 -> 150）。
 
 ⚠️【免责声明】
 ------------------------------------------
@@ -378,10 +401,9 @@ class Task {
             this.log(`✅ 今日已签到（本月连续 ${info.signContinuityMonth || 0} 天）`);
             return;
         }
-        // retry:false —— 实测这个接口的 40001 不是会话过期：换新会话（getOpenId 或
-        // grantAuth 都试过）、换时间戳、换 UA 一律 40001，而同一把会话打 user/info /
-        // signList 都是 200。会话头留空时它反而报 20001，说明头是读到了的。
-        // 所以这里不做「重登再重放」，免得白耗一次取码额度。
+        // retry:false —— 这个接口的 40001 不是会话过期（见文件头：两天 15 轮变量法，
+        // 同一把会话连 signInSupplement / upgradeConfirm 这两个写接口都是 200），
+        // 重登也换不来结果，只会白耗一次取码额度。
         const result = await this.request(EP_SIGN_IN, { data: { userId: this.userId }, retry: false });
         if (isSuccess(result) && result.data) {
             // state 1/2/3 在源码里对应三种「签到成功」弹窗
@@ -389,7 +411,8 @@ class Task {
         } else if (isAlreadyDone(result.message)) {
             this.log(`✅ 今日已签到（${result.message}）`);
         } else if (bizCode(result) === CODE_SESSION_EXPIRED) {
-            this.log("❌ 签到被服务端拦下（40001），账号态问题，请在小程序里手动点一次签到");
+            this.log("❌ 签到被服务端单独挡住（40001），同一把会话打其它读写接口都正常；");
+            this.log("   请在小程序里手点一次签到（脚本已按客户端顺序先查 signList，不会重复签）");
         } else {
             this.log(`❌ 签到失败: ${result.message || bizCode(result)}`);
         }
@@ -427,10 +450,11 @@ class Task {
             this.log(`🎉 抽奖成功: ${result.data.name || "已中奖"}`);
         } else if (isAlreadyDone(result.message)) {
             this.log(`🎡 今日抽奖已完成（${result.message}）`);
-        } else if (/非法请求/.test(String(result.message || ""))) {
-            // 参数、请求头、UA、活动状态都与真机一致（checkActivity/luckDraw list 都是 200），
-            // 只有这个路径被前置网关挡下，属于服务端风控，脚本不绕。
-            this.log("❌ 抽奖被服务端网关拦下（非法请求），请在小程序里手动转一次");
+        } else if (/非法请求|服务异常|请求太频繁/.test(String(result.message || ""))) {
+            // code=1 是这个后端的通用错误兜底，不是网关拦截：同一个请求换个 Referer 会
+            // 变成 90002「请求太频繁」（客户端静默吞掉的那个码），同时段连只读的
+            // luckDraw/list 也在回 code=1「服务异常」。所以是抽奖服务自己在抖，不猜不绕。
+            this.log(`🎡 抽奖服务返回通用错误（${result.message}），稍后重试或在小程序里手动转一次`);
         } else {
             this.log(`❌ 抽奖失败: ${result.message || bizCode(result)}`);
         }
