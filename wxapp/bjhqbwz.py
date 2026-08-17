@@ -211,6 +211,19 @@ def api_post(path, body, token=None, user_id=None):
     headers = sign_headers(body_str, token=token, user_id=user_id)
     resp = session.post(f"{BASE_URL}{path}", data=body_str.encode("utf-8"),
                         headers=headers, timeout=30)
+    # 会话失效时服务端是用 HTTP 401/403 表达的, 不是 JSON 信封里的 code。
+    # raise_for_status() 会在 run_account 的重登重放分支之前就把它抛成异常
+    # (实测缓存 token 过期后直接报 "401 Client Error", 整个账号失败),
+    # 所以这里把它翻译成带 code 的信封, 交给调用方去重登。
+    if resp.status_code in SESSION_CODES:
+        try:
+            data = resp.json()
+        except Exception:
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
+        data["code"] = resp.status_code
+        return data
     resp.raise_for_status()
     return resp.json()
 
