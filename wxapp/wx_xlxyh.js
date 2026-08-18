@@ -35,36 +35,24 @@ cron: 20 9 * * *
         （sign 的算法本身是核对过的：563700E2…js 的 hex_md5 就是标准小写 md5，
           h() 按 charCodeAt&255 取字节，l() 输出小写 hex，没有任何私货。）
 
-签到（GET /api/user/signIn）—— 已知服务端拦截，脚本不再瞎试：
-  客户端 pages/task-center/index.js:180-220 的 userSign() 会先看 signList 的
-  isSignToday，已签就只弹个 toast、根本不打 signIn。脚本照这个顺序做，
-  所以正常情况下（含用户自己在小程序里签过）走的是「今日已签到」这条分支。
-  未签时打 signIn 会恒回 40001「登录过期」，两天共 15 轮变量法排除到底，
-  以下全部试过且结果一律 40001：
-    · 会话来源：getOpenId / grantAuth（返回同一把 sessionKey）
-    · sessionKey 里 + 的 5 种转义、整体 urlencode
-    · timestamp 毫秒/秒、对齐服务端 Date 头
-    · requestId：32 位无横线（真机 quirk）/ 标准 UUID / 纯随机 32 位
-    · GET / POST、sign 大小写、Content-Type 有无、头名全小写
-    · Referer 换 page-frame / task-center / 首页 / 我的 / 只到版本号
-    · UA 换安卓 / 苹果 / PC 微信
-    · userId 换成别人（连 userId=1 都是 40001）、openId 改错、会话也塞进 query
-  而同一把会话打 /api/user/info、/api/user/signList、/api/user/userLevel、
-  /api/user/check、以及两个【写】接口 /api/user/signInSupplement、
-  /api/user/upgradeConfirm 全是 200 —— 所以既不是会话失效，也不是写操作被禁。
-  会话头留空时它改回 20001，说明请求头确实被读到了。
-  也不是「今天已签所以报错」：8-16 那天 signList 显示未签，signIn 同样 40001。
-  结论：这一个路径被服务端单独挡住，包里的请求契约已经复刻到位，
-  要再往下走只能拿一次真机成功签到的抓包（URL + 完整请求头 + body）来 diff。
+签到 / 抽奖的【前置条件】：先打一次点击埋点（2026-08-18 实测定性）
+  这个后端要求先收到一条"你点了这个按钮"的埋点事件，之后那个动作才放行：
+    POST /api/buryPointApp/save
+      userId, openId, activitySource=Xcx_MeiRiRenWu,
+      urlPath=pages/task-center/index, urlName=任务中心,
+      elementName=每日签到, elementType=页面, eventNameEn=MPClick
+    → 等 0.4~1.1 秒 → GET /api/user/signIn?userId=…
+  对照实验（同一把会话、同一分钟）：
+    不打埋点 → signIn 恒回 40001「登录过期，请重新登录」
+    打了埋点 → signIn 回 200 {state:3, coreCoin:10}，签到成功、连续天数 +1
+  抽奖同理，换成转盘页的埋点（urlPath=pages/wheel/index、elementName=立即抽奖）：
+    不打埋点 → getLuck 回 code=1「非法请求」，连只读的 luckDraw/list 都回 code=1
+    打了埋点 → getLuck 回 200 并中奖
+  真机每次点按钮都会先发埋点，所以线上永远撞不到；脚本不发就一直被拒。
+  ⚠️ 这也是为什么之前两天 15 轮变量法（换会话/时间戳/requestId/UA/Referer/GET-POST/
+     签名大小写/换别人 userId）全都无效 —— 门槛根本不在 signIn 这个请求里面。
 
-抽奖（POST /api/luckDraw/getLuck）：
-  参数与 pages/wheel/components/raffle/raffle.js:126 一字不差。
-  实测这个后端的 code=1 是【通用错误兜底】而不是网关拦截 —— 同一个请求换个
-  Referer 会变成 90002「请求太频繁」（源码里客户端静默吞掉的那个码），
-  同一时段连只读的 luckDraw/list 也在回 code=1「服务异常」。
-  脚本只抽每日免费的那次，免费次数用尽就跳过，不花芯动值。
-
-点赞 / 阅读 5 分钟 / VLOG 1 分钟 三个任务是通的（实测芯动值 125 -> 150）。
+点赞 / 阅读 5 分钟 / VLOG 1 分钟 三个任务不需要埋点前置，直接就能过。
 
 ⚠️【免责声明】
 ------------------------------------------
@@ -107,6 +95,7 @@ const EP_SIGN_IN = "/api/user/signIn"; // GET  {userId}   ← 是 GET，不是 P
 const EP_TASK_DAILY = "/api/home/taskDaily"; // GET  {userId}
 const EP_DRAW_LIST = "/api/luckDraw/list"; // GET  {page,userId,activityId}
 const EP_GET_LUCK = "/api/luckDraw/getLuck"; // POST {userId,activityId}
+const EP_BURY_POINT = "/api/buryPointApp/save"; // POST 点击埋点，签到/抽奖的前置
 const EP_ARTICLES = "/api/home/articles"; // GET  {page,size,userId,type,searchDate,articleShowPlace}
 const EP_ARTICLE_LIKE = "/api/article/like"; // GET  {articleId,userId}
 const EP_ENTER_READ = "/api/article/enterReadDaily"; // POST {articleId,userId}
@@ -389,6 +378,37 @@ class Task {
         return true;
     }
 
+    /**
+     * 点击埋点 —— 签到和抽奖的【前置条件】，不是可选的统计上报。
+     * 服务端要求先收到一条"你点了这个按钮"的埋点事件，之后那个动作才放行：
+     *   不打埋点 -> signIn 恒回 40001「登录过期」、getLuck 恒回 code=1「非法请求」
+     *   打了埋点 -> 两个都 200
+     * 真机每次点按钮都会先发它，所以线上永远不会撞到；脚本不发就一直被拒。
+     */
+    async buryPoint(page) {
+        const P = {
+            sign: { urlPath: "pages/task-center/index", urlName: "任务中心", elementName: "每日签到" },
+            wheel: { urlPath: "pages/wheel/index", urlName: "幸运大转盘", elementName: "立即抽奖" },
+        }[page];
+        const result = await this.request(EP_BURY_POINT, {
+            method: "POST",
+            data: {
+                userId: this.userId,
+                openId: this.openId || "",
+                activitySource: "Xcx_MeiRiRenWu",
+                urlPath: P.urlPath,
+                urlName: P.urlName,
+                elementName: P.elementName,
+                elementType: "页面",
+                eventNameEn: "MPClick",
+            },
+            retry: false,
+        });
+        // 真机点完按钮到发请求有个自然间隔，太快容易被判成非人工
+        await $.wait(400 + Math.floor(Math.random() * 700));
+        return isSuccess(result);
+    }
+
     /** pages/task-center/index.js:200-235  signList -> isSignToday==0 才 signIn */
     async signTask() {
         const list = await this.request(EP_SIGN_LIST, { data: { userId: this.userId } });
@@ -401,9 +421,10 @@ class Task {
             this.log(`✅ 今日已签到（本月连续 ${info.signContinuityMonth || 0} 天）`);
             return;
         }
-        // retry:false —— 这个接口的 40001 不是会话过期（见文件头：两天 15 轮变量法，
-        // 同一把会话连 signInSupplement / upgradeConfirm 这两个写接口都是 200），
-        // 重登也换不来结果，只会白耗一次取码额度。
+        if (!(await this.buryPoint("sign"))) {
+            this.log("⚠️ 签到前置埋点没成功，继续试签到（大概率会被拒）");
+        }
+        // retry:false —— 这里的 40001 不是会话过期，是前置埋点没到位，重登没用
         const result = await this.request(EP_SIGN_IN, { data: { userId: this.userId }, retry: false });
         if (isSuccess(result) && result.data) {
             // state 1/2/3 在源码里对应三种「签到成功」弹窗
@@ -411,8 +432,7 @@ class Task {
         } else if (isAlreadyDone(result.message)) {
             this.log(`✅ 今日已签到（${result.message}）`);
         } else if (bizCode(result) === CODE_SESSION_EXPIRED) {
-            this.log("❌ 签到被服务端单独挡住（40001），同一把会话打其它读写接口都正常；");
-            this.log("   请在小程序里手点一次签到（脚本已按客户端顺序先查 signList，不会重复签）");
+            this.log("❌ 签到回 40001：前置埋点没被服务端认下，稍后重试或在小程序里手点一次");
         } else {
             this.log(`❌ 签到失败: ${result.message || bizCode(result)}`);
         }
@@ -424,6 +444,10 @@ class Task {
      * luckCoreCoin 芯动值，脚本不替用户花积分。
      */
     async drawTask() {
+        // 转盘页的读接口也吃这个前置：不打埋点连 luckDraw/list 都回 code=1
+        if (!(await this.buryPoint("wheel"))) {
+            this.log("⚠️ 抽奖前置埋点没成功，继续试（大概率会被拒）");
+        }
         const list = await this.request(EP_DRAW_LIST, {
             data: { page: 1, userId: this.userId, activityId: LUCK_ACTIVITY_ID },
         });
@@ -450,11 +474,9 @@ class Task {
             this.log(`🎉 抽奖成功: ${result.data.name || "已中奖"}`);
         } else if (isAlreadyDone(result.message)) {
             this.log(`🎡 今日抽奖已完成（${result.message}）`);
-        } else if (/非法请求|服务异常|请求太频繁/.test(String(result.message || ""))) {
-            // code=1 是这个后端的通用错误兜底，不是网关拦截：同一个请求换个 Referer 会
-            // 变成 90002「请求太频繁」（客户端静默吞掉的那个码），同时段连只读的
-            // luckDraw/list 也在回 code=1「服务异常」。所以是抽奖服务自己在抖，不猜不绕。
-            this.log(`🎡 抽奖服务返回通用错误（${result.message}），稍后重试或在小程序里手动转一次`);
+        } else if (/非法请求/.test(String(result.message || ""))) {
+            // 实测就是前置埋点没到位（打了埋点同一请求立刻 200 并中奖）
+            this.log("🎡 抽奖回「非法请求」：前置埋点没被认下，稍后重试");
         } else {
             this.log(`❌ 抽奖失败: ${result.message || bizCode(result)}`);
         }
