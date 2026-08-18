@@ -29,6 +29,7 @@ const WeChatServer = require("./wcs.js");
 const ckName = "baimazhixuan";
 const MINI_APP_ID = "wx51f8cb2a7578f42f";
 const BASE = "https://min.51afa.com/module/integralApi";
+
 const TOKEN_CACHE_FILE = path.join(__dirname, "baimazhixuan_token_cache.json");
 const USER_AGENT =
     "Mozilla/5.0 (Linux; Android 12; M2012K11AC Build/SKQ1.220303.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) " +
@@ -83,6 +84,8 @@ const msgOf = (res) => res?.msg || res?.message || res?.msg || short(res);
 /** 每天跑一次，「已签到」必须当成成功而不是失败 */
 const isAlreadyDone = (t) => /已签|已经签|签到过|重复|已完成|already/i.test(String(t || ""));
 const isAuthError = (t) => /登录|token|未授权|未登录|失效|过期|重新|401/i.test(String(t || ""));
+/** 账号态：这个微信号还没在该平台注册/绑定 —— 不是脚本缺陷，别打 ❌ */
+const isNotRegistered = (t) => /未注册|未绑定|请先注册|请先绑定|not regist/i.test(String(t || ""));
 
 class Task {
     constructor(raw) {
@@ -146,6 +149,7 @@ class Task {
         const res = await this.request(EP_LOGIN, { code, company_id: 1, _cache_: 1 }, false, "POST", null, null);
         if (!isOk(res)) throw new Error(`登录失败: ${msgOf(res)}`);
         this.token = ((res.data || {}).token || (res.data || {}).accessToken || ((res.data || {}).userInfo || {}).token) || "";
+
         if (!this.token) throw new Error(`登录未返回 token: ${short(res)}`);
         const cache = readCache();
         cache[this.account.openid] = { token: this.token, updatedAt: new Date().toISOString() };
@@ -190,6 +194,9 @@ class Task {
         const res = await this.request(EP_SIGN, { timestamp: Date.now(), company_id: 1 }, true, "POST", null, { act: "do_sign" });
         if (isOk(res)) return this.log("✅ 签到成功");
         if (isAlreadyDone(msgOf(res))) return this.log(`✅ 今日已签到（${msgOf(res)}）`);
+        if (isNotRegistered(msgOf(res))) {
+            return this.log(`⚠️ ${msgOf(res)} —— 该微信号还没在该平台注册会员，先在小程序里注册一次再跑`);
+        }
         if (retry && isAuthError(msgOf(res))) {
             this.log("会话失效，重新登录后重试");
             this.token = "";

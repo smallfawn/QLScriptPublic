@@ -30,6 +30,7 @@ const WeChatServer = require("./wcs.js");
 const ckName = "shanyi";
 const MINI_APP_ID = "wxc59eee06736849e8";
 const BASE = "https://net.todaypayforyou.fun/YSKJ/api";
+
 const TOKEN_CACHE_FILE = path.join(__dirname, "shanyi_token_cache.json");
 const USER_AGENT =
     "Mozilla/5.0 (Linux; Android 12; M2012K11AC Build/SKQ1.220303.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) " +
@@ -84,6 +85,8 @@ const msgOf = (res) => res?.msg || res?.message || res?.msg || short(res);
 /** 每天跑一次，「已签到」必须当成成功而不是失败 */
 const isAlreadyDone = (t) => /已签|已经签|签到过|重复|已完成|already/i.test(String(t || ""));
 const isAuthError = (t) => /登录|token|未授权|未登录|失效|过期|重新|401/i.test(String(t || ""));
+/** 账号态：这个微信号还没在该平台注册/绑定 —— 不是脚本缺陷，别打 ❌ */
+const isNotRegistered = (t) => /未注册|未绑定|请先注册|请先绑定|not regist/i.test(String(t || ""));
 
 class Task {
     constructor(raw) {
@@ -99,7 +102,7 @@ class Task {
         $.log(`账号[${this.index}]${this.account.remark ? `[${this.account.remark}]` : ""} ${text}`);
     }
 
-    async request(apiPath, body = null, withAuth = true, method = "POST") {
+    async request(apiPath, body = null, withAuth = true, method = "POST", query = null, epHeaders = null) {
         const isForm = false;
         const headers = {
             "Content-Type": isForm ? "application/x-www-form-urlencoded" : "application/json",
@@ -107,13 +110,17 @@ class Task {
             Referer: `https://servicewechat.com/${MINI_APP_ID}/0/page-frame.html`,
             Accept: "application/json, text/plain, */*",
             xweb_xhr: "1",
+            ...(epHeaders || {}),
         };
         if (withAuth && this.token) headers["X-Token"] = this.token;
         const payload = body || {};
+
         const isGet = String(method).toUpperCase() === "GET";
+        // query 独立于 body：有些接口是 POST 但参数只在查询串上
+        const qs = query ? form(query) : (isGet && Object.keys(payload).length ? form(payload) : "");
         const res = await axios.request({
             method: isGet ? "GET" : "POST",
-            url: `${BASE}${apiPath}${isGet && Object.keys(payload).length ? `?${form(payload)}` : ""}`,
+            url: `${BASE}${apiPath}${qs ? `?${qs}` : ""}`,
             data: isGet ? undefined : (isForm ? form(payload) : payload),
             headers,
             timeout: 20000,
@@ -139,9 +146,10 @@ class Task {
 
     async login() {
         const code = await this.getCode();
-        const res = await this.request(EP_LOGIN, { code, device_id: this.deviceId, invite_code: "", nickname: "", avatar: "" }, false, "POST");
+        const res = await this.request(EP_LOGIN, { code, device_id: this.deviceId, invite_code: "", nickname: "", avatar: "" }, false, "POST", null, null);
         if (!isOk(res)) throw new Error(`登录失败: ${msgOf(res)}`);
         this.token = (res.data || {}).token || "";
+
         if (!this.token) throw new Error(`登录未返回 token: ${short(res)}`);
         const cache = readCache();
         cache[this.account.openid] = { token: this.token, updatedAt: new Date().toISOString() };
@@ -165,7 +173,7 @@ class Task {
 
     async queryUser(needLog = true) {
         if (!EP_USER) return true;
-        const res = await this.request(EP_USER, {}, true, "GET");
+        const res = await this.request(EP_USER, {}, true, "GET", null, null);
         if (!isOk(res)) {
             if (needLog) this.log(`读取资料失败: ${msgOf(res)}`);
             return false;
@@ -183,9 +191,12 @@ class Task {
     }
 
     async sign(retry = true) {
-        const res = await this.request(EP_SIGN, {}, true, "POST");
+        const res = await this.request(EP_SIGN, {}, true, "POST", null, null);
         if (isOk(res)) return this.log("✅ 签到成功");
         if (isAlreadyDone(msgOf(res))) return this.log(`✅ 今日已签到（${msgOf(res)}）`);
+        if (isNotRegistered(msgOf(res))) {
+            return this.log(`⚠️ ${msgOf(res)} —— 该微信号还没在该平台注册会员，先在小程序里注册一次再跑`);
+        }
         if (retry && isAuthError(msgOf(res))) {
             this.log("会话失效，重新登录后重试");
             this.token = "";

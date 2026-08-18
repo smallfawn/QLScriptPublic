@@ -1,44 +1,44 @@
 /*
 ------------------------------------------
-@Description: 申工社 - 微信小程序静默登录 + 每日签到
-cron: 34 8 * * *
+@Description: 每天有乐 - 微信小程序静默登录 + 每日签到
+cron: 50 8 * * *
 ------------------------------------------
-变量名：shengongshe
+变量名：mtyl
 变量值：wx_server 里的 openid/账号标识，多账号用 & 或换行分隔（可加 #备注）
 
 依赖变量：
 wx_server_url  默认 http://192.168.31.196:8787
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
-契约（appid wx63d70210fcc108fd，host fwdt.shszgh.cn）：
-  登录  POST /fwdt-wechat-xc/api/wechat/oauth  {code}
-          -> code==0 && success===true，data 本身就是 token 字符串
-          之后所有请求带请求头 token: <token>
-  资料  GET  /fwdt-wechat-xc/api/member/info/get   -> data.nickname / data.integral
-  签到  GET  /fwdt-wechat-xc/api/integral/sign?_t=<毫秒>
-  token 失效的表现是 code==100 且 message==用户未登录
+契约（appid wxd84920ac8965ee21，host bcportal.app.swirecocacola.com/portal-gateway-prod/portal-applets）：
+  登录  POST /wechat/userLoginByCode  {code, sync:1}  -> code==200, data.token
+          同时要从 data.elseOpenid 里挑出 type=='zfj' 的那条的 koOpenid —— 签到要用它
+          之后所有请求带请求头 token: <token>，另外要 env-version=release 等几个固定头
+  积分  GET  /applets/getMemberPoint?details=1  -> data.point / data.signStatus
+  签到  GET  /applets/sign?koOpenid=<上面那个 koOpenid>
+  成功码 code==200；未注册会员时签到回 code==403「您还未注册会员」（账号态，不是脚本问题）
 ------------------------------------------
 */
 
 const { Env } = require("../tools/env.js");
-const $ = new Env("申工社");
+const $ = new Env("每天有乐");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 const WeChatServer = require("./wcs.js");
 
-const ckName = "shengongshe";
-const MINI_APP_ID = "wx63d70210fcc108fd";
-const BASE = "https://fwdt.shszgh.cn";
+const ckName = "mtyl";
+const MINI_APP_ID = "wxd84920ac8965ee21";
+const BASE = "https://bcportal.app.swirecocacola.com/portal-gateway-prod/portal-applets";
 
-const TOKEN_CACHE_FILE = path.join(__dirname, "shengongshe_token_cache.json");
+const TOKEN_CACHE_FILE = path.join(__dirname, "mtyl_token_cache.json");
 const USER_AGENT =
     "Mozilla/5.0 (Linux; Android 12; M2012K11AC Build/SKQ1.220303.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) " +
     "Version/4.0 Chrome/134.0.6998.136 Mobile Safari/537.36 MicroMessenger/8.0.48.2580(0x28003036) MiniProgramEnv/android";
 
-const EP_LOGIN = "/fwdt-wechat-xc/api/wechat/oauth";
-const EP_SIGN = "/fwdt-wechat-xc/api/integral/sign";
-const EP_USER = "/fwdt-wechat-xc/api/member/info/get";
+const EP_LOGIN = "/wechat/userLoginByCode";
+const EP_SIGN = "/applets/sign";
+const EP_USER = "/applets/getMemberPoint";
 
 const wechat = new WeChatServer({
     url: process.env.wx_server_url || "http://192.168.31.196:8787",
@@ -80,8 +80,8 @@ function form(obj) {
 }
 
 /** 该后端的成功判定 */
-const isOk = (res) => Number(res?.code) === 0 && (res?.success === undefined || res?.success === true);
-const msgOf = (res) => res?.message || res?.message || res?.msg || short(res);
+const isOk = (res) => Number(res?.code) === 200;
+const msgOf = (res) => res?.msg || res?.message || res?.msg || short(res);
 /** 每天跑一次，「已签到」必须当成成功而不是失败 */
 const isAlreadyDone = (t) => /已签|已经签|签到过|重复|已完成|already/i.test(String(t || ""));
 const isAuthError = (t) => /登录|token|未授权|未登录|失效|过期|重新|401/i.test(String(t || ""));
@@ -110,6 +110,8 @@ class Task {
             Referer: `https://servicewechat.com/${MINI_APP_ID}/0/page-frame.html`,
             Accept: "application/json, text/plain, */*",
             xweb_xhr: "1",
+            "X-Requested-With": "XMLHttpRequest",
+            "env-version": "release",
             ...(epHeaders || {}),
         };
         if (withAuth && this.token) headers["token"] = this.token;
@@ -146,9 +148,10 @@ class Task {
 
     async login() {
         const code = await this.getCode();
-        const res = await this.request(EP_LOGIN, { code }, false, "POST", null, null);
+        const res = await this.request(EP_LOGIN, { code, sync: 1 }, false, "POST", null, null);
         if (!isOk(res)) throw new Error(`登录失败: ${msgOf(res)}`);
-        this.token = (typeof res.data === "string" ? res.data : (res.data || {}).token) || "";
+        this.token = (res.data || {}).token || "";
+        this.koOpenid = String((((res.data || {}).elseOpenid || []).find((x) => x && x.type === "zfj") || {}).koOpenid || "");
 
         if (!this.token) throw new Error(`登录未返回 token: ${short(res)}`);
         const cache = readCache();
@@ -173,7 +176,7 @@ class Task {
 
     async queryUser(needLog = true) {
         if (!EP_USER) return true;
-        const res = await this.request(EP_USER, {}, true, "GET", null, null);
+        const res = await this.request(EP_USER, { details: 1 }, true, "GET", null, null);
         if (!isOk(res)) {
             if (needLog) this.log(`读取资料失败: ${msgOf(res)}`);
             return false;
@@ -191,7 +194,7 @@ class Task {
     }
 
     async sign(retry = true) {
-        const res = await this.request(EP_SIGN, { _t: Date.now() }, true, "GET", null, null);
+        const res = await this.request(EP_SIGN, {}, true, "GET", { koOpenid: this.koOpenid || "" }, null);
         if (isOk(res)) return this.log("✅ 签到成功");
         if (isAlreadyDone(msgOf(res))) return this.log(`✅ 今日已签到（${msgOf(res)}）`);
         if (isNotRegistered(msgOf(res))) {
