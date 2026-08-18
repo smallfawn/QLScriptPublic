@@ -93,6 +93,7 @@ class Task {
         this.index = $.userIdx++;
         this.account = parseAccount(raw);
         this.token = "";
+        this.signedToday = false;
         // 设备号按 openid 稳定派生：同一账号每次跑都一样，避免被当成新设备
         this.deviceId = "d_" + require("crypto").createHash("md5")
             .update(String(this.account.openid || raw)).digest("hex").slice(0, 16);
@@ -178,7 +179,7 @@ class Task {
             if (needLog) this.log(`读取资料失败: ${msgOf(res)}`);
             return false;
         }
-        const d = res.data || res.datas || {};
+        const d = res.data || res.datas || res.body || {};
         if (needLog) {
             const bits = [];
             for (const k of ["nickname", "nickName", "name", "memberId", "integral", "points",
