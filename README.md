@@ -194,6 +194,7 @@ https://rewards.bing.com/welcome?rh=g7a-IyWIfh0&ref=rafsrchae
 | 有赞通用签到 | 2026-08-18 18:04:46 | ✅ |
 | Babycare官方旗舰店 | 2026-08-18 20:16:12 | ✅ |
 | 汤星球 | 2026-08-18 20:16:12 | ✅ |
+| iyouke平台签到 | 2026-08-18 20:57:50 | ✅ |
 <!-- WXAPP_TABLE_END -->
 # 青龙面板拉库命令
 
