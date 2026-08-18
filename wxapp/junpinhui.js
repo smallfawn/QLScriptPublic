@@ -8,20 +8,33 @@ cron: 45 8 * * *
 依赖变量：wx_server_url、wx_auth
 
 ------------------------------------------
-已知限制（2026-08-17 实测定性，别再当成账号问题去查）：
-  只读部分全通：登录(wxMiniSilentLogin)、getMemberInfo、sorghum/index、tasks/index。
-  但所有【加密写接口】都被服务端拒绝，签到/分享/种植/浇水/施肥/收获同一个根因：
-    · 不带 encryptData  -> 5001「请从小程序重新进入！」（说明这个字段是必填的）
-    · 带 encryptData    -> 5001「用户信息异常，请删除小程序后重新打开」
-                           （说明服务端收到了、并且在校验它，只是格式不对）
-  已试过 8 种 encryptData 形状全部同样报错：
-    微信用户密钥(AES-128-GCM，key/iv base64 解码后 16+12 字节，密文+tag / 密文与 tag 分开)、
-    脚本现状(把 base64 串当 utf8 明文喂 AES-CBC 输出 hex)、
-    包里验证码模块那把固定密钥 XwKsGlMcdPMEhR1B 的 ECB/CBC + base64，
-    明文分别试过 {ts} / {member_id,ts} / 时间戳字符串 / openid。
-  正确格式无从还原：这套逻辑在 plant/ 分包里，而 /wx/downloadurl 只给主包
-  （plant/ 下 24 个文件全是空壳）。要修必须在小程序里抓一次成功签到的请求
-  （URL + 请求头 + 完整 body），拿到 encryptData 的真实构造方式。
+关键点：酒谷之旅(garden) 这套后端注册在【习酒】小程序 wx489f950decfeb93e 名下，
+不是君品荟自己。2026-08-18 实测定性，三件事都必须换成习酒的身份，缺一个就 5001：
+
+  ① 登录（两段，各耗一个 code，都用习酒 appid 取码）
+       GET  xcx.exijiu.com/anti-channeling/public/index.php/api/v2/auth/session?code=
+            -> data.login_code          （之后当请求头 login_code 带上）
+       GET  apimallwm.exijiu.com/garden/wechat/login?code=
+            -> data.authorized_token    （之后当请求头 Authorization 带上）
+     authorized_token 是个 JWT，解出来 memberInfo.id 和君品荟侧的 member_id 一致，
+     所以是同一个会员，换 appid 不换账号。
+  ② 请求头：AppID / Referer 都用习酒 appid，Authorization 放 authorized_token。
+     服务端是按 AppID 头去找"该 appid 的用户密钥"来解 encryptData 的。
+  ③ encryptData 的密钥：smallcat /wx/encryptkey 要用【习酒】appid 取，
+     encrypt_key(24 字符) 和 iv(16 字符) 都按 utf-8 字节直接用 -> AES-192-CBC/PKCS7，
+     输出 hex；version 用该次返回的值。明文是 {…业务参数, ts}。
+
+对照实验：
+  君品荟 appid 的 encryptkey + 君品荟的头 -> 5001「用户信息异常」（这是修之前的行为）
+  习酒   appid 的 encryptkey + 君品荟的头 -> 5001（头也得换）
+  习酒   appid 的 encryptkey + 习酒的头   -> err=0，签到成功
+                                             {isTodayFirstSign:true, water:"1", tips:"系统赠送您：浇水*1次"}
+
+另外：/garden/wechat/auth（拿站点自己签发的 key）在 smallcat 体系下走不通 ——
+它要用服务端自己 code2Session 得到的 session_key 去解 encryptedData，
+而 smallcat 每次调用都会另换一把 session_key，两边永远对不上；上面这条
+/wx/encryptkey 的路子是同一份第三方实现里的另一条分支，实测可用。
+滑块验证(5008) 按规则不绕。
 ------------------------------------------
 */
 
@@ -35,14 +48,26 @@ const WeChatServer = require("./wcs.js");
 
 const ckName = "junpinhui";
 const MINI_APP_ID = "wx8d41cdc44c8aeaab";
+// 酒谷之旅(garden) 这套后端注册在【习酒】小程序名下，不是君品荟自己。
+// 所以 garden 的登录、请求头、以及 encryptData 用的加密密钥都必须用这个 appid，
+// 用君品荟的 appid 去取密钥服务端一律回 5001「用户信息异常」。会员是同一个
+// （garden 登录返回的 authorized_token 里 memberInfo.id 和君品荟侧一致）。
+const GARDEN_APP_ID = "wx489f950decfeb93e";
 const APP_VERSION = "1.0.12";
 const FM_BASE = "https://fm.exijiu.com";
 const GARDEN_BASE = "https://apimallwm.exijiu.com";
+const MAIN_BASE = "https://xcx.exijiu.com/anti-channeling/public/index.php/api/v2";
 const TOKEN_CACHE_FILE = path.join(__dirname, "junpinhui_token_cache.json");
 
 const wechat = new WeChatServer({
   url: process.env.wx_server_url || "http://192.168.31.196:8787",
   appid: MINI_APP_ID,
+  auth: process.env.wx_auth || "your-api-key",
+});
+// garden 侧要用习酒 appid 取 code / 取加密密钥
+const gardenWechat = new WeChatServer({
+  url: process.env.wx_server_url || "http://192.168.31.196:8787",
+  appid: GARDEN_APP_ID,
   auth: process.env.wx_auth || "your-api-key",
 });
 
@@ -111,6 +136,23 @@ function headers(token = "") {
   };
 }
 
+/**
+ * garden 侧的请求头 —— 必须整套换成【习酒】的身份，服务端是按 AppID 头 +
+ * Authorization 里的 authorized_token 来决定用哪个 appid 的密钥解 encryptData 的。
+ * 混用（君品荟的头 + 习酒的密钥，或反之）一律 5001。
+ */
+function gardenHeaders(session = {}) {
+  return {
+    "Content-Type": "application/json",
+    "User-Agent": "Mozilla/5.0 MicroMessenger MiniProgramEnv/Windows",
+    Referer: `https://servicewechat.com/${GARDEN_APP_ID}/215/page-frame.html`,
+    AppID: GARDEN_APP_ID,
+    "App-Version": APP_VERSION,
+    ...(session.authorizedToken ? { Authorization: session.authorizedToken } : {}),
+    ...(session.loginCode ? { login_code: session.loginCode } : {}),
+  };
+}
+
 function shortJson(value, limit = 180) {
   const text = typeof value === "string" ? value : JSON.stringify(value);
   if (!text) return "";
@@ -128,7 +170,7 @@ function assertOk(res, action) {
   return res.data;
 }
 
-async function request(method, base, urlPath, { token = "", data = null, params = null } = {}) {
+async function request(method, base, urlPath, { token = "", data = null, params = null, hdrs = null } = {}) {
   const res = await axios({
     method,
     url: `${base}${urlPath}`,
@@ -136,7 +178,7 @@ async function request(method, base, urlPath, { token = "", data = null, params 
     params,
     timeout: 20000,
     validateStatus: () => true,
-    headers: headers(token),
+    headers: hdrs || headers(token),
   });
   return res.data;
 }
@@ -261,39 +303,80 @@ class Task {
   }
 
   async withRelogin(fn) {
-    await this.ensureLogin();
     let res = await fn();
     const msg = `${res?.message || ""}${res?.msg || ""}`;
-    if (!okCode(res) && this.openid && /登录|授权|token|Token|未认证|失效/.test(msg)) {
-      $.log(`账号[${this.index}] token疑似失效，重新登录`);
-      this.removeToken();
-      await this.login();
+    // 5001 既可能是会话过期也可能是加密不对，两种都靠重登 garden 会话解决
+    if (!okCode(res) && this.openid && /登录|授权|token|Token|未认证|失效|重新进入|用户信息异常/.test(msg)) {
+      $.log(`账号[${this.index}] garden 会话疑似失效，重新登录`);
+      this.garden = null;
+      await this.gardenLogin();
       res = await fn();
     }
     return res;
   }
 
+  /**
+   * garden 会话：走【习酒】appid 的两段式登录（每次跑消耗 2 个 code）。
+   *   ① code -> GET {MAIN_BASE}/auth/session?code=  -> data.login_code   （请求头 login_code）
+   *   ② code -> GET {GARDEN_BASE}/garden/wechat/login?code=  -> data.authorized_token（请求头 Authorization）
+   * 会员和君品荟侧是同一个（authorized_token 的 JWT 里 memberInfo.id 一致）。
+   */
+  async gardenLogin() {
+    if (!this.openid) throw new Error("缺少 openid，无法登录 garden");
+    const pick = (d) => d?.data?.code || d?.code;
+
+    const r1 = await gardenWechat.getCode(this.openid);
+    if (!r1?.data?.status) throw new Error(`取 garden code 失败: ${r1?.data?.message || "未知"}`);
+    const sess = await request("get", MAIN_BASE, "/auth/session", {
+      params: { code: pick(r1.data) },
+      hdrs: gardenHeaders(),
+    });
+    const loginCode = (sess?.data || {}).login_code || "";
+
+    const r2 = await gardenWechat.getCode(this.openid);
+    if (!r2?.data?.status) throw new Error(`取 garden code 失败: ${r2?.data?.message || "未知"}`);
+    const auth = await request("get", GARDEN_BASE, "/garden/wechat/login", {
+      params: { code: pick(r2.data) },
+      hdrs: gardenHeaders({ loginCode }),
+    });
+    const authorizedToken = assertOk(auth, "garden 登录")?.authorized_token;
+    if (!authorizedToken) throw new Error(`garden 登录未返回 authorized_token: ${shortJson(auth)}`);
+
+    this.garden = { loginCode, authorizedToken };
+    $.log(`账号[${this.index}] garden 登录成功`);
+  }
+
+  async ensureGarden() {
+    if (!this.garden?.authorizedToken) await this.gardenLogin();
+    return this.garden;
+  }
+
   async gardenGet(urlPath, params = {}) {
-    const res = await this.withRelogin(() =>
-      request("get", GARDEN_BASE, urlPath, { token: this.token, params })
+    const res = await this.withRelogin(async () =>
+      request("get", GARDEN_BASE, urlPath, { hdrs: gardenHeaders(await this.ensureGarden()), params })
     );
     return assertOk(res, urlPath);
   }
 
   async gardenPost(urlPath, data = {}) {
-    const res = await this.withRelogin(() =>
-      request("post", GARDEN_BASE, urlPath, { token: this.token, data })
+    const res = await this.withRelogin(async () =>
+      request("post", GARDEN_BASE, urlPath, { hdrs: gardenHeaders(await this.ensureGarden()), data })
     );
     return assertOk(res, urlPath);
   }
 
+  /**
+   * encryptData 用的密钥必须取【习酒】appid 的（GARDEN_APP_ID）。
+   * 用君品荟自己的 appid 取，服务端一律回 5001「用户信息异常」——
+   * 因为它是按请求头里的 AppID 去找对应 appid 的用户密钥来解密的。
+   */
   async getEncryptKey() {
-    if (!this.openid) throw new Error("缺少 openid，无法生成微信 encryptData");
+    if (!this.openid) throw new Error("缺少 openid，无法生成 encryptData");
     const { data } = await axios.post(
-      `${wechat.serverUrl}/wx/encryptkey`,
-      { appid: MINI_APP_ID, openid: this.openid },
+      `${gardenWechat.serverUrl}/wx/encryptkey`,
+      { appid: GARDEN_APP_ID, openid: this.openid },
       {
-        headers: { auth: wechat.auth },
+        headers: { auth: gardenWechat.auth },
         timeout: 30000,
         validateStatus: () => true,
       }
@@ -327,16 +410,19 @@ class Task {
   }
 
   /**
-   * 加密写接口被服务端拒时补一句根因，避免下一个人把它当账号问题查。
-   * 见文件头：encryptData 的真实构造在 plant/ 分包里，下包 API 只给主包，需要抓包。
+   * 加密写接口被拒时补一句根因指向。5001 现在只剩两种可能：
+   * garden 会话过期（withRelogin 已经自动重登重放过一次），或者密钥拿错了 appid。
    */
   async withEncryptHint(urlPath, fn) {
     try {
       return await fn();
     } catch (e) {
       const msg = String(e.message || e);
-      if (/用户信息异常|请从小程序重新进入/.test(msg)) {
-        throw new Error(`${msg} ← encryptData 格式未还原(plant/ 是空壳分包)，需抓一次真机请求，见文件头说明`);
+      if (/用户信息异常|请从小程序重新进入|请删除小程序/.test(msg)) {
+        throw new Error(`${msg} ← encryptData 校验失败：密钥必须取 ${GARDEN_APP_ID}(习酒) 的，见文件头说明`);
+      }
+      if (/滑块|5008/.test(msg)) {
+        throw new Error(`${msg} ← 触发滑块验证，按规则不绕，请在小程序里手动过一次`);
       }
       throw e;
     }
@@ -629,7 +715,9 @@ class Task {
 
   async run() {
     $.log(`\n账号[${this.index}] ${mask(this.openid || this.cacheKey)}`);
-    await this.ensureLogin();
+    // 所有业务都在 garden 上，直接用 garden 会话；原来的 fm 静默登录只是拿一个
+    // 对 garden 无效的 X-Access-Token，白耗一个 code，已不再调用。
+    await this.ensureGarden();
     await this.queryMember();
     await this.dailySign();
 
