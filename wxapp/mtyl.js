@@ -129,7 +129,12 @@ class Task {
             timeout: 20000,
             validateStatus: () => true,
         });
-        if (res.status !== 200) throw new Error(`${apiPath} HTTP ${res.status}: ${short(res.data)}`);
+        if (res.status < 200 || res.status >= 300) {
+            // 业务结论常常躺在 4xx/5xx 的 JSON 体里（"今日已签到" 见过 400 也见过 500），
+            // 有 JSON 体就交给下游按业务码判，别在这一层抛掉
+            if (res.data && typeof res.data === "object") return res.data;
+            throw new Error(`${apiPath} HTTP ${res.status}: ${short(res.data)}`);
+        }
         return res.data;
     }
 
@@ -182,7 +187,8 @@ class Task {
             if (needLog) this.log(`读取资料失败: ${msgOf(res)}`);
             return false;
         }
-        const d = res.data || res.datas || res.body || {};
+        // 有的家没有 data/body 包装，响应体本身就是数据（zippo 的 profile 就是）
+        const d = res.data || res.datas || res.body || res || {};
         if (needLog) {
             const bits = [];
             for (const k of ["nickname", "nickName", "name", "memberId", "integral", "points",

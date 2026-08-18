@@ -1,43 +1,48 @@
 /*
 ------------------------------------------
-@Description: 白马智选 - 微信小程序静默登录 + 每日签到
-cron: 42 8 * * *
+@Description: zippo会员 - 微信小程序静默登录 + 每日签到
+cron: 44 8 * * *
 ------------------------------------------
-变量名：baimazhixuan
+变量名：zippo
 变量值：wx_server 里的 openid/账号标识，多账号用 & 或换行分隔（可加 #备注）
 
 依赖变量：
 wx_server_url  默认 http://192.168.31.196:8787
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
-契约（appid wx51f8cb2a7578f42f，host min.51afa.com/module/integralApi）：
-  登录  POST /login.html   form: code=<code>&company_id=1&_cache_=1
-          -> status 为真，token 在 data.token（也兼容 accessToken / userInfo.token 等写法）
-  签到  POST /sign.html    form: token=<token>&timestamp=<毫秒>&company_id=1
-          并且要带请求头 act: do_sign（这个后端按 act 头区分动作，同一路径多用途）
-  token 是放在 body 里的，不是请求头
+契约（appid wxaa75ffd8c2d75da7，host wx-center.zippo.com.cn）：
+  这家没有业务成功码：成功就是 HTTP 2xx（登录/签到都回 **201**）且响应体里没有 code；
+  失败才带 code，且**放在 4xx 的 JSON 体里** —— 重复签到 = HTTP 400
+    {"code":"already_signed","message":"今日已签到"}，所以不能在非 200 时直接抛。
+  登录  POST /api/users/auth  {code, scene:"1001", platform:"wxmp"}
+          -> {token(JWT), sid, openId, unionId}；之后 Authorization: Bearer <token>（带空格）
+          固定头 x-app-id:zippo / x-platform:wxmp / x-platform-id:<appid> / x-platform-env:release
+  资料  GET  /api/users/profile   -> memberLevel/phone(已脱敏)/nickname
+  日历  GET  /api/daily-signin/month?month=YYYY-MM  -> days[].isSignIn（month 必须是 YYYY-MM，
+          发 YYYY-MM-DD 会回 400 "month must be a Date instance"）(只读，脚本未用)
+  签到  POST /api/daily-signin  {}  -> rewards[].count（每日 1 分，连签 7/30 天另有奖励）
 ------------------------------------------
 */
 
 const { Env } = require("../tools/env.js");
-const $ = new Env("白马智选");
+const $ = new Env("zippo会员");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 const WeChatServer = require("./wcs.js");
 
-const ckName = "baimazhixuan";
-const MINI_APP_ID = "wx51f8cb2a7578f42f";
-const BASE = "https://min.51afa.com/module/integralApi";
+const ckName = "zippo";
+const MINI_APP_ID = "wxaa75ffd8c2d75da7";
+const BASE = "https://wx-center.zippo.com.cn";
 
-const TOKEN_CACHE_FILE = path.join(__dirname, "baimazhixuan_token_cache.json");
+const TOKEN_CACHE_FILE = path.join(__dirname, "zippo_token_cache.json");
 const USER_AGENT =
     "Mozilla/5.0 (Linux; Android 12; M2012K11AC Build/SKQ1.220303.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) " +
     "Version/4.0 Chrome/134.0.6998.136 Mobile Safari/537.36 MicroMessenger/8.0.48.2580(0x28003036) MiniProgramEnv/android";
 
-const EP_LOGIN = "/login.html";
-const EP_SIGN = "/sign.html";
-const EP_USER = null;
+const EP_LOGIN = "/api/users/auth";
+const EP_SIGN = "/api/daily-signin";
+const EP_USER = "/api/users/profile";
 
 const wechat = new WeChatServer({
     url: process.env.wx_server_url || "http://192.168.31.196:8787",
@@ -79,8 +84,8 @@ function form(obj) {
 }
 
 /** 该后端的成功判定 */
-const isOk = (res) => Number(res?.status) === 1 || res?.status === true || Number(res?.code) === 0;
-const msgOf = (res) => res?.msg || res?.message || res?.msg || short(res);
+const isOk = (res) => !res?.code;
+const msgOf = (res) => res?.message || res?.message || res?.msg || short(res);
 /** 每天跑一次，「已签到」必须当成成功而不是失败 */
 const isAlreadyDone = (t) => /已签|已经签|签到过|重复|已完成|already/i.test(String(t || ""));
 const isAuthError = (t) => /登录|token|未授权|未登录|失效|过期|重新|401/i.test(String(t || ""));
@@ -103,18 +108,21 @@ class Task {
     }
 
     async request(apiPath, body = null, withAuth = true, method = "POST", query = null, epHeaders = null) {
-        const isForm = true;
+        const isForm = false;
         const headers = {
             "Content-Type": isForm ? "application/x-www-form-urlencoded" : "application/json",
             "User-Agent": USER_AGENT,
             Referer: `https://servicewechat.com/${MINI_APP_ID}/0/page-frame.html`,
             Accept: "application/json, text/plain, */*",
             xweb_xhr: "1",
+            "x-app-id": "zippo",
+            "x-platform": "wxmp",
+            "x-platform-id": MINI_APP_ID,
+            "x-platform-env": "release",
             ...(epHeaders || {}),
         };
-        // token 放 body，见下面各处 token
+        if (withAuth && this.token) headers["Authorization"] = `Bearer ${this.token}`;
         const payload = body || {};
-        if (withAuth && this.token) payload["token"] = this.token;
 
         const isGet = String(method).toUpperCase() === "GET";
         // query 独立于 body：有些接口是 POST 但参数只在查询串上
@@ -152,9 +160,9 @@ class Task {
 
     async login() {
         const code = await this.getCode();
-        const res = await this.request(EP_LOGIN, { code, company_id: 1, _cache_: 1 }, false, "POST", null, null);
+        const res = await this.request(EP_LOGIN, { code, scene: "1001", platform: "wxmp" }, false, "POST", null, null);
         if (!isOk(res)) throw new Error(`登录失败: ${msgOf(res)}`);
-        this.token = ((res.data || {}).token || (res.data || {}).accessToken || ((res.data || {}).userInfo || {}).token) || "";
+        this.token = res.token || "";
 
         if (!this.token) throw new Error(`登录未返回 token: ${short(res)}`);
         const cache = readCache();
@@ -179,7 +187,7 @@ class Task {
 
     async queryUser(needLog = true) {
         if (!EP_USER) return true;
-        const res = await this.request(EP_USER, {}, true, "POST", null, null);
+        const res = await this.request(EP_USER, {}, true, "GET", null, null);
         if (!isOk(res)) {
             if (needLog) this.log(`读取资料失败: ${msgOf(res)}`);
             return false;
@@ -187,18 +195,13 @@ class Task {
         // 有的家没有 data/body 包装，响应体本身就是数据（zippo 的 profile 就是）
         const d = res.data || res.datas || res.body || res || {};
         if (needLog) {
-            const bits = [];
-            for (const k of ["nickname", "nickName", "name", "memberId", "integral", "points",
-                             "point", "score", "credits", "balance", "coin", "amount"]) {
-                if (d && d[k] !== undefined && d[k] !== null && d[k] !== "") bits.push(`${k}=${d[k]}`);
-            }
-            this.log(`会员: ${bits.join(" ") || short(d, 120)}`);
+            this.log(`会员: ${d.memberLevel || "-"}${d.phone ? ` ${d.phone}` : ""}`);
         }
         return true;
     }
 
     async sign(retry = true) {
-        const res = await this.request(EP_SIGN, { timestamp: Date.now(), company_id: 1 }, true, "POST", null, { act: "do_sign" });
+        const res = await this.request(EP_SIGN, {}, true, "POST", null, null);
         if (isOk(res)) return this.log("✅ 签到成功");
         if (isAlreadyDone(msgOf(res))) return this.log(`✅ 今日已签到（${msgOf(res)}）`);
         if (isNotRegistered(msgOf(res))) {
