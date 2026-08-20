@@ -23,6 +23,9 @@ https://api.hcnsec.cn/sign-up?aff=tEPD
 https://freemodel.dev/invite/FRE-cd7d1d77
 
 
+https://api.justwoker.icu/sign-up?aff=nUng
+
+
 访问不了就用梯子
 注册不了就用第三方登录
 
