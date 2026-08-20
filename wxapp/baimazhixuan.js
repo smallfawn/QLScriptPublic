@@ -79,7 +79,7 @@ function form(obj) {
 }
 
 /** 该后端的成功判定 */
-const isOk = (res) => Number(res?.status) === 1 || res?.status === true || Number(res?.code) === 0;
+const isOk = (res) => Number(res?.status) === 1 || Number(res?.status) === 200 || res?.status === true || Number(res?.code) === 0 || Number(res?.code) === 200;
 const msgOf = (res) => res?.msg || res?.message || res?.msg || short(res);
 /** 每天跑一次，「已签到」必须当成成功而不是失败 */
 const isAlreadyDone = (t) => /已签|已经签|签到过|重复|已完成|already/i.test(String(t || ""));

@@ -24,11 +24,15 @@ const $ = new Env("社服益寿活动");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
+const https = require("https");
 const WeChatServer = require("./wcs.js");
 
 const ckName = "shefuyishou";
 const MINI_APP_ID = "wx8ac1f54b8fc39c6c";
 const BASE = "https://ylapi.luckystarpay.com";
+// 该站 TLS 证书已过期（服务端问题），Node 默认会以 certificate has expired 直接拒连。
+// 小程序端照常访问，这里仅对本站放宽证书校验以恢复可用性（不影响其它请求）。
+const httpsAgent = new https.Agent({ keepAlive: true, rejectUnauthorized: false });
 const TOKEN_CACHE_FILE = path.join(__dirname, "shefuyishou_token_cache.json");
 const USER_AGENT =
     "Mozilla/5.0 (Linux; Android 12; M2012K11AC Build/SKQ1.220303.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) " +
@@ -117,6 +121,7 @@ class Task {
             headers: this.headers(),
             timeout: 20000,
             validateStatus: () => true,
+            httpsAgent,
         });
         if (res.status !== 200) throw new Error(`${apiPath} HTTP ${res.status}: ${short(res.data)}`);
         return res.data;
