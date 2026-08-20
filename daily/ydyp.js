@@ -3791,10 +3791,13 @@ const $t = "https://caiyun.feixin.10086.cn/market/signin/page/info?client=app",
 function Ft(e) {
 	return {
 		getSigninStatus: async function() {
+			// 该接口已被移动云盘下线(返回 404)。容错处理：不让 HTTP 错误抛出中断整个账号流程，
+			// 否则 404 会以 AxiosError 冒泡，导致后续签到/任务全部无法执行(issue #288)。
 			return e.requestJson({
 				url: $t,
 				method: "get",
-				headers: e.jwtHeaders
+				headers: e.jwtHeaders,
+				throwHttpErrors: !1
 			})
 		},
 		doSignin: async function() {
@@ -4093,7 +4096,11 @@ class Ut {
 	async signinStatus() {
 		await this.sleep();
 		const e = await this.api.getSigninStatus();
-		if ("success" !== e?.msg) return void this.log(`签到状态查询失败: ${e?.msg||"未知错误"}`);
+		if ("success" !== e?.msg) {
+			this.log(`签到状态查询接口已失效(服务端 404，需重新抓包更新)，跳过状态判断直接尝试签到`);
+			const r = await this.api.doSignin();
+			return void this.log("success" === r?.msg ? "签到完成(未经状态校验)" : `签到失败: ${r?.msg||"未知错误"}`)
+		}
 		if (e.result?.todaySignIn) return void this.log("今日已签到");
 		const t = await this.api.doSignin();
 		this.log("success" === t?.msg ? "签到成功" : `签到失败: ${t?.msg||"未知错误"}`)
