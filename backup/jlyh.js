@@ -202,7 +202,13 @@ class UserInfo {
                 headers: this.getGetHeader(204179735, `/api/v1/login/refresh?refreshToken=${this.refreshToken}`),
             },
                 result = await httpRequest(options);
-            if (result.code == 'success') {
+            if (result?.__requestFailed) {
+                $.DoubleLog(`❌刷新KEY失败：接口无响应或网络异常（refreshToken 可能已过期，请先用手机打开一次「吉利银河」APP 刷新登录态后再跑）`);
+                this.ckStatus = false;
+                Notify = 1;
+                return;
+            }
+            if (result?.code == 'success' && result?.data?.centerTokenDto?.token) {
                 console.log(`✅${result.message}: ${result.data.centerTokenDto.token} \n🆗刷新KEY:${result.data.centerTokenDto.refreshToken}`);
                 this.ckStatus = true;
                 this.token = result.data.centerTokenDto.token
@@ -227,7 +233,12 @@ class UserInfo {
 
             let result = await httpRequest(options);
 
-            if (result.code == 0) {
+            if (result?.__requestFailed) {
+                $.DoubleLog(`❌查询签到状态失败：接口无响应（登录态可能已失效，请先打开一次「吉利银河」APP）`);
+                Notify = 1;
+                return false;
+            }
+            if (result?.code == 0) {
                 if (result.data === true) {
                     $.DoubleLog(`✅今日已经签到啦！`);
                     return true;
@@ -267,7 +278,12 @@ class UserInfo {
 
             let result = await httpRequest(options);
             
-            if (result.code == 0) {
+            if (result?.__requestFailed) {
+                $.DoubleLog(`❌签到失败：接口无响应（登录态可能已失效，请先打开一次「吉利银河」APP）`);
+                Notify = 1;
+                return;
+            }
+            if (result?.code == 0) {
                 $.DoubleLog(`✅签到成功！`);
                 await this.points();
                 Notify = 1;
@@ -289,8 +305,8 @@ class UserInfo {
                 headers: this.getGetHeader(204453306, `/h5/v1/points/get`),
             },
                 result = await httpRequest(options);
-            if (result.code == 0) {
-                $.DoubleLog(`✅剩余积分: ${result.data.availablePoints}`);
+            if (result?.code == 0) {
+                $.DoubleLog(`✅剩余积分: ${result?.data?.availablePoints ?? "未知"}`);
             } else {
                 $.DoubleLog(`❌剩余积分查询: 失败`);
                 console.log(result);
@@ -335,7 +351,9 @@ function httpRequest(options, method = null) {
                     console.log(`请求api返回数据为空，请检查自身原因`);
                 }
             }
-            resolve();
+            // 失败/空响应时返回安全对象而非 undefined，避免调用方读 result.code 抛
+            // TypeError: Cannot read properties of undefined (reading 'code')
+            resolve({ __requestFailed: true });
         });
     });
 }
