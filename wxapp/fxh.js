@@ -173,7 +173,14 @@ class Task {
     }
 
     async queryPoints(needLog = true) {
-        const res = await this.request(EP_POINTS, {});
+        // 查积分是附带信息，端点 404/异常不该中断签到主流程
+        let res;
+        try {
+            res = await this.request(EP_POINTS, {});
+        } catch (e) {
+            if (needLog) this.log(`读取积分跳过: ${e.message || e}`);
+            return false;
+        }
         if (!isOk(res)) {
             if (needLog) this.log(`读取积分失败: ${msgOf(res)}`);
             return false;
