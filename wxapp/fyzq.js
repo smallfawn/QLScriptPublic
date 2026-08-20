@@ -124,7 +124,10 @@ async function envelopePost(urlPath, params = {}) {
 class Task {
   constructor(account) {
     this.index = $.userIdx++;
-    this.account = account.trim();
+    // 变量值支持 openid#备注 格式：# 后是备注，取码只能用纯 openid
+    const [openid, remark] = String(account || "").split("#").map((s) => (s || "").trim());
+    this.account = openid;
+    this.remark = remark || "";
     this.token = "";
   }
 
@@ -196,7 +199,7 @@ class Task {
   }
 
   async run() {
-    $.log(`\n账号[${this.index}] ${mask(this.account)}`);
+    $.log(`\n账号[${this.index}]${this.remark ? `[${this.remark}]` : ""} ${mask(this.account)}`);
     this.token = this.getCachedToken();
 
     if (this.token) {
