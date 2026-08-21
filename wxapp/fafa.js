@@ -100,6 +100,8 @@ class Task {
             await this.loginByWxCode();
             if (!this.authorization) return;
         }
+        // 未在本店铺注册：后续接口必然 401，直接结束，避免刷一串误导性失败
+        if (this.unregistered) return;
 
         await this.getUserInfo();
         await this.getPointsInfo();
@@ -207,7 +209,15 @@ class Task {
             this.applyToken(data);
             if (!this.authorization) throw new Error(`登录未返回token: ${JSON.stringify(data)}`);
             this.saveCachedToken();
-            $.log(`账号[${this.index}] 登录成功: userId=${data.userId || ""}`);
+            // 登录回 200 但不带 userId 时，拿到的是无效会话：随后所有业务接口都会
+            // 401(token已失效/缺少token令牌)。实测两种成因——wx_server 取码失败/限流拿到坏 code
+            // (最常见，稍后重试即可)，或该微信号确实未在本店铺注册。都不该继续往下刷失败。
+            if (!data.userId) {
+                this.unregistered = true;
+                $.log(`账号[${this.index}] ⚠️ 登录未返回 userId，会话无效（多为 wx_server 取码失败/限流，稍后重试；若持续如此则是该微信号未在本店铺注册）`);
+                return;
+            }
+            $.log(`账号[${this.index}] 登录成功: userId=${data.userId}`);
         } catch (e) {
             $.log(`账号[${this.index}] 登录失败: ${e.message || e}`);
         }

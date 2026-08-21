@@ -118,6 +118,13 @@ class FeiheMom {
             transformRequest: [(data) => data],
         });
         const token = res.data?.data?.tokenInfo?.accessToken || res.data?.data?.accessToken || "";
+        // 服务端会以 code:"00000"/success:true 回一个只含 tempUid、tokenInfo:null 的响应，
+        // 那是「该微信号还不是会员」的临时身份，不是登录出错——照原样抛会显示成 HTTP 200 的登录失败。
+        if (res.status === 200 && !token && res.data?.data?.tempUid) {
+            const e = new Error("NO_ACCOUNT:登录只返回临时身份(tokenInfo 为空)");
+            e.unregistered = true;
+            throw e;
+        }
         if (res.status !== 200 || !token) throw new Error(`登录失败 HTTP ${res.status}: ${short(res.data)}`);
         this.token = token;
         return `token=${token.slice(0, 8)}***`;
@@ -179,7 +186,12 @@ async function runAccount(openid, index) {
         $.log(`查询：${await runner.query()}`);
         $.log(`签到：${await runner.sign()}`);
     } catch (e) {
-        $.log(`执行失败：${e.message || e}`);
+        const m = String(e.message || e);
+        if (m.startsWith("NO_ACCOUNT")) {
+            $.log(`⚠️ 该微信号还没在飞鹤星妈会注册会员（${m.replace(/^NO_ACCOUNT:/, "")}），先在小程序里登录注册一次再跑`);
+            return;
+        }
+        $.log(`执行失败：${m}`);
     }
 }
 
