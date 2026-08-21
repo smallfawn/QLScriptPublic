@@ -1,4 +1,8 @@
 ## 免费AI中转站
+
+https://free.supxh.xin/register?code=BVDU5Y
+
+
 https://vsllm.com/register?aff=5Wvk
 
 
