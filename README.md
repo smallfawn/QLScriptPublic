@@ -1,6 +1,5 @@
 ## 免费AI中转站
 
-https://kktoken.cc/sign-up?aff=lMQ6
 
 
 https://free.supxh.xin/register?code=BVDU5Y
@@ -22,12 +21,6 @@ https://api2.gemai.cc/sign-up?aff=Fjsj
 
 
 https://api456.me/register?aff=yBOp
-
-
-https://api.hcnsec.cn/sign-up?aff=tEPD
-
-
-https://freemodel.dev/invite/FRE-cd7d1d77
 
 
 https://api.justwoker.icu/sign-up?aff=nUng
