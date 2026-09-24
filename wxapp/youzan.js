@@ -198,7 +198,7 @@ class Task {
 
     async checkSession() {
         const res = await this.h5Get("/wscaccount/api/authorize/data.json");
-        return isOk(res);
+        return res && res.data && res.data.userInfo && res.data.userInfo.hasLogin;
     }
 
     async ensureLogin() {

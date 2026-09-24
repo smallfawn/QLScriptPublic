@@ -7,6 +7,14 @@
 @Description:  
 cron: 30 9 * * 1
 ------------------------------------------
+[更新日志]
+
+2026.09.21
+1.增加缓存机制
+2.修复签到报错问题
+
+
+------------------------------------------
 #Notice:   
 谷雨 微信小程序 签到得积分 
 WeChatCodeServer 填写wx_server_url wx_auth 用于获取code 
@@ -25,12 +33,15 @@ WeChatCodeServer 填写wx_server_url wx_auth 用于获取code
 const {
     Env
 } = require("../tools/env")
-const $ = new Env("谷雨小程序");
+const $ = new Env("谷雨小程序", {
+    bucket: "guyu_token_cache.json"
+});
 const WeChatServer = require("./wcs.js");
 let ckName = `guyu`;
 const strSplitor = "#";
 const axios = require("axios");
 const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.31(0x18001e31) NetType/WIFI Language/zh_CN miniProgram"
+
 let wechat = new WeChatServer({
     url: process.env.wx_server_url || 'https://xxx',
     appid: 'wxda948f3be0afc375',
@@ -43,7 +54,6 @@ class Task {
     constructor(env) {
         this.index = $.userIdx++
         this.user = env.split(strSplitor);
-        this.token = null
         this.wcsid = this.user[0]
         this.isSign = false
         this.shopId = '100186753'
@@ -53,11 +63,24 @@ class Task {
 
     async run() {
         //随机延迟5-30s 模拟人工操作
-        await $.wait(Math.floor(Math.random() * 20 + 5) * 1000);
-        let { data: codeRes } = await wechat.getCode(this.wcsid)
-        if (codeRes.status) {
-            await this.getUserToken(codeRes.data.code)
+        // await $.wait(Math.floor(Math.random() * 20 + 5) * 1000);
+
+        const userData = await $.get(this.wcsid)
+        if (userData) {
+            $.log('使用缓存')
+            this.token = userData.mobileToken
         }
+
+        if (this.token && await this.getUserPoints()) {
+
+        } else {
+            $.log('缓存已失效，重新登录')
+            let { data: codeRes } = await wechat.getCode(this.wcsid)
+            if (codeRes.status) {
+                await this.getUserToken(codeRes.data.code)
+            }
+        }
+
         if (!this.token) {
             $.log(`账号[${this.index}] 获取用户Token失败❌`)
             return
@@ -94,6 +117,8 @@ class Task {
             let info = result.result || {}
             this.token = info.mobileToken
             if (info.shopId) this.shopId = "" + info.shopId
+
+            $.set(this.wcsid, info)
             $.log(`🌸账号[${this.index}] 获取用户Token成功 门店:${info.shopName || this.shopId}`)
         } else {
             $.log(`🌸账号[${this.index}] 获取用户Token-失败:${result?.msg || result?.message}❌`)
@@ -157,7 +182,7 @@ class Task {
     // 这里用两个只读查询接口动态拿当前可参与的签到活动(activityType=3)
     async findSignActivity() {
         try {
-            let { data: sys } = await this.request({
+           let { data: sys } = await this.request({
                 method: 'GET',
                 url: `https://mall-mobile-v6.vecrp.com/mobile/activity/common/queryIntegralSystemList`,
                 params: { shopId: this.shopId, earnSpendType: 1 },
@@ -260,9 +285,11 @@ class Task {
         } = await this.request(options);
         if (result?.success) {
             $.log(`账号[${this.index}]` + `积分:${result.result[0].score}`);
+            return Promise.resolve(true)
         } else {
             $.log(`账号[${this.index}] 获取积分-失败:${result.msg}❌`)
         }
+        return Promise.resolve(false)
     }
 
 

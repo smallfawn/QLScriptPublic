@@ -120,13 +120,14 @@ class Task {
         if (res.status !== 200 || String(d.status) !== "0") throw new Error(`upms登录失败: ${d.msg || `HTTP ${res.status}`}`);
         const payload = (d.data && d.data.data) || d.data || {};
         this.session.token = payload.token || this.session.token || "";
-        this.session.userId = String(payload.loginId || (payload.account || {}).loginId || "");
-        if (!this.session.userId) throw new Error(`upms未返回 loginId: ${short(d)}`);
+        this.session.loginId = String(payload.loginId || (payload.account || {}).loginId || "");
+        this.session.userId = String(payload.userId || (payload.account || {}).userId || "c10cff02123a9e2697d875262612399d");
+        if (!this.session.loginId) throw new Error(`upms未返回 loginId: ${short(d)}`);
     }
     async loginMobile() {
         const code = await this.getCode();
         const res = await axios.post(`${MOBILE_BASE}/wechat/login`,
-            formBody({ code, userId: this.session.userId }),
+            formBody({ code, userId: "c10cff02123a9e2697d875262612399d" }),
             { headers: this.commonHeaders({ from_env: "app" }), timeout: 20000, validateStatus: () => true });
         const d = res.data || {};
         if (String(d.status) !== "0") {
@@ -138,32 +139,36 @@ class Task {
         if (sid) this.session.sessionId = sid;
         const cust = (d.data || {}).customer || {};
         if (!this.session.sessionId) throw new Error(`mobile登录未拿到 SESSION: ${short(d)}`);
+
         this.log(`登录成功${cust.nickName ? `（${cust.nickName}）` : ""}`);
     }
     async login() {
-        await this.loginUpms();
         await this.loginMobile();
+        await this.loginUpms();
+
         const cache = readCache();
         cache[this.account.openid] = { ...this.session, updatedAt: new Date().toISOString() };
         writeCache(cache);
     }
     async mobilePost(apiPath, data = {}) {
         if (!this.session.sessionId) throw new Error("缺少SESSION");
-        const res = await axios.post(`${MOBILE_BASE}${apiPath}`,
-            formBody({ ...(data || {}), userId: this.session.userId }),
+        const res = await axios.post(`${VIP_BASE}${apiPath}`,
+            formBody({ ...(data || {}), uid: this.session.userId }),
             { headers: this.commonHeaders({ Cookie: `SESSION=${this.session.sessionId}`, Authorization: this.session.token || "", from_env: "app" }), timeout: 20000, validateStatus: () => true });
         const sid = getSessionId(res.headers);
         if (sid) this.session.sessionId = sid;
         return res.data;
     }
     async sign() {
-        const list = (await this.mobilePost("/promotion/sign/list"))?.data || [];
-        const signedToday = Array.isArray(list) && list.some((it) => String(it?.signTime || "").slice(0, 10) === today());
+        var yearMonth = $.time("yyyy-MM")
+        var dayMonth = $.time("d");
+        const list = (await this.mobilePost("/vip/member/listUserSignLog", { "yearMonth": yearMonth, "tenantId": "1" }))?.data || [];
+        const signedToday = Array.isArray(list) && list.some((it) => it.dayMonth === dayMonth);
         if (signedToday) {
             const last = list[list.length - 1] || {};
-            return this.log(`✅ 今日已签到，连续 ${last.signContinuousDay || 0} 天`);
+            return this.log(`✅ 今日已签到，连续 ${last.continueDays || 0} 天`);
         }
-        const res = await this.mobilePost("/promotion/sign/sign");
+        const res = await this.mobilePost("/vip/member/sign", { "channel": "", "tenantId": "1" });
         if (String(res?.status) === "0") {
             const point = (res.data || {}).point;
             return this.log(`✅ 签到成功${point ? `，积分+${point}` : ""}`);
@@ -174,7 +179,7 @@ class Task {
     }
     async checkSession() {
         try {
-            const r = await this.mobilePost("/promotion/sign/list");
+            const r = await this.mobilePost("/vip/member/getVipExtInfo", {  "tenantId": "1" });
             return String(r?.status) === "0" || Array.isArray(r?.data);
         } catch (e) {
             return false;
