@@ -12,7 +12,6 @@ const fs = require("fs");
 const path = require("path");
 
 // ================== 配置区 ==================
-const ACTIVITY_ID = "100001275";
 const BASE_URL = "https://scrm.aimatech.com";
 const WXCLIENT_URL = `${BASE_URL}/aima/wxclient`;
 const MINI_APPID = "wx2dcfb409fd5ddfb4";
@@ -199,11 +198,31 @@ async function getAccessToken(account) {
 }
 
 // ================== 核心逻辑 ==================
+
 async function signIn(account, index) {
   let token = await getAccessToken(account);
   const setToken = (newToken) => {
     token = newToken;
   };
+  const searchLocations = await request(
+    "post",
+    `${WXCLIENT_URL}/mkt/activities/locations:search`,
+    token,
+    {
+      data: { "locations":[0,1,2] },
+      account,
+      onToken: setToken,
+    }
+  );
+
+  if(searchLocations.status !== 200 || searchLocations.data?.code !== 200) {
+    throw new Error(`查询活动ID失败: HTTP ${searchLocations.status} ${JSON.stringify(searchLocations.data)}`);
+  }
+  var activityId = searchLocations.data?.content?.[0]?.activityId;
+  $.log(`🔎 账号【${index}】查询到活动ID: ${activityId || "未找到"}`);
+  if(!activityId) {
+    throw new Error(`未找到活动ID，请检查活动是否结束或账号是否有权限参与`);
+  }
 
   $.log(`🚀 账号【${index}】查询签到状态...`);
   const searchRes = await request(
@@ -211,7 +230,7 @@ async function signIn(account, index) {
     `${WXCLIENT_URL}/mkt/activities/sign:search`,
     token,
     {
-      data: { activityId: ACTIVITY_ID },
+      data: { activityId: activityId },
       account,
       onToken: setToken,
     }
@@ -233,7 +252,7 @@ async function signIn(account, index) {
     `${WXCLIENT_URL}/mkt/activities/sign:join`,
     token,
     {
-      data: { activityId: ACTIVITY_ID, activitySceneId: null },
+      data: { activityId: activityId, activitySceneId: null },
       account,
       onToken: setToken,
     }
