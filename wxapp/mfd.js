@@ -92,6 +92,7 @@ class Task {
         this.phone = "";
         this.groupId = "";
         this.agentId = "";
+        this.accessToken = "";
         this.memberInfo = {};
     }
 
@@ -134,6 +135,7 @@ class Task {
             phone: this.phone,
             groupId: this.groupId,
             agentId: this.agentId,
+            accessToken:this.accessToken,
             updatedAt: new Date().toISOString(),
         };
         writeTokenCache(cache);
@@ -151,12 +153,14 @@ class Task {
         this.phone = "";
         this.groupId = "";
         this.agentId = "";
+        this.accessToken = "";
     }
 
     applyToken(data = {}) {
         this.openId = data.openId || "";
         this.unionId = data.unionId || "";
         this.memberId = data.memberId || "";
+        this.accessToken = data.accessToken || "";
         this.phone = data.phone || "";
         this.groupId = data.groupId || "";
         this.agentId = data.agentId || "";
@@ -172,6 +176,7 @@ class Task {
             tenantId: TENANT_ID,
             wxAppid: MINI_APP_ID,
             groupId: this.groupId || "",
+            'X-Token':this.accessToken || "",
             ...extra,
         };
         if (this.memberId) headers.userId = this.memberId;
@@ -192,7 +197,6 @@ class Task {
             options.params = { _: Date.now() };
             options.data = data;
         }
-
         const { data: result, status } = await axios.request(options);
         if (status !== 200) throw new Error(`HTTP ${status}: ${JSON.stringify(result)}`);
         if (!result || (String(result.code) !== "0" && Number(result.code) !== 2)) {
@@ -237,6 +241,7 @@ class Task {
             this.openId = data.openId || "";
             this.unionId = data.unionId || "";
             this.memberId = String(data.memberId || "");
+            this.accessToken = data.accessToken;
             this.phone = data.phone || "";
             if (!this.memberId) throw new Error(`登录响应未返回 memberId: ${JSON.stringify(result)}`);
             this.saveCachedToken();

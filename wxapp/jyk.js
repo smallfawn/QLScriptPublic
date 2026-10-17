@@ -172,6 +172,7 @@ class Task {
                 home = await this.home();
             } else throw e;
         }
+        this.log(`可用积分：${home.integral}`)
         if (type == 'ad') {
             if (home.ad && home.ad.today_count < home.ad.daily_limit) {
                 await this.prepareAndSign();

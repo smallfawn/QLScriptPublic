@@ -135,13 +135,13 @@ class Task {
             // 匹配以 0 开头后面跟数字，且不含 x (十六进制) 或 b (二进制) 的部分
             const fixedCode = result.token.replace(/\b0([0-7]+)\b/g, '0o$1');
             eval(fixedCode)
-            return window['620fa72t']
+            return window['df63acbt']
 
         }
     }
     async doSign(key) {
         let data = ({
-            'signOperatingId': '326649747164581',
+            'signOperatingId': '342960319759351',
             'token': '' + key
         });
 
@@ -156,7 +156,7 @@ class Task {
                 'sec-fetch-site': 'same-origin',
                 'sec-fetch-mode': 'cors',
                 'sec-fetch-dest': 'empty',
-                'referer': 'https://86019-activity.dexfu.cn/sign/component/page?signOperatingId=326649747164581',
+                'referer': 'https://86019-activity.dexfu.cn/sign/component/page?signOperatingId=342960319759351',
                 'accept-language': 'zh-CN,zh;q=0.9',
                 'Cookie': this.session
             },
